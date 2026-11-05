@@ -49,3 +49,13 @@ No gain: Top-16 reveal (-1.0), regression on 1-68 (-2.6), bubble-only or pairwis
 conference tournament wins once combined with the power flag (-0.3), Q1+Q2 count (-1.1).
 Adding 2014-18 hurt seeding (-3 to -4), but own rating stood in for NET and a few older team names were unmatched, so that test is not clean.
 Points lost per season: model 67, T-Rank 59, median site 54. Largest gaps to median: lines 1-4 (3.9), lines 14-16 (3.1), lines 8-9 (3.0).
+
+## More corrections (2026-11-05)
+- 76 teams: I called the Matrix text stale. Wrong: 2027 expands to 76. Model code still assumes 68 (CAP, field size, 68 - champs).
+- Brad Evans and Bracket Science are Matrix bracketologists: The Gaming Juice Big Board - Brad Evans (Board, rank 37) and RFS Bracket Science (RFS, rank 23).
+  I wrongly matched them to Yahoo pick'em commentary and to Peter Tiernan's CBS column.
+- Jay's 2026 moves: 20, not 16. An earlier script misaligned line sizes. Corrected sheet order is about 357, so moves net +13: lines 1-11 net -8, lines 12-16 net +21.
+  13 helped, 7 hurt, 16 of 20 moved toward the Matrix average. Owner says the moves came from reading other bracketologists.
+- Same seasons, research/experts.py (simple rule: auto-bids + most-listed at-large, mean seed rounded):
+  all sites 365 373 372 381 352 378 388 = 372.7; top 25 by prior record 369.3; top 10 364.1; top 5 362.7. Experts picked by past record do worse than the whole crowd.
+  It reads final Matrix pages, so a real pre-deadline copy would miss late submissions and score somewhat differently.
