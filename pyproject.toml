@@ -1,0 +1,11 @@
+[project]
+name = "bracketology"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = ["requests>=2.31", "openpyxl>=3.1"]
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.pytest.ini_options]
+pythonpath = ["src"]
