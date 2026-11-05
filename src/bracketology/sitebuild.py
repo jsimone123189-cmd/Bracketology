@@ -46,6 +46,7 @@ def team_record(r: dict, table: dict, season: int) -> dict:
     return d
 
 def benchmarks(acc: dict) -> dict:
+    """Refresh helper, run once a year after the final Matrix posts. Saved in site/accuracy.json so daily runs don't re-download large Matrix pages."""
     out = {"t_rank": [], "median": [], "best": []}
     for y in acc["seasons"]:
         s = bm.collect(y)["reported"]["SCORE"]; v = [int(x) for x in s.values() if x.isdigit()]
@@ -64,7 +65,7 @@ def demo(season: int = 2026) -> dict:
             "lines": fieldformat.line_sizes(season), "order": ORDER, "teams": [team_record(r, table, season) for r in order], "out": [team_record(r, table, season) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
             "missed": [{"team": r["team"], "seed": r["seed"], "net": r["net"], "key": r["key"]} for r in rows if r["in_field"] and r["key"] not in {x["key"] for x in order}],
-            "accuracy": {**acc, **benchmarks(acc)}}
+            "accuracy": acc}
 
 MIN_MEDIAN_GAMES = 15
 
@@ -84,7 +85,7 @@ def live(season: int, fitted: model.Model) -> dict:
             "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + notes,
             "teams": [team_record(r, table, season) for r in final], "out": [team_record(r, table, season) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
-            "missed": [], "accuracy": {**acc, **benchmarks(acc)}}
+            "missed": [], "accuracy": acc}
 
 def load_or_fit(path="models/v2.joblib", season: int = 2027) -> model.Model:
     """CI uses the saved model because training data stays out of the public repo. Refit locally with: python -m bracketology.sitebuild fit"""
