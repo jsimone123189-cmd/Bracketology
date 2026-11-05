@@ -10,6 +10,6 @@
 ## To go live
 1. Owner decided (2026-11-05) not to wait for Torvik: use only his public CSVs under robots.txt rules (10-second delay, no .json or time-machine pages), credit and link him, and do not republish his ratings. Warren Nolan email is drafted, unsent as far as known.
 2. Owner approves the public page.
-3. Add CLOUDFLARE_API_TOKEN (Account > Workers Scripts > Edit) and CLOUDFLARE_ACCOUNT_ID as repo secrets. Worker jays-bracket-plays already exists with a "Coming soon" placeholder.
+3. Domain jaysbracketplays.com (Cloudflare Registrar, paid by owner). Add CLOUDFLARE_API_TOKEN (the "Edit Cloudflare Workers" template, zone jaysbracketplays.com) and CLOUDFLARE_ACCOUNT_ID as repo secrets. Worker jays-bracket-plays already exists with a "Coming soon" placeholder.
 4. Uncomment the schedule.
 5. Add 2027 reclassifying teams to INELIGIBLE_CHAMPS.

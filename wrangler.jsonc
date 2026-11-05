@@ -1,6 +1,12 @@
 {
-  // Static site only. Cloudflare now runs Pages projects on Workers, so this deploys with `wrangler deploy`.
+  // Static site only. Uploads data/output/public, which CI fills after the publish check passes.
+  // Do not run `wrangler deploy` by hand from a machine holding preview data: it would publish that folder.
   "name": "jays-bracket-plays",
   "compatibility_date": "2026-11-04",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "jaysbracketplays.com", "custom_domain": true },
+    { "pattern": "www.jaysbracketplays.com", "custom_domain": true }
+  ],
   "assets": { "directory": "data/output/public" }
 }
