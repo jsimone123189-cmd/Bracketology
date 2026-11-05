@@ -1,0 +1,18 @@
+BASE: classifier field, pairwise seeds         [331, 327, 342, 338, 329, 359, 360] mean 340.9 picked 66.1 exact 40.7
+pairwise field                                 [330, 327, 342, 332, 335, 353, 360] mean 339.9 picked 66.0 exact 40.6  vs base -1.0  better 1 worse 3
+pairwise field + bubble features               [330, 327, 342, 338, 335, 353, 360] mean 340.7 picked 66.1 exact 40.7  vs base -0.1  better 1 worse 2
+classifier + bubble features                   [331, 327, 342, 338, 333, 359, 360] mean 341.4 picked 66.3 exact 40.7  vs base +0.6  better 1 worse 0
+seeding + bubble features                      [335, 326, 347, 344, 329, 363, 356] mean 342.9 picked 66.1 exact 41.6  vs base +2.0  better 4 worse 2
+low-major slots ordered by NET                 [339, 327, 342, 338, 329, 355, 364] mean 342.0 picked 66.1 exact 41.3  vs base +1.1  better 2 worse 1
+tiered re-rank top and bottom                  [323, 324, 342, 332, 329, 355, 360] mean 337.9 picked 66.1 exact 39.3  vs base -3.0  better 0 worse 4
+pairwise field, tiered                         [322, 324, 342, 326, 335, 349, 360] mean 336.9 picked 66.0 exact 39.1  vs base -4.0  better 1 worse 4
+pairwise field, low-major NET                  [338, 327, 342, 332, 335, 349, 364] mean 341.0 picked 66.0 exact 41.1  vs base +0.1  better 3 worse 2
+all bubble features, pairwise field            [335, 326, 347, 344, 335, 357, 356] mean 342.9 picked 66.1 exact 41.6  vs base +2.0  better 4 worse 3
+2019 picked without this season: seeding + bubble features
+2021 picked without this season: seeding + bubble features
+2022 picked without this season: seeding + bubble features
+2023 picked without this season: seeding + bubble features
+2024 picked without this season: seeding + bubble features
+2025 picked without this season: all bubble features, pairwise field
+2026 picked without this season: seeding + bubble features
+NESTED honest score of 'choose the best variant' [335, 326, 347, 344, 329, 357, 356] mean 342.0 picked 66.0 exact 41.4  vs base +1.1  better 3 worse 3

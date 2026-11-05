@@ -1,0 +1,58 @@
+2019 top-16 names unmatched [] | not in final field: []
+2021 top-16 names unmatched [] | not in final field: []
+2022 top-16 names unmatched [] | not in final field: []
+2023 top-16 names unmatched [] | not in final field: []
+2024 top-16 names unmatched [] | not in final field: []
+2025 top-16 names unmatched [] | not in final field: []
+2026 top-16 names unmatched [] | not in final field: []
+BASE: pairwise on official order               [331, 327, 342, 338, 329, 359, 360] mean 340.9 picked 66.1 exact 40.7
++ Top-16 reveal line and flag, seeding         [329, 327, 343, 338, 324, 362, 356] mean 339.9 picked 66.1 exact 39.7  vs base -1.0  better 2 worse 3
++ Top-16 reveal, seeding and selection         [329, 327, 343, 338, 324, 362, 356] mean 339.9 picked 66.1 exact 39.7  vs base -1.0  better 2 worse 3
+
+Points lost per season by true seed line: model / T-Rank / human median site
+lines 1-4 model 9.3 T-Rank 8.6 median 5.4
+lines 5-7 model 14.1 T-Rank 12.7 median 12.5
+lines 8-9 model 13.9 T-Rank 11.6 median 10.9
+lines 10-11 model 16.6 T-Rank 15.4 median 15.3
+lines 12-13 model 4.6 T-Rank 4.3 median 4.2
+lines 14-16 model 8.7 T-Rank 6.6 median 5.6
+total model 67.1 T-Rank 59.1 median 53.9
+
+Largest model misses (true seed - model line). Negative = committee seeded them better.
+2024 Michigan St.       B10   true  9 model None NET  24 ratingRk  18 WAB  -0.3 Q1 3-9 Q3/4L 0/0 rec 19-14 champ 0
+2024 Texas A&M          SEC   true  9 model None NET  45 ratingRk  49 WAB  -0.4 Q1 7-7 Q3/4L 4/0 rec 20-14 champ 0
+2024 Virginia           ACC   true 10 model None NET  54 ratingRk  67 WAB   0.9 Q1 2-7 Q3/4L 0/0 rec 23-10 champ 0
+2019 Temple             Amer  true 11 model None NET  56 ratingRk  72 WAB   0.3 Q1 2-6 Q3/4L 1/0 rec 23-9 champ 0
+2019 Arizona St.        P12   true 11 model None NET  63 ratingRk  59 WAB   0.1 Q1 3-3 Q3/4L 2/2 rec 22-10 champ 0
+2019 St. John's (NY)    BE    true 11 model None NET  73 ratingRk  82 WAB  -0.9 Q1 5-7 Q3/4L 2/0 rec 21-12 champ 0
+2021 Colgate            Pat   true 14 model 7 NET   9 ratingRk   9 WAB   1.5 Q1 0-0 Q3/4L 1/0 rec 14-1 champ 1
+2021 Utah St.           MWC   true 11 model None NET  39 ratingRk  44 WAB  -1.2 Q1 2-5 Q3/4L 2/0 rec 19-8 champ 0
+2022 Notre Dame         ACC   true 11 model None NET  53 ratingRk  56 WAB   0.8 Q1 2-8 Q3/4L 1/0 rec 21-10 champ 0
+2022 Rutgers            B10   true 11 model None NET  77 ratingRk  81 WAB  -0.7 Q1 6-6 Q3/4L 2/1 rec 18-13 champ 0
+2023 Pittsburgh         ACC   true 11 model None NET  67 ratingRk  78 WAB  -1.0 Q1 4-4 Q3/4L 1/1 rec 22-11 champ 0
+2025 Xavier             BE    true 11 model None NET  45 ratingRk  40 WAB   0.5 Q1 1-9 Q3/4L 0/0 rec 21-11 champ 0
+2026 Miami (OH)         MAC   true 11 model None NET  64 ratingRk  90 WAB   1.7 Q1 0-0 Q3/4L 0/1 rec 28-1 champ 0
+2022 Indiana            B10   true 12 model None NET  39 ratingRk  32 WAB   0.0 Q1 4-8 Q3/4L 1/0 rec 20-13 champ 0
+2023 Fla. Atlantic      CUSA  true  9 model 5 NET  13 ratingRk  20 WAB   4.1 Q1 2-1 Q3/4L 0/0 rec 29-3 champ 1
+2019 VCU                A10   true  8 model 11 NET  34 ratingRk  41 WAB   0.6 Q1 2-2 Q3/4L 3/0 rec 25-7 champ 0
+2021 Wisconsin          B10   true  9 model 6 NET  27 ratingRk  19 WAB   2.3 Q1 5-10 Q3/4L 0/0 rec 17-12 champ 0
+2023 Texas A&M          SEC   true  7 model 4 NET  19 ratingRk  32 WAB   3.9 Q1 7-6 Q3/4L 0/2 rec 25-9 champ 0
+2023 Memphis            Amer  true  8 model 5 NET  23 ratingRk  25 WAB   4.2 Q1 4-4 Q3/4L 1/0 rec 26-8 champ 1
+2024 Nevada             MWC   true 10 model 7 NET  34 ratingRk  45 WAB   2.5 Q1 6-6 Q3/4L 1/0 rec 25-7 champ 0
+2025 Louisville         ACC   true  8 model 5 NET  23 ratingRk  22 WAB   5.4 Q1 4-6 Q3/4L 0/0 rec 27-7 champ 0
+2025 Memphis            Amer  true  5 model 8 NET  50 ratingRk  54 WAB   4.5 Q1 6-1 Q3/4L 2/0 rec 28-5 champ 1
+2019 Utah St.           MWC   true  8 model 10 NET  29 ratingRk  33 WAB   2.2 Q1 3-2 Q3/4L 1/0 rec 28-6 champ 1
+2019 UCF                Amer  true  9 model 11 NET  30 ratingRk  47 WAB   0.9 Q1 2-5 Q3/4L 1/0 rec 23-8 champ 0
+2019 Iowa               B10   true 10 model 8 NET  43 ratingRk  39 WAB   3.3 Q1 4-10 Q3/4L 1/0 rec 22-11 champ 0
+2019 Minnesota          B10   true 10 model 8 NET  61 ratingRk  50 WAB   2.5 Q1 5-10 Q3/4L 1/0 rec 21-13 champ 0
+2021 Texas Tech         B12   true  6 model 8 NET  16 ratingRk  17 WAB   0.7 Q1 4-10 Q3/4L 0/0 rec 17-10 champ 0
+2021 San Diego St.      MWC   true  6 model 8 NET  18 ratingRk  24 WAB   2.7 Q1 1-3 Q3/4L 0/0 rec 22-4 champ 1
+
+Field misses (team left out / wrongly in)
+2019 OUT: [('Temple', 11, 'NET', 56), ('Arizona St.', 11, 'NET', 63), ("St. John's (NY)", 11, 'NET', 73)]  IN: [('NC State', 'NET', 33), ('Clemson', 'NET', 35), ('TCU', 'NET', 52)]
+2021 OUT: [('Utah St.', 11, 'NET', 39)]  IN: [('Louisville', 'NET', 56)]
+2022 OUT: [('Indiana', 12, 'NET', 39), ('Notre Dame', 11, 'NET', 53), ('Rutgers', 11, 'NET', 77)]  IN: [('Oklahoma', 'NET', 40), ('Texas A&M', 'NET', 42), ('SMU', 'NET', 44)]
+2023 OUT: [('Pittsburgh', 11, 'NET', 67)]  IN: [('North Texas', 'NET', 38)]
+2024 OUT: [('Michigan St.', 9, 'NET', 24), ('Texas A&M', 9, 'NET', 45), ('Virginia', 10, 'NET', 54)]  IN: [('Indiana St.', 'NET', 29), ('Oklahoma', 'NET', 46), ('Seton Hall', 'NET', 67)]
+2025 OUT: [('Xavier', 11, 'NET', 45)]  IN: [('West Virginia', 'NET', 51)]
+2026 OUT: [('Miami (OH)', 11, 'NET', 64)]  IN: [('Auburn', 'NET', 38)]

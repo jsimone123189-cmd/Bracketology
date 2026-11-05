@@ -18,7 +18,7 @@ def _cells(row: str) -> list[str]:
 
 def parse(text: str) -> dict:
     rows = [_cells(r) for r in re.findall(r"<tr[^>]*>(.*?)</tr>", text, re.S)]
-    hdr = next(r for r in rows if len(r) > 10 and r[1] in ("FINAL RESULTS", "OFFICIAL RESULTS"))
+    hdr = next(r for r in rows if len(r) > 10 and "RESULTS" in r[1])
     sites = {i: n for i, n in enumerate(hdr) if i >= 5 and n}
     reported = {}
     for r in rows:

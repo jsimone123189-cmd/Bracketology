@@ -36,3 +36,16 @@ the sheet: 362. Jay: 370. So manual adjustment was worth about 8 points that sea
 Seven seasons; a few points of difference is noise. Earlier configuration choices were made on these same seasons, so
 339-340 is somewhat optimistic. As-of real metrics exist for only 2021, 2022, 2023, 2025 (2023 capture is from the Saturday before).
 Team sheet captures after the reveal contain seeds in the team name; the parser strips them.
+
+## Research rounds after the corrections (2026-11-05). Scripts and outputs in research/.
+Base for each round is leave-one-season-out over 2019, 2021-2026. Benchmarks: T-Rank 348.9, human median 354.0.
+| Change | Mean | Vs its base | Better/worse seasons |
+|---|---|---|---|
+| Seeds: ranking pairs on the committee's published 1-68 order | 340.9 | +2.0 | 4/1 |
+| Seeds: + few-Q1-games, Q1 games, Q1 wins x power, NET x non-power | 342.9 | +2.0 | 4/2 |
+| Low-major auto-bid slots ordered by NET | 342.0 | +1.1 | 2/1 |
+| Nested choice among round 3 variants (honest estimate) | 342.0 | +1.1 | 3/3 |
+No gain: Top-16 reveal (-1.0), regression on 1-68 (-2.6), bubble-only or pairwise field, tiered re-rank (-3.0), separate low-major model (-4.4),
+conference tournament wins once combined with the power flag (-0.3), Q1+Q2 count (-1.1).
+Adding 2014-18 hurt seeding (-3 to -4), but own rating stood in for NET and a few older team names were unmatched, so that test is not clean.
+Points lost per season: model 67, T-Rank 59, median site 54. Largest gaps to median: lines 1-4 (3.9), lines 14-16 (3.1), lines 8-9 (3.0).

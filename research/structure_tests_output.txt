@@ -1,0 +1,23 @@
+2014 teams 351 field matched 65 unmatched ['Virginia Commonwealth', "St. Joseph's", 'Wisconsin-Milwaukee'] champs 31 champs not in field ['Milwaukee', "Saint Joseph's"]
+2015 teams 351 field matched 66 unmatched ['Southern Methodist', 'Virginia Commonwealth'] champs 32 champs not in field ['SMU', 'VCU']
+2016 teams 351 field matched 64 unmatched ["St. Joseph's", 'Virginia Commonwealth', 'Arkansas-Little Rock', 'Wisconsin-Green Bay'] champs 31 champs not in field ['Green Bay', 'Little Rock', "Saint Joseph's"]
+2017 teams 351 field matched 67 unmatched ['E. Tennessee State'] champs 32 champs not in field ['East Tennessee St.']
+2018 teams 351 field matched 67 unmatched ['Maryland-Baltimore County'] champs 32 champs not in field ['UMBC']
+BASE (Z + is_power)                            [331, 320, 342, 337, 327, 352, 363] mean 338.9 picked 66.1 exact 39.9
+-- bubble-focused selection training
+train selection only on NET<=150               [331, 320, 342, 337, 327, 352, 363] mean 338.9 picked 66.0 exact 40.0  vs base +0.0  better 0 worse 0
+train selection only on NET<=100               [331, 320, 342, 337, 331, 352, 363] mean 339.4 picked 66.1 exact 40.0  vs base +0.6  better 1 worse 0
+train selection only on NET<=75                [324, 320, 342, 337, 331, 352, 363] mean 338.4 picked 66.0 exact 39.7  vs base -0.4  better 1 worse 1
+train selection only on NET<=60                [326, 320, 342, 337, 327, 352, 363] mean 338.1 picked 65.9 exact 39.9  vs base -0.7  better 0 worse 1
+-- seeding structure
+separate auto-bid low-major seeding            [324, 320, 335, 332, 323, 351, 356] mean 334.4 picked 66.1 exact 37.6  vs base -4.4  better 0 worse 6
+direct pairwise ranking                        [327, 329, 338, 343, 329, 359, 356] mean 340.1 picked 66.1 exact 40.4  vs base +1.3  better 4 worse 3
+monotonic boosting                             [334, 320, 345, 331, 323, 360, 360] mean 339.0 picked 66.1 exact 40.0  vs base +0.1  better 3 worse 3
+-- more training seasons (own rating stands in for NET)
++2014-18 for selection and seeding             [330, 320, 353, 324, 323, 352, 347] mean 335.6 picked 66.3 exact 38.9  vs base -3.3  better 1 worse 4
++2016-18 for selection and seeding             [327, 318, 345, 323, 324, 352, 354] mean 334.7 picked 66.3 exact 38.0  vs base -4.1  better 1 worse 5
++2014-18 for seeding only                      [330, 320, 353, 324, 318, 352, 347] mean 334.9 picked 66.1 exact 38.7  vs base -4.0  better 1 worse 4
++2014-18 for selection only                    [331, 320, 342, 337, 329, 352, 363] mean 339.1 picked 66.3 exact 39.7  vs base +0.3  better 1 worse 0
+-- features
++ conference tournament wins                   [333, 317, 334, 334, 325, 360, 367] mean 338.6 picked 66.1 exact 39.9  vs base -0.3  better 3 worse 4
++ Q1+Q2 wins and Q1 win rate                   [334, 320, 335, 340, 323, 348, 364] mean 337.7 picked 66.0 exact 39.6  vs base -1.1  better 3 worse 3
