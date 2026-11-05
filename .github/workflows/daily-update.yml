@@ -1,5 +1,5 @@
 name: daily-update
-# $0 plan: GitHub Actions runs the update, Cloudflare Pages hosts the static page. See docs/07-deployment.md.
+# $0 plan: GitHub Actions runs the update, Cloudflare Workers hosts the static page. See docs/07-deployment.md.
 on:
   # Off until Torvik and Warren Nolan reply and the owner approves going public.
   # schedule: [{cron: "17 10 * 11-12,1-4 *"}]     # daily, November to April
@@ -32,4 +32,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy data/output/site --project-name=jays-bracket-plays
+          command: deploy

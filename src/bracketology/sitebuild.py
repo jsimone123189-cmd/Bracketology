@@ -1,5 +1,5 @@
 from __future__ import annotations
-"""Builds the static site: site/template.html + data -> data/output/site/{preview.html (private Artifact), index.html (Cloudflare Pages)}.
+"""Builds the static site: site/template.html + data -> data/output/site/preview.html (private Artifact) and data/output/public/index.html (Cloudflare).
 Run: python -m bracketology.sitebuild demo-2026   (held-out 2026 preview). Live seasons get the same data shape from project.py."""
 import itertools, json, os, statistics, sys, time
 from . import fieldformat, model, project
@@ -98,7 +98,8 @@ def render(data: dict, out="data/output/site") -> str:
     page = t.replace("/*DATA*/null", payload)
     os.makedirs(out, exist_ok=True)
     open(f"{out}/preview.html", "w", encoding="utf-8").write(page)
-    open(f"{out}/index.html", "w", encoding="utf-8").write('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' + page + "</body></html>")
+    os.makedirs("data/output/public", exist_ok=True)   # only this folder is uploaded to Cloudflare
+    open("data/output/public/index.html", "w", encoding="utf-8").write('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' + page + "</body></html>")
     return f"{out}/preview.html"
 
 if __name__ == "__main__":
