@@ -65,3 +65,17 @@ def test_projected_auto_and_overrides():
     final, notes = project.apply_overrides(order, rest, {"T0": {"line": 3, "reason": "x"}, "T1": {"out": True}, rest[0]["team"]: {"line": 11}}, 2026)
     by = {r["team"]: r for r in final}
     assert by["T0"]["line"] == 3 and by["T0"]["model_line"] == 1 and "T1" not in by and rest[0]["team"] in by and len(final) == 68
+
+def test_regions_handle_both_formats():
+    from bracketology import fieldformat as ff, sitebuild
+    for season in (2026, 2027):
+        lines = ff.slot_lines(season)
+        order = [dict(team=f"T{i}", key=f"t{i}", lg=f"L{i % 7}", overall=i + 1, line=l) for i, l in enumerate(lines)]
+        sitebuild.assign_regions(order)
+        assert all(r["region"] in (0, 1, 2, 3) for r in order)
+        for line, n in enumerate(ff.line_sizes(season), 1):
+            rs = [r for r in order if r["line"] == line]
+            assert sum(r.get("play_in", False) for r in rs) == 2 * (n - 4)
+            for g in range(4):      # every region has a team (or play-in pair) on every line
+                c = [r for r in rs if r["region"] == g]
+                assert len(c) == (2 if any(r.get("play_in") for r in c) else 1)

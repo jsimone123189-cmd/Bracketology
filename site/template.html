@@ -1,0 +1,114 @@
+<title>Jay's Bracket Plays</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout concept: a printed tournament sheet. Seed lines are the organizing unit, so the seed number is the loudest thing on every row. */
+:root{--bg:#f3f5f6;--surface:#ffffff;--ink:#14212b;--muted:#566672;--line:#d5dce1;--accent:#0f5e9c;--accent-soft:#dfebf4;--good:#1c6b45;--warn:#8a5a00;--bad:#a82a2a;
+--display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--body:"Source Sans 3","Segoe UI",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f171d;--surface:#17222a;--ink:#e6edf1;--muted:#9aaab5;--line:#2c3a44;--accent:#6db3e8;--accent-soft:#1c3243;--good:#64c795;--warn:#e0b14f;--bad:#f08a8a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f171d;--surface:#17222a;--ink:#e6edf1;--muted:#9aaab5;--line:#2c3a44;--accent:#6db3e8;--accent-soft:#1c3243;--good:#64c795;--warn:#e0b14f;--bad:#f08a8a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--body);font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.bar{display:flex;flex-wrap:wrap;gap:4px 20px;align-items:center;padding-block:8px}
+.brand{font:700 24px/1.1 var(--display);letter-spacing:.01em;color:var(--ink);text-decoration:none;text-transform:uppercase}
+nav{display:flex;gap:2px;overflow-x:auto;min-width:0}
+nav a{font:600 17px/1 var(--display);letter-spacing:.03em;text-transform:uppercase;padding:9px 10px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;white-space:nowrap}
+nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 56px;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,44px);font-weight:700;text-transform:uppercase;letter-spacing:.01em}
+h2{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+h3{font-size:19px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+p{margin:0;max-width:68ch}.muted{color:var(--muted)}.small{font-size:14px}
+.notice{background:var(--accent-soft);padding:12px 14px;display:grid;gap:4px;border-left:4px solid var(--accent)}
+.scores{display:flex;flex-wrap:wrap;gap:8px 28px}
+.scores div{display:grid}.scores b{font:700 34px/1 var(--display)}.scores span{font-size:13px;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+label{font-size:14px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+input[type=search],select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:6px 8px;border-radius:3px;max-width:100%}
+.regions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:18px}
+.region{min-width:0}.region h3{padding-bottom:6px;border-bottom:2px solid var(--ink);margin-bottom:6px}
+.game{display:grid;gap:1px;padding-block:5px;border-bottom:1px solid var(--line)}
+.slot{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px;align-items:baseline}
+.sd{font:700 18px/1.3 var(--display);text-align:right;color:var(--accent)}
+.slot a,td a{color:var(--ink);text-decoration:none;font-weight:600}.slot a:hover,td a:hover{text-decoration:underline}
+.pi{font-size:12px;color:var(--muted);letter-spacing:.03em}
+.tag{font-size:12px;font-weight:700;white-space:nowrap}.tag.exact{color:var(--good)}.tag.near{color:var(--warn)}.tag.off{color:var(--bad)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{font:600 15px/1.1 var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-align:right;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th.l,td.l{text-align:left}tr.linestart td{border-top:2px solid var(--line)}
+td .sd{font-size:17px}
+.bubble{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:18px}
+.bubble section{min-width:0;display:grid;gap:2px;align-content:start}.bubble h3{padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.brow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding-block:7px;border-bottom:1px solid var(--line)}
+.team-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:24px}
+.grid2>*{min-width:0;display:grid;gap:8px;align-content:start}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px}.kv>*{padding-block:6px;border-bottom:1px solid var(--line)}.kv b{font-weight:700;text-align:right}
+.meter{display:grid;grid-template-columns:62px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:14px}
+.track{height:12px;background:var(--line);border-radius:0 3px 3px 0;overflow:hidden}.fill{height:100%;background:var(--accent);border-radius:0 3px 3px 0}
+.stack{display:grid;gap:12px}
+.back{color:var(--accent);font-weight:600;text-decoration:none}
+</style>
+<header><div class="wrap bar"><a class="brand" href="#bracket">Jay's Bracket Plays</a><nav id="nav"></nav></div></header>
+<div class="wrap"><main id="app"></main></div>
+<script>
+const D=/*DATA*/null;
+const LG={ACC:"ACC",B10:"Big Ten",B12:"Big 12",BE:"Big East",SEC:"SEC",A10:"Atlantic 10",MWC:"Mountain West",WCC:"West Coast",Amer:"American",MVC:"Missouri Valley",P12:"Pac-12"};
+const NAV=[["bracket","Bracket"],["seeds","Seed List"],["bubble","Bubble"],["accuracy","Accuracy"],["how","How It Works"]];
+const T={};D.teams.concat(D.out).forEach(t=>T[t.key]=t);
+const demo=D.mode==="demo";let compare=demo;
+const e=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pct=p=>p>=.995?"99%+":p<.005?"<1%":Math.round(p*100)+"%";
+const rec=(a,b)=>`${a??0}-${b??0}`;
+const link=t=>`<a href="#team-${t.key}">${e(t.team)}</a>`;
+function tag(t){if(!demo||!compare)return"";if(!t.in_field)return'<span class="tag off">Not in field</span>';const d=t.seed-t.line;
+ if(d===0)return'<span class="tag exact">Exact</span>';return`<span class="tag ${Math.abs(d)===1?"near":"off"}">Actual ${t.seed}</span>`}
+function banner(){if(!demo)return`<p class="muted small">Updated ${e(D.generated)}</p>`;const s=D.score;
+ return`<div class="notice"><b>Preview using the ${D.season} field.</b><p class="small">The model was trained without ${D.season}, using only what was known on Selection Sunday. It scored ${s.score} of ${D.max} under Bracket Matrix rules. Live ${D.season+1} projections start once teams have played enough games.</p></div>`}
+function bracket(){const rs=[0,1,2,3].map(g=>{const games=D.order.map(([a,b])=>{const side=l=>{const ts=D.teams.filter(t=>t.region===g&&t.line===l);
+ if(!ts.length)return"";return ts.map((t,i)=>`<div class="slot"><span class="sd">${l}</span><span>${link(t)}${t.play_in?' <span class="pi">opening round</span>':""}</span>${tag(t)}</div>`).join("")};
+ return`<div class="game">${side(a)}${side(b)}</div>`}).join("");return`<section class="region"><h3>Region ${g+1}</h3>${games}</section>`}).join("");
+ return`${banner()}<div><h1>Projected bracket</h1></div>${demo?`<div class="tools"><label><input id="cmp" type="checkbox" ${compare?"checked":""}> Compare with the official seeds</label></div>`:""}<div class="regions">${rs}</div><p class="muted small">Seed lines are the projection. Region placement only balances the regions and separates conference mates, and it does not affect the Bracket Matrix score.</p>`}
+function seeds(){const confs=[...new Set(D.teams.map(t=>t.lg))].sort();
+ return`${banner()}<h1>Seed list</h1><div class="tools"><label>Find a team <input id="q" type="search"></label><label>Conference <select id="cf"><option value="">All</option>${confs.map(c=>`<option value="${e(c)}">${e(LG[c]||c)}</option>`).join("")}</select></label></div><div class="tablewrap"><table><thead><tr><th>Overall</th><th>Seed</th><th class="l">Team</th><th class="l">Conf</th><th>Record</th><th>NET</th><th>Q1 record</th><th>Chance in</th>${demo?"<th>Official</th>":""}</tr></thead><tbody id="rows"></tbody></table></div>`}
+function rows(){const q=(document.getElementById("q").value||"").toLowerCase(),c=document.getElementById("cf").value;let prev=0;
+ document.getElementById("rows").innerHTML=D.teams.filter(t=>(!q||t.team.toLowerCase().includes(q))&&(!c||t.lg===c)).map(t=>{const s=t.line!==prev;prev=t.line;
+ return`<tr class="${s?"linestart":""}"><td>${t.overall}</td><td><span class="sd">${t.line}</span></td><td class="l">${link(t)}</td><td class="l">${e(LG[t.lg]||t.lg)}${t.champ?" (auto)":""}</td><td>${rec(t.w,t.l)}</td><td>${t.net}</td><td>${rec(t.cq1_w,t.cq1_l)}</td><td>${t.champ?"Auto-bid":pct(t.p_in)}</td>${demo?`<td>${t.in_field?t.seed:"Out"}</td>`:""}</tr>`}).join("")}
+function bubble(){const c=(title,keys)=>`<section><h3>${title}</h3>${keys.map(k=>{const t=T[k];return`<div class="brow"><span>${link(t)}<br><span class="muted small">NET ${t.net}, Q1 ${rec(t.cq1_w,t.cq1_l)}</span></span><span style="text-align:right">${pct(t.p_in)}${demo?`<br><span class="tag ${t.in_field?"exact":"off"}">${t.in_field?"Was in":"Was out"}</span>`:""}</span></div>`}).join("")}</section>`;
+ const miss=demo&&D.missed.length?`<p class="small muted">Official field teams the model left out: ${D.missed.map(m=>`${e(m.team)} (${m.seed} seed, NET ${m.net})`).join(", ")}.</p>`:"";
+ return`${banner()}<h1>Bubble watch</h1><div class="bubble">${c("Last four byes",D.bubble.byes)}${c("Last four in",D.bubble.last_in)}${c("First four out",D.bubble.first_out)}${c("Next four out",D.bubble.next_out)}</div>${miss}`}
+function team(k){const t=T[k];if(!t)return`<p>That team isn't in this projection.</p><a class="back" href="#seeds">Back to the seed list</a>`;
+ const kv=(a,b)=>`<span>${a}</span><b>${b}</b>`;
+ const probs=t.probs?t.probs.map(p=>`<div class="meter" title="${p.line} seed: ${pct(p.p)}"><span>${p.line} seed</span><div class="track"><div class="fill" style="width:${Math.max(p.p*100,1)}%"></div></div><span>${pct(p.p)}</span></div>`).join(""):'<p class="muted">Not in the projected field.</p>';
+ return`<a class="back" href="#seeds">Back to the seed list</a><div class="team-head"><h1>${e(t.team)}</h1><span class="muted">${e(LG[t.lg]||t.lg)}, ${rec(t.w,t.l)}</span></div>
+ <div class="scores">${t.line?`<div><b>${t.line}</b><span>Projected seed</span></div><div><b>${t.overall}</b><span>Overall rank</span></div>`:""}<div><b>${t.champ?"Auto":pct(t.p_in)}</b><span>${t.champ?"Won conference tournament":"Chance of an at-large bid"}</span></div>${demo?`<div><b>${t.in_field?t.seed:"Out"}</b><span>Official seed</span></div>`:""}</div>
+ <div class="grid2"><section><h2>Résumé</h2><div class="kv">${kv("NET rank",t.net)}${kv("Quad 1A record",rec(t.q1a_w,t.q1a_l))}${kv("Quad 1 record",rec(t.cq1_w,t.cq1_l))}${kv("Quad 2 record",rec(t.cq2_w,t.cq2_l))}${kv("Quad 3 losses",t.cq3_l)}${kv("Quad 4 losses",t.cq4_l)}${kv("Road wins",t.road_w)}${kv("Neutral wins",t.neutral_w)}${kv("Last 10 games",`${t.last10}-${10-t.last10}`)}</div></section>
+ <section><h2>Our metrics</h2><div class="kv">${kv("Wins above bubble (our estimate)",(t.wab>0?"+":"")+t.wab)}${kv("Strength rating rank",t.rating_rank)}${kv("Schedule strength (points)",(t.sos>0?"+":"")+t.sos)}</div><h2 style="margin-top:12px">Seed chances</h2>${probs}<p class="small muted">Based on how far the model's seeds missed in past seasons for teams on similar lines.</p></section></div>`}
+function accuracy(){const A=D.accuracy,mean=a=>(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1);const row=(n,a,b)=>`<tr><td class="l">${b?"<b>"+n+"</b>":n}</td>${a.map(v=>`<td>${b?"<b>"+v+"</b>":v}</td>`).join("")}<td><b>${mean(a)}</b></td></tr>`;
+ return`<h1>Historical accuracy</h1><p>Each season is predicted by a model that never saw it, using only information available on Selection Sunday. Scores use the Bracket Matrix rules: 3 points per team picked, 3 for the exact seed, 1 for a seed within one line. These 68-team seasons have a maximum of 408.</p>
+ <div class="tablewrap"><table><thead><tr><th class="l">Bracket</th>${A.seasons.map(s=>`<th>${s}</th>`).join("")}<th>Mean</th></tr></thead><tbody>${row("This model, before any manual edits",A.model,true)}${row("T-Rank (barttorvik.com)",A.t_rank)}${row("Median Bracket Matrix site",A.median)}${row("Best Bracket Matrix site",A.best)}</tbody></table></div>
+ <p>The model on its own is below the median site. The published bracket adds manual adjustments, and those will be scored separately once there is a live season to grade.</p>
+ <h2>Are the at-large chances honest?</h2><p>Teams given a chance in each range, and how often they really got in. Held-out seasons, excluding conference champions.</p>
+ <div class="tablewrap"><table><thead><tr><th class="l">Model's chance</th><th>Teams</th><th>Average chance</th><th>Actually in</th></tr></thead><tbody>${A.calibration.map(c=>`<tr><td class="l">${c.label}</td><td>${c.n}</td><td>${c.pred.toFixed(1)}%</td><td>${c.actual.toFixed(1)}%</td></tr>`).join("")}</tbody></table></div><p class="small muted">The middle ranges hold few teams, so read those rows as rough.</p>`}
+function how(){return`<h1>How it works</h1><div class="stack">
+ <section class="stack"><h2>The short version</h2><p>A statistical model builds the full field and seed list from each team's résumé. Then a person reviews it and makes adjustments, which are tracked separately so they can be graded. It does not use other bracketologists' projections as inputs.</p></section>
+ <section class="stack"><h2>Two separate decisions</h2><p>Conference champions get in automatically. A selection model estimates each other team's chance of an at-large bid and takes the highest until the field is full. A second model ranks the field, trained on the order the committee has published each year.</p></section>
+ <section class="stack"><h2>What the model looks at</h2><p>NET rank, quadrant records including Quad 1A, wins above bubble, strength of record, a predictive strength rating, schedule strength, road and neutral wins, recent results, and whether a team plays in a major conference. Several of these are calculated here from game results, because past values aren't freely available.</p></section>
+ <section class="stack"><h2>The 76-team field</h2><p>The tournament grows to 76 teams in 2027, with 24 teams in 12 opening-round games. All past testing was on 68-team fields, so the last at-large picks and the size of each seed line are less certain than anything shown on the accuracy page.</p></section>
+ <section class="stack"><h2>What it can't see</h2><p>Injuries, the committee's discussion, and anything else that isn't in the numbers. Those are what the manual review is for.</p></section>
+ <section class="stack"><h2>Data</h2><p>NET rankings from the NCAA. Game results and ratings from <a href="https://barttorvik.com/">barttorvik.com</a>. Scoring and past results from <a href="http://bracketmatrix.com/">The Bracket Matrix</a>. This site is free, with no ads, subscriptions or accounts.</p></section></div>`}
+function render(){const h=(location.hash||"#bracket").slice(1),app=document.getElementById("app");
+ document.getElementById("nav").innerHTML=NAV.map(([k,n])=>`<a href="#${k}" ${h===k||(k==="seeds"&&h.startsWith("team-"))?'aria-current="page"':""}>${n}</a>`).join("");
+ if(h.startsWith("team-"))app.innerHTML=team(h.slice(5));else if(h==="seeds"){app.innerHTML=seeds();rows();document.getElementById("q").oninput=rows;document.getElementById("cf").onchange=rows}
+ else if(h==="bubble")app.innerHTML=bubble();else if(h==="accuracy")app.innerHTML=accuracy();else if(h==="how")app.innerHTML=how();else{app.innerHTML=bracket();const c=document.getElementById("cmp");if(c)c.onchange=()=>{compare=c.checked;render()}}
+ window.scrollTo(0,0)}
+addEventListener("hashchange",render);render();
+</script>
