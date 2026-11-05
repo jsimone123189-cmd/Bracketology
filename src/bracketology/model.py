@@ -75,7 +75,7 @@ def choose_field(rows: list[dict], season: int, project_autos: bool = True) -> t
     done = {r.get("lg") for r in rows if r["champ"]}; autos = [r for r in rows if r["champ"]]; proj = {}
     for r in rows:
         lg = r.get("lg")
-        if project_autos and lg and lg.lower() != "ind" and lg not in done and r.get("eligible", True) and (lg not in proj or r["rank_score"] > proj[lg]["rank_score"]): proj[lg] = r
+        if project_autos and lg and lg.lower() not in ("ind", "independent", "independents", "di-independent") and lg not in done and r.get("eligible", True) and (lg not in proj or r["rank_score"] > proj[lg]["rank_score"]): proj[lg] = r
     ids = {r["key"] for r in autos}
     for r in proj.values(): r["projected_auto"] = True; ids.add(r["key"])
     autos = autos + list(proj.values())

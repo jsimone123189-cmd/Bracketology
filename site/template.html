@@ -62,7 +62,7 @@ td .sd{font-size:17px}
 <div class="wrap"><main id="app"></main></div>
 <script>
 const D=/*DATA*/null;
-const LG={ACC:"ACC",B10:"Big Ten",B12:"Big 12",BE:"Big East",SEC:"SEC",A10:"Atlantic 10",MWC:"Mountain West",WCC:"West Coast",Amer:"American",MVC:"Missouri Valley",P12:"Pac-12"};
+const LG={acc:"ACC","big-ten":"Big Ten","big-12":"Big 12","big-east":"Big East",sec:"SEC","atlantic-10":"Atlantic 10","mountain-west":"Mountain West",wcc:"West Coast",american:"American",mvc:"Missouri Valley",ACC:"ACC",B10:"Big Ten",B12:"Big 12",BE:"Big East",SEC:"SEC",A10:"Atlantic 10",MWC:"Mountain West",WCC:"West Coast",Amer:"American",MVC:"Missouri Valley",P12:"Pac-12"};
 const NAV=[["bracket","Bracket"],["seeds","Seed List"],["bubble","Bubble"],["accuracy","Accuracy"],["how","How It Works"]];
 const T={};D.teams.concat(D.out).forEach(t=>T[t.key]=t);
 const demo=D.mode==="demo";let compare=demo;
@@ -105,7 +105,7 @@ function how(){return`<h1>How it works</h1><div class="stack">
  <section class="stack"><h2>What the model looks at</h2><p>NET rank, quadrant records including Quad 1A, wins above bubble, strength of record, a predictive strength rating, schedule strength, road and neutral wins, recent results, and whether a team plays in a major conference. Several of these are calculated here from game results, because past values aren't freely available.</p></section>
  <section class="stack"><h2>The 76-team field</h2><p>The tournament grows to 76 teams in 2027, with 24 teams in 12 opening-round games. All past testing was on 68-team fields, so the last at-large picks and the size of each seed line are less certain than anything shown on the accuracy page.</p></section>
  <section class="stack"><h2>What it can't see</h2><p>Injuries, the committee's discussion, and anything else that isn't in the numbers. Those are what the manual review is for.</p></section>
- <section class="stack"><h2>Data</h2><p>NET rankings from the NCAA. Game results and ratings from <a href="https://barttorvik.com/">barttorvik.com</a>. Scoring and past results from <a href="http://bracketmatrix.com/">The Bracket Matrix</a>. This site is free, with no ads, subscriptions or accounts.</p></section></div>`}
+ <section class="stack"><h2>Data</h2><p>NET rankings from the NCAA. Game results and arenas from the NCAA. Past-season game logs used for training from <a href="https://barttorvik.com/">barttorvik.com</a>. Ranking table and auto-bids from <a href="https://www.warrennolan.com/">WarrenNolan.com</a>. Scoring and past results from <a href="http://bracketmatrix.com/">The Bracket Matrix</a>. This site is free, with no ads, subscriptions or accounts.</p></section></div>`}
 function render(){const h=(location.hash||"#bracket").slice(1),app=document.getElementById("app");
  document.getElementById("nav").innerHTML=NAV.map(([k,n])=>`<a href="#${k}" ${h===k||(k==="seeds"&&h.startsWith("team-"))?'aria-current="page"':""}>${n}</a>`).join("");
  if(h.startsWith("team-"))app.innerHTML=team(h.slice(5));else if(h==="seeds"){app.innerHTML=seeds();rows();document.getElementById("q").oninput=rows;document.getElementById("cf").onchange=rows}

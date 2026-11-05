@@ -1,0 +1,12 @@
+fetching venues for 5646 games
+venue known 5571
+unmatched NCAA names (D-I vs D-I expected none): [('Virginia-Lynchburg', 10), ('Biblical Stud. (TX)', 9), ('Nobel', 7), ('Bethesda (CA)', 7), ('Champion Chris.', 6), ('Mid-Atlantic Christ.', 6), ('Lincoln (CA)', 5), ('Ecclesia', 5), ('Ky. Christian', 4), ('Midway', 4), ('Fisk', 4), ('Bryan', 4)]
+Torvik D-I team-games 11294 NCAA 11292 both 11246 missing from NCAA 48
+score agrees 11242
+location Torvik->NCAA {('A', 'A'): 4967, ('H', 'H'): 4967, ('N', 'N'): 1018, ('N', 'H'): 116, ('N', 'A'): 116, ('H', 'N'): 31, ('A', 'N'): 31}
+Example missing [('2025-11-09', 'easttexasaandm', 'hawaii'), ('2025-11-09', 'hawaii', 'easttexasaandm'), ('2025-11-12', 'hawaii', 'mississippival'), ('2025-11-12', 'mississippival', 'hawaii'), ('2025-11-14', 'hawaii', 'manhattan')]
+wab spearman vs Torvik-based, NET<=90 0.999
+sor spearman vs Torvik-based, NET<=90 0.999
+rating spearman vs Torvik-based, NET<=90 0.999
+Q1A exact 82 / 90 Q1 exact 77
+2026 score with NCAA game data {'picked': 67, 'exact': 45, 'within1': 65, 'score': 356} (Torvik-based 2026 was 356)

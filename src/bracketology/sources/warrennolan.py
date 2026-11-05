@@ -27,5 +27,14 @@ def parse(text: str) -> list[dict]:
         out.append(d)
     return out
 
+def parse_autobids(text: str) -> dict[str, str]:
+    """{conference: team} for leagues whose auto-bid is decided. Reflects eligibility rules, so reclassifying champions aren't listed."""
+    cell = lambda r: [re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", x))).strip() for x in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S)]
+    rows = [cell(r) for r in re.split(r"<tr\b", text)[1:]]
+    return {r[0]: r[1] for r in rows if len(r) >= 2 and r[0] != "Conference" and r[1] and r[1] != "N/A"}
+
+def autobids(season: int, ttl: int = 3600) -> dict[str, str]:
+    return parse_autobids(fetch(f"https://www.warrennolan.com/basketball/{season}/autobids", ttl=ttl))
+
 def collect(season: int, ttl: int = 3600) -> dict:
     return {"source": "warrennolan_compare", "url": url(season), "rows": parse(fetch(url(season), ttl=ttl))}

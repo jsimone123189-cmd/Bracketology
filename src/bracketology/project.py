@@ -5,12 +5,13 @@ Your adjustments live in overrides/{season}.json and are never mixed into the mo
 import json, os, re, statistics, sys, time
 from datetime import date, datetime
 from . import fieldformat, history, metrics, model
-from .dataset import completed_champions, INELIGIBLE_CHAMPS, _d
+from .dataset import _d
 from .features import build_year
-from .sources import ncaa_net, torvik, warrennolan
+from .sources import ncaa_games, ncaa_net, warrennolan
 from .teams import key
 
-POWER = {"ACC", "B12", "BE", "B10", "SEC"}
+POWER = {"acc", "big-ten", "big-12", "big-east", "sec"}     # NCAA conference codes
+SELECTION_SUNDAY_LIVE = {2027: date(2027, 3, 14)}          # confirm each season; games after this date are ignored
 
 def net_is_current(asof: str | None, season: int) -> bool:
     """The NCAA feed keeps showing last season's final NET until the new one is published in-season."""
@@ -19,36 +20,42 @@ def net_is_current(asof: str | None, season: int) -> bool:
     return datetime.strptime(" ".join(m.groups()), "%b %d %Y").date() >= date(season - 1, 11, 1)
 
 def live_rows(season: int, today: str | None = None) -> tuple[list[dict], list[str]]:
+    """Live data reachable from GitHub Actions: NCAA results, arenas and NET, plus Warren Nolan's table and auto-bids.
+    Torvik refuses cloud servers, so his files are used only for the local training history."""
     today = today or time.strftime("%Y-%m-%d", time.gmtime()); warn = []
-    teams = torvik.collect_teams(season)["rows"]; games = torvik.collect_games(season)["rows"]
-    for g in games:
-        g["team_key"], g["opp_key"] = key(g["team"]), key(g["opp"]); g["date_iso"] = _d(g["date"])
-    try: wn = {key(r["team"]): r for r in warrennolan.collect(season)["rows"]}
-    except Exception as e: wn = {}; warn.append(f"Warren Nolan unavailable: {e}")
+    wn = {key(r["team"]): r for r in warrennolan.collect(season)["rows"]}
     net = {}
     try:
         feed = ncaa_net.collect()
         if net_is_current(feed["asof"], season): net = {key(r["team"]): r["net"] for r in feed["rows"]}
         else: warn.append(f"Official NCAA NET not published for {season} yet (feed shows {feed['asof']}).")
     except Exception as e: warn.append(f"NCAA NET unavailable: {e}")
-    if not net and wn:
+    if not net:
         net = {k: r["r_net"] for k, r in wn.items() if "r_net" in r}; warn.append("Using Warren Nolan's NET column in place of the official feed.")
-    base = {key(t["team"]): 100 for t in teams}
-    first = metrics.compute(games, base, today)
-    missing = [k for k in base if k not in net]
-    if not net: warn.append("No NET source: using this model's own rating rank as NET.")
-    if net and missing: warn.append(f"{len(missing)} teams have no NET rank and use their own rating rank: {missing[:5]}")
-    ranks = {k: net.get(k, first[k]["rating_rank"]) for k in base}
+    universe = set(wn)
+    cutoff = SELECTION_SUNDAY_LIVE.get(season)
+    games = ncaa_games.season_games(season, date.fromisoformat(today), universe, key, end=cutoff)
+    names, lg, rec = {}, {}, {}
+    for g in games:
+        g["team_key"], g["opp_key"], g["date_iso"] = key(g["team"]), key(g["opp"]), _d(g["date"])
+        if g["team_key"] in universe:
+            names[g["team_key"]] = g["team"]; lg[g["team_key"]] = g["conf"]
+            if g["opp_key"] in universe or True:
+                w, l = rec.get(g["team_key"], (0, 0)); rec[g["team_key"]] = (w + g["win"], l + (not g["win"]))
+    first = metrics.compute(games, {k: 100 for k in universe}, today)
+    missing = [k for k in universe if k not in net]
+    if missing: warn.append(f"{len(missing)} teams have no NET rank and use their own rating rank: {missing[:5]}")
+    ranks = {k: net.get(k, first[k]["rating_rank"]) for k in universe}
     M = metrics.compute(games, ranks, today)
-    swap = INELIGIBLE_CHAMPS.get(season, {})
-    champs = {key(swap.get(t, t)) for t in completed_champions(games, today).values()}
+    try: champs = {key(t) for t in warrennolan.autobids(season).values()}
+    except Exception as e: champs = set(); warn.append(f"Auto-bid list unavailable, projecting every league: {e}")
+    unknown = sorted(c for c in champs if c not in universe)
+    if unknown: warn.append(f"Auto-bid names not matched: {unknown}")
     rows = []
-    for t in teams:
-        k = key(t["team"]); w = l = 0
-        for g in games:
-            if g["team_key"] == k and g["type"] in (0, 1, 2) and g["date_iso"] <= today: w += g["win"]; l += not g["win"]
-        rows.append({"team": t["team"], "key": k, "year": season, "net": ranks[k], "w": w, "l": l, "lg": t["conf"], "champ": k in champs,
-                     "is_power": 1.0 if t["conf"] in POWER else 0.0, **M[k], **{c: v for c, v in wn.get(k, {}).items() if c.startswith("r_")}})
+    for k in universe:
+        w, l = rec.get(k, (0, 0))
+        rows.append({"team": names.get(k, wn[k]["team"]), "key": k, "year": season, "net": ranks[k], "w": w, "l": l, "lg": lg.get(k, ""), "champ": k in champs,
+                     "is_power": 1.0 if lg.get(k) in POWER else 0.0, **M[k], **{c: v for c, v in wn[k].items() if c.startswith("r_")}})
     played = statistics.median(r["w"] + r["l"] for r in rows)
     if played < 15: warn.append(f"Early season: teams have played a median of {played:.0f} games. The model is trained on full Selection Sunday resumes, so treat this as a rough preview.")
     return rows, warn

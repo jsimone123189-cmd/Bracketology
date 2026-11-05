@@ -79,3 +79,19 @@ def test_regions_handle_both_formats():
             for g in range(4):      # every region has a team (or play-in pair) on every line
                 c = [r for r in rs if r["region"] == g]
                 assert len(c) == (2 if any(r.get("play_in") for r in c) else 1)
+
+
+def test_neutral_sites_from_arena():
+    from bracketology.sources.ncaa_games import mark_neutral
+    r = lambda i, t, o, l: dict(id=i, team=t, opp=o, loc=l)
+    rows = []
+    for i in "abc": rows += [r(i, "Home U", "X" + i, "H"), r(i, "X" + i, "Home U", "A")]
+    rows += [r("n", "Home U", "Other", "H"), r("n", "Other", "Home U", "A"), r("u", "Home U", "Y", "H")]
+    v = dict(a="Barn", b="Barn", c="Barn", n="Vegas Arena", u=None)
+    out = {(g["id"], g["team"]): g["loc"] for g in mark_neutral(rows, v)}
+    assert out[("a", "Home U")] == "H" and out[("n", "Home U")] == "N" and out[("n", "Other")] == "N" and out[("u", "Home U")] == "H"
+
+def test_autobid_parsing_skips_undecided():
+    from bracketology.sources.warrennolan import parse_autobids
+    t = "<table><tr><th>Conference</th><th>Automatic Bid</th></tr><tr><td>ACC</td><td><a>Duke</a></td></tr><tr><td>SEC</td><td></td></tr></table>"
+    assert parse_autobids(t) == {"ACC": "Duke"}

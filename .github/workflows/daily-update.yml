@@ -15,6 +15,12 @@ jobs:
         with: {python-version: "3.9"}          # must match the version that saved models/v2.joblib
       - run: pip install requests pytest openpyxl numpy==2.0.2 scipy scikit-learn==1.6.1 joblib
       - run: PYTHONPATH=src pytest -q
+      - name: Restore saved game results
+        run: |
+          git fetch origin snapshots:snapshots || true
+          if git rev-parse --verify snapshots >/dev/null 2>&1 && git cat-file -e snapshots:gamecache/2027.json 2>/dev/null; then
+            mkdir -p data/output/gamecache; git show snapshots:gamecache/2027.json > data/output/gamecache/2027.json
+          fi
       - id: build
         run: |
           code=0; PYTHONPATH=src python -m bracketology.sitebuild 2027 || code=$?
@@ -23,10 +29,10 @@ jobs:
       - name: Save dated snapshot to the snapshots branch
         run: |
           git config user.name "bracketology-bot"; git config user.email "bracketology-bot@users.noreply.github.com"
-          git fetch origin snapshots:snapshots || git branch snapshots
+          git rev-parse --verify snapshots >/dev/null 2>&1 || git branch snapshots
           git worktree add ../snap snapshots
-          mkdir -p ../snap/snapshots; cp data/output/snapshots/*.json ../snap/snapshots/
-          cd ../snap; git add snapshots; git diff --cached --quiet || (git commit -m "Snapshot $(date -u +%F)" && git push origin snapshots)
+          mkdir -p ../snap/snapshots ../snap/gamecache; cp data/output/snapshots/*.json ../snap/snapshots/; cp data/output/gamecache/*.json ../snap/gamecache/
+          cd ../snap; git add snapshots gamecache; git diff --cached --quiet || (git commit -m "Snapshot $(date -u +%F)" && git push origin snapshots)
       - if: steps.build.outputs.publish == 'true'
         uses: cloudflare/wrangler-action@v3
         with:

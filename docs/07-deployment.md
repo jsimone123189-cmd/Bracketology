@@ -13,3 +13,7 @@
 3. Domain jaysbracketplays.com (Cloudflare Registrar, paid by owner). Add CLOUDFLARE_API_TOKEN (the "Edit Cloudflare Workers" template, zone jaysbracketplays.com) and CLOUDFLARE_ACCOUNT_ID as repo secrets. Worker jays-bracket-plays already exists with a "Coming soon" placeholder.
 4. Uncomment the schedule.
 5. Add 2027 reclassifying teams to INELIGIBLE_CHAMPS.
+
+## Data sources in production (updated)
+Torvik returns HTTP 403 to GitHub Actions. Live runs use NCAA results and arenas (neutral games inferred from the home team's usual arenas), the NCAA NET, and Warren Nolan's table and auto-bids.
+Tested on 2026 only: same score as Torvik's log (356), WAB/SOR/rating Spearman .999 for NET<=90; neutral games found 81% of the time, with 62 of about 9,900 non-neutral team-games wrongly marked neutral. The saved game file lives on the public `snapshots` branch.
