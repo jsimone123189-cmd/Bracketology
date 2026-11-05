@@ -1,6 +1,6 @@
 from __future__ import annotations
 """Our own as-of-date resume/strength metrics rebuilt from game results (SOR/KPI/historic WAB are not freely available).
-- rating: ridge margin model (Massey with home-court term), margins capped at +/-20.
+- rating: ridge margin model (Massey with home-court term), margins capped at +/-MARGIN_CAP.
 - wab: wins above a bubble-level team (rating of the 45th-best team) over the same schedule.
 - sor: P(an average top-25 team would do at least as well) -> reported as -log10 (bigger = better).
 Only games on/before the cutoff date are used -> no leakage."""
@@ -11,7 +11,12 @@ from sklearn.linear_model import Ridge
 from scipy.stats import norm
 from . import quads
 
-SIGMA = 11.0; HCA_FIT = True
+# Calibrated ONLY against official metric values (never against seeds or the field):
+# WAB vs official WAB ranks 2025+2026, Spearman on NET<=90 teams .92 -> .99; SOR vs official SOR 2021/22/23/25, .97 -> .98.
+SIGMA = 11.0        # game-outcome spread for WAB
+SIGMA_SOR = 7.0     # for the SOR-style metric
+MARGIN_CAP = 40     # was 20; heavy capping and shrinkage were degrading ratings among good teams
+RIDGE_ALPHA = 0.5   # was 3.0
 
 def _games(games, keys, day):
     seen, out = set(), []
@@ -33,9 +38,9 @@ def compute(games: list[dict], net_rank: dict[str, int], day: str) -> dict[str, 
         i, j = keys[g["team_key"]], keys[g["opp_key"]]
         h = {"H": 1.0, "A": -1.0, "N": 0.0}[g["loc"]]
         rows += [r, r, r]; cols += [i, j, n]; vals += [1.0, -1.0, h]
-        y.append(max(-20, min(20, g["pf"] - g["pa"])))
+        y.append(max(-MARGIN_CAP, min(MARGIN_CAP, g["pf"] - g["pa"])))
     X = csr_matrix((vals, (rows, cols)), shape=(m, n + 1))
-    mdl = Ridge(alpha=3.0, fit_intercept=False).fit(X, np.array(y))
+    mdl = Ridge(alpha=RIDGE_ALPHA, fit_intercept=False).fit(X, np.array(y))
     r = mdl.coef_[:n]; hca = float(mdl.coef_[n])
     inv = {i: k for k, i in keys.items()}
     order = np.sort(r)[::-1]
@@ -57,7 +62,7 @@ def compute(games: list[dict], net_rank: dict[str, int], day: str) -> dict[str, 
             if g["loc"] == "A": d["rw"] += 1
             if g["loc"] == "N": d["nw"] += 1
         d["hist"].append((g["date_iso"], g["win"]))
-        d["p25"].append(norm.cdf((top25 - r[keys[b]] + h * hca) / SIGMA))
+        d["p25"].append(norm.cdf((top25 - r[keys[b]] + h * hca) / SIGMA_SOR))
     out = {}
     for k, d in per.items():
         w = d["w"]; ps = d["p25"]

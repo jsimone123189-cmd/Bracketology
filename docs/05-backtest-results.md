@@ -1,3 +1,5 @@
+> **Superseded in part by docs/06-corrections-and-real-benchmarks.md.**
+
 # Backtest results (leave-one-season-out, seasons 2019, 2021-2026; 2020 had no tournament)
 
 Scored with the real Bracket Matrix rubric (3*picked + 3*exact + 1*within-one, 68 teams, max 408; verified to

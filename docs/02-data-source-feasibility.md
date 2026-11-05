@@ -1,3 +1,5 @@
+> **Superseded in part by docs/06-corrections-and-real-benchmarks.md.**
+
 # Phase 2 — Data-source feasibility (probed 2026-11-05)
 
 Method: fetched each site's robots.txt and live-tested the endpoint from this machine. "Verified" = I got real data back. Terms-of-service pages were NOT read for every site; where only robots.txt was checked, that is stated. Nothing here bypasses a login or paywall.

@@ -8,6 +8,10 @@ from .sources import bracketmatrix as bm, torvik
 def _d(s):  # 'm/d/yy' -> iso
     m, d, y = s.split("/"); return f"20{y}-{int(m):02d}-{int(d):02d}"
 
+# Reclassifying (transitional D-I) champions cannot take the auto-bid; it passes to another league team.
+# Public knowledge by Selection Sunday. Must be maintained each season.
+INELIGIBLE_CHAMPS = {2022: {"Bellarmine": "Jacksonville St."}, 2023: {"Merrimack": "FDU"}}
+
 def conf_champions(games: list[dict], day: str) -> dict[str, str]:
     """Winner of the last conference-tournament game (type 2) played on/before Selection Sunday, per conference."""
     last = {}
@@ -24,7 +28,8 @@ def build_year(year: int, hist="data/history") -> tuple[list[dict], dict]:
     except FileNotFoundError: tr = {}
     idx = TeamIndex([r["team"] for r in net])
     games = torvik.collect_games(year)["rows"]
-    champs = {key(t) for t in conf_champions(games, day).values()}
+    swap = INELIGIBLE_CHAMPS.get(year, {})
+    champs = {key(swap.get(t, t)) for t in conf_champions(games, day).values()}
     m = bm.collect(year); seeds = {key(t): s for t, s in m["official"].items()}
     rep = {"year": year, "unmatched_matrix": idx.unmatched(m["official"]), "unmatched_champs": idx.unmatched(
         conf_champions(games, day).values())}

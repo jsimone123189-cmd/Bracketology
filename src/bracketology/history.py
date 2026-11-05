@@ -1,6 +1,7 @@
 from __future__ import annotations
-"""As-of-Selection-Sunday history from Internet Archive captures of public pages (no direct scraping of live sites).
-Picks the latest capture at/before the reveal (6pm ET Sunday) so no post-selection information leaks in."""
+"""As-of-Selection-Sunday history from Internet Archive captures of public pages.
+Captures can be slightly AFTER the reveal (up to 06:00 UTC Monday), but no games are played by then and the NET page's
+own "Through Games" date is checked, so ratings contain no postseason results. Pages must not contribute seed info."""
 import html, json, re
 from datetime import date, timedelta
 from .http import fetch
