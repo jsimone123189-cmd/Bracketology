@@ -4,10 +4,27 @@ on:
   # Off until Torvik and Warren Nolan reply and the owner approves going public.
   # schedule: [{cron: "17 10 * 11-12,1-4 *"}]     # daily, November to April
   workflow_dispatch:
+    inputs:
+      placeholder_only:
+        description: "Publish only the Coming Soon page, with no projection build"
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
+  placeholder:
+    if: ${{ inputs.placeholder_only == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p data/output/public && cp site/placeholder/index.html data/output/public/
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
   publish:
+    if: ${{ inputs.placeholder_only != true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
