@@ -109,6 +109,8 @@ if __name__ == "__main__":
         print(render(demo()))
     else:      # live: refuses to build a public page on too few games unless --force
         season = int(cmd); data = live(season, load_or_fit(season=season)); print("\n".join(data["warnings"]))
+        os.makedirs("data/output/snapshots", exist_ok=True)     # dated history; CI commits these to the snapshots branch, even before the page goes public
+        json.dump(data, open(f"data/output/snapshots/{season}_{time.strftime('%Y-%m-%d', time.gmtime())}.json", "w"), separators=(",", ":"))
         if data["median_games"] < MIN_MEDIAN_GAMES and "--force" not in sys.argv:
             print(f"Not publishing: median {data['median_games']} games played, need {MIN_MEDIAN_GAMES}."); sys.exit(3)
         print(render(data))
