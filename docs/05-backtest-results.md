@@ -66,3 +66,28 @@ as prose articles, one per year, so extraction is brittle). Upper bound on benef
   a copy of the crowd and cannot beat it by construction on information alone.
 - The consensus is only available from the live Matrix page in-season; the daily pipeline would need to fetch it
   (http://bracketmatrix.com/ only; https fails). Confirm the site is OK with automated reads before relying on it.
+
+---
+# Update: expected-score picker + improving the independent (stats-only) model
+
+**Expected-score seed picker** (`picker.py`: optimal assignment of lines to maximize 3*P(exact)+1*P(within one),
+under the real 4/6 line capacities). Two variants, LOSO, stats-only ensemble:
+- Probabilities from the regression's predicted seed (normal around it, sigma 0.8-1.3): 311-319, WORSE than rank
+  slotting (325.7); the regressions' predicted seeds are shrunk toward the middle, so their probabilities are miscalibrated.
+- Probabilities centered on the rank-implied line: 325.7 at every sigma, IDENTICAL to slotting. With symmetric
+  uncertainty and fixed line capacities the optimum is the rank order, so the picker adds nothing unless a team
+  has a skewed seed distribution that we can actually estimate. We cannot (7 seasons). Kept in code, not used.
+
+**Independent-model improvements** (all LOSO, 7 seasons; seed noise is a few points):
+| Variant | Mean |
+|---|---|
+| raw features (baseline) | 325.7 |
+| within-year z-scored features | 327.9 |
+| z-scored + log-rank of WAB/SOR/rating | 329.6 |
+| z-scored, ridge alpha 30 | 329.0 |
+| z-scored, train seeding on all top-150 teams (non-field = 18) | 307.0 (worse) |
+Differences among the top four rows are inside the noise. Stats-only is saturated at ~326-330.
+
+**Conclusion:** the independent model is ~326-330 vs human median ~360 and consensus ~365. More features,
+normalization, and a better line picker did not close that. The gap is information the committee/crowd has and
+public stats do not.

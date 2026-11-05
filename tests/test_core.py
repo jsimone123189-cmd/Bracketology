@@ -31,3 +31,11 @@ def test_bracketmatrix_score_rubric():
     off = {"A": 1, "B": 2, "C": 3}
     s = score({"A": 1, "B": 3, "C": 9, "D": 5}, off)   # D not in field
     assert s == {"picked": 3, "exact": 1, "within1": 2, "score": 3 * 3 + 3 * 1 + 1}
+
+def test_picker_respects_capacity_and_matches_rank_slotting():
+    import numpy as np
+    from bracketology import picker
+    mu = np.linspace(1, 16, 68)
+    lines = picker.assign(mu, 0.8)
+    assert [int((lines == l).sum()) for l in range(1, 17)] == picker.CAP
+    assert list(lines) == sorted(lines)            # monotone: better predicted seed never gets a worse line
