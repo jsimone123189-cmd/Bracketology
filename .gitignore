@@ -4,3 +4,5 @@ data/*.sqlite
 data/cache/
 *.pyc
 data/raw/
+data/history/
+data/features/
