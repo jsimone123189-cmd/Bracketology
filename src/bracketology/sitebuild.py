@@ -15,7 +15,7 @@ def assign_regions(order: list[dict]) -> None:
     lines = {}
     for r in order: lines.setdefault(r["line"], []).append(r)
     for line in sorted(lines):
-        rs = lines[line]; games = len(rs) - 4                # lines with extra teams hold opening-round games
+        rs = lines[line]; games = max(0, len(rs) - 4)        # lines with extra teams hold opening-round games
         singles, low = rs[:4 - games], rs[4 - games:]        # the lowest teams on the line play their seed-list neighbour
         units = [[r] for r in singles] + [low[i:i + 2] for i in range(0, len(low), 2)]
         best, best_cost = None, None
@@ -39,7 +39,7 @@ def seed_probs(line: int, table: dict, season: int) -> list[dict]:
     return [{"line": l, "p": round(p / t, 3)} for l, p in sorted(out.items())]
 
 def team_record(r: dict, table: dict, season: int) -> dict:
-    d = {k: r.get(k) for k in ("key", "team", "lg", "w", "l", "net", "line", "overall", "region", "play_in", "champ", "projected_auto", "seed", "in_field",
+    d = {k: r.get(k) for k in ("key", "team", "lg", "w", "l", "net", "line", "model_line", "override_reason", "overall", "region", "play_in", "champ", "projected_auto", "seed", "in_field",
                                "q1a_w", "q1a_l", "cq1_w", "cq1_l", "cq2_w", "cq2_l", "cq3_l", "cq4_l", "road_w", "neutral_w", "rating_rank")}
     d.update(p_in=round(r["p_in"], 3), wab=round(r["wab"], 1), sor=round(r["sor"], 2), sos=round(r["sos"], 1), last10=round(r["last10"] * 10))
     if r.get("line"): d["probs"] = seed_probs(r["line"], table, season)
@@ -66,6 +66,31 @@ def demo(season: int = 2026) -> dict:
             "missed": [{"team": r["team"], "seed": r["seed"], "net": r["net"], "key": r["key"]} for r in rows if r["in_field"] and r["key"] not in {x["key"] for x in order}],
             "accuracy": {**acc, **benchmarks(acc)}}
 
+MIN_MEDIAN_GAMES = 15
+
+def live(season: int, fitted: model.Model) -> dict:
+    """Live season: model bracket, then the owner's overrides. Public JSON carries no third-party metric values (r_* columns)."""
+    acc = json.load(open("site/accuracy.json")); table = acc["seed_error"]
+    rows, warn = project.live_rows(season); model.prepare(rows); fitted.score(rows)
+    field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season)
+    path = f"overrides/{season}.json"; overrides = json.load(open(path)) if os.path.exists(path) else {}
+    final, notes = project.apply_overrides(order, rest, overrides, season)
+    final.sort(key=lambda r: (r["line"], r["overall"] if r.get("overall") else 99))
+    for i, r in enumerate(final): r["overall"] = i + 1
+    assign_regions(final)
+    ids = {r["key"] for r in final}; rest = [r for r in rest if r["key"] not in ids]
+    atl = sorted((r for r in final if not r["champ"] and not r.get("projected_auto")), key=lambda r: r["p_in"])
+    return {"mode": "live", "season": season, "generated": time.strftime("%B %-d, %Y"), "max": fieldformat.max_score(season), "lines": fieldformat.line_sizes(season), "order": ORDER,
+            "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + notes,
+            "teams": [team_record(r, table, season) for r in final], "out": [team_record(r, table, season) for r in rest[:12]],
+            "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
+            "missed": [], "accuracy": {**acc, **benchmarks(acc)}}
+
+def load_or_fit(path="models/v2.joblib", season: int = 2027) -> model.Model:
+    """CI uses the saved model because training data stays out of the public repo. Refit locally with: python -m bracketology.sitebuild fit"""
+    import joblib
+    return joblib.load(path) if os.path.exists(path) else model.Model().fit(project.training_rows(exclude={season}))
+
 def render(data: dict, out="data/output/site") -> str:
     t = open("site/template.html", encoding="utf-8").read()
     payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
@@ -76,4 +101,14 @@ def render(data: dict, out="data/output/site") -> str:
     return f"{out}/preview.html"
 
 if __name__ == "__main__":
-    print(render(demo()))
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "demo"
+    if cmd == "fit":
+        import joblib
+        os.makedirs("models", exist_ok=True); joblib.dump(model.Model().fit(project.training_rows()), "models/v2.joblib"); print("saved models/v2.joblib")
+    elif cmd == "demo":
+        print(render(demo()))
+    else:      # live: refuses to build a public page on too few games unless --force
+        season = int(cmd); data = live(season, load_or_fit(season=season)); print("\n".join(data["warnings"]))
+        if data["median_games"] < MIN_MEDIAN_GAMES and "--force" not in sys.argv:
+            print(f"Not publishing: median {data['median_games']} games played, need {MIN_MEDIAN_GAMES}."); sys.exit(3)
+        print(render(data))

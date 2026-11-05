@@ -1,17 +1,26 @@
 name: daily-update
+# $0 plan: GitHub Actions runs the update, Cloudflare Pages hosts the static page. See docs/07-deployment.md.
 on:
-  # Daily schedule is off until Torvik and Warren Nolan reply and storage for training data exists.
-  # schedule: [{cron: "17 10 * 11-12,1-4 *"}]
+  # Off until Torvik and Warren Nolan reply and the owner approves going public.
+  # schedule: [{cron: "17 10 * 11-12,1-4 *"}]     # daily, November to April
   workflow_dispatch:
 jobs:
-  collect:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: pip install requests pytest openpyxl numpy scipy scikit-learn
+        with: {python-version: "3.9"}          # must match the version that saved models/v2.joblib
+      - run: pip install requests pytest openpyxl numpy==2.0.2 scipy scikit-learn==1.6.1 joblib
       - run: PYTHONPATH=src pytest -q
-      - run: PYTHONPATH=src python -m bracketology.pipeline
-        env: {BRACKETOLOGY_UA: "bracketology-bot/0.1 (see repo README for contact)"}
-      # Persistence + D1 publish added in the deployment stage.
+      - id: build
+        run: |
+          code=0; PYTHONPATH=src python -m bracketology.sitebuild 2027 || code=$?
+          if [ "$code" = "3" ]; then echo "publish=false" >> "$GITHUB_OUTPUT"; elif [ "$code" = "0" ]; then echo "publish=true" >> "$GITHUB_OUTPUT"; else exit "$code"; fi
+        env: {BRACKETOLOGY_UA: "bracketology-bot/0.1 (free open bracketology project)"}
+      - if: steps.build.outputs.publish == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy data/output/site --project-name=jays-bracket-plays
