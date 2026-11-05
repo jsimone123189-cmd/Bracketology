@@ -30,12 +30,18 @@ def parse(text: str) -> dict:
     for r in rows:
         if len(r) > 6 and re.fullmatch(r"\d{1,2}", r[0] or "") and r[1] and re.fullmatch(r"\d+\.\d+", r[3] or ""):
             teams.append(r)
+    # consensus: every listed team incl. "OTHER AT-LARGES": (average seed, number of brackets listing the team)
+    cons = {}
+    for r in rows:
+        if len(r) > 5 and r[1] and re.fullmatch(r"\d+\.\d+", r[3] or "") and re.fullmatch(r"\d+", r[4] or ""):
+            cons[r[1]] = (float(r[3]), int(r[4]))
+    total = max((n for _, n in cons.values()), default=0)
     subs = {n: {} for n in sites.values()}
     for r in teams:
         official[r[1]] = int(r[0])
         for i, n in sites.items():
             if i < len(r) and re.fullmatch(r"\d{1,2}", r[i] or ""): subs[n][r[1]] = int(r[i])
-    return {"sites": list(sites.values()), "official": official, "submissions": subs, "reported": reported}
+    return {"consensus": cons, "n_brackets": total, "sites": list(sites.values()), "official": official, "submissions": subs, "reported": reported}
 
 def score(sub: dict[str, int], official: dict[str, int]) -> dict:
     picked = sum(1 for t in sub if t in official)

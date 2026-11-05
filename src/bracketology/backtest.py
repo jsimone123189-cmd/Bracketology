@@ -29,6 +29,7 @@ def _f(r, n):
 
 FEATS_BASE = ["net_log", "wab", "sor", "rating", "q1a_w", "cq1_w", "cq3_l", "cq4_l", "win_pct"]
 FEATS_EXT = FEATS_BASE + ["sos", "road_w", "neutral_w", "last10", "best3", "cq2_w", "cq1_l"]
+FEATS_CONS = FEATS_EXT + ["cons_avg_all", "cons_share"]
 FEATS = FEATS_EXT
 def X_of(rows, feats=None):
     return np.array([[_f(r, n) for n in (feats or FEATS)] for r in rows])
@@ -67,7 +68,7 @@ def run(verbose=True):
         Xte = X_of(test)
         for r, p1, p2 in zip(test, lr.predict_proba(sc.transform(Xte))[:, 1], gb.predict_proba(Xte)[:, 1]):
             r["p_lr"], r["p_gb"] = p1, p2
-            r["s_net"], r["s_wab"] = -r["net"], r["wab"]
+            r["s_net"], r["s_wab"], r["s_cons"] = -r["net"], r["wab"], -r["cons_avg_all"]
         # --- seed models trained on true-field teams: predict seed (continuous) ---
         tr_f = [r for r in train if r["in_field"]]
         Xf, yf = X_of(tr_f), np.array([r["seed"] for r in tr_f], float)
@@ -79,7 +80,7 @@ def run(verbose=True):
             r["seed_rg"], r["seed_gb"] = a, b
             r["seed_ens"] = (a + b) / 2
         methods = {  # name -> (field score key, seed score key (higher=better))
-            "V1-proxy": ("v1", "v1"), "NET only": ("s_net", "s_net"), "WAB only": ("s_wab", "s_wab"),
+            "V1-proxy": ("v1", "v1"), "Consensus only": ("s_cons", "s_cons"), "NET only": ("s_net", "s_net"), "WAB only": ("s_wab", "s_wab"),
             "LogReg+Ridge": ("p_lr", "neg_seed_rg"), "GBM+GBM": ("p_gb", "neg_seed_gb"),
             "Ensemble (LR+GBM avg)": ("p_ens", "neg_seed_ens")}
         for r in test:
@@ -89,6 +90,11 @@ def run(verbose=True):
             field = pick_field(test, fk)
             order = sorted(field, key=lambda r: -r[sk])
             results.setdefault(name, {})[hold] = evaluate(hold, test, field, slot(order))
+            if name in ("Consensus only", "Ensemble (LR+GBM avg)"):   # alt: round predicted line, no capacity constraint
+                val = {"Consensus only": lambda r: r["cons_avg"] if r["cons_share"] > 0 else 16.0,
+                       "Ensemble (LR+GBM avg)": lambda r: r["seed_ens"]}[name]
+                rnd = {r["key"]: int(min(16, max(1, round(val(r))))) for r in field}
+                results.setdefault(name + " [round]", {})[hold] = evaluate(hold, test, field, rnd)
     return results
 
 def report(res):

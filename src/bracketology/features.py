@@ -14,6 +14,13 @@ def build_year(year: int, outdir="data/features") -> list[dict]:
     for g in games:
         g["team_key"], g["opp_key"] = key(g["team"]), key(g["opp"]); m, d, y = g["date"].split("/")
         g["date_iso"] = f"20{y}-{int(m):02d}-{int(d):02d}"
+    from .sources import bracketmatrix as bm
+    from .teams import key as _k
+    mx = bm.collect(year); cons = {_k(t): v for t, v in mx["consensus"].items()}
+    for r in rows:
+        avg, n = cons.get(r["key"], (17.0, 0))
+        r["cons_avg"], r["cons_share"] = avg, n / max(1, mx["n_brackets"])
+        r["cons_avg_all"] = avg * (n / max(1, mx["n_brackets"])) + 17.0 * (1 - n / max(1, mx["n_brackets"]))
     nr = {r["key"]: r["net"] for r in rows}
     M = metrics.compute(games, nr, day)
     for r in rows: r.update(M.get(r["key"], {}))
