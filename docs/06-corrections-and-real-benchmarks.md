@@ -59,3 +59,8 @@ Points lost per season: model 67, T-Rank 59, median site 54. Largest gaps to med
 - Same seasons, research/experts.py (simple rule: auto-bids + most-listed at-large, mean seed rounded):
   all sites 365 373 372 381 352 378 388 = 372.7; top 25 by prior record 369.3; top 10 364.1; top 5 362.7. Experts picked by past record do worse than the whole crowd.
   It reads final Matrix pages, so a real pre-deadline copy would miss late submissions and score somewhat differently.
+
+## Production V2 (owner chose: stats model, then owner's adjustments, no crowd inputs)
+src/bracketology/model.py + project.py reproduce research exactly on 68-team seasons: 335 326 347 344 329 363 356, mean 342.9.
+Below T-Rank (348.9) and the median (354.0) before owner adjustments. Field/lines switch to 76 for 2027; line sizes are an assumption and no 76-team season exists to test on.
+overrides/{season}.json holds adjustments separately so grade() can score model and adjustments apart. Reclassifying teams for 2027 still need adding to INELIGIBLE_CHAMPS.

@@ -21,6 +21,20 @@ def conf_champions(games: list[dict], day: str) -> dict[str, str]:
                 last[g["conf"]] = (_d(g["date"]), g["team"])
     return {c: t for c, (_, t) in last.items()}
 
+def completed_champions(games: list[dict], day: str) -> dict[str, str]:
+    """Like conf_champions, but safe mid-tournament: only names a champion once a league's latest tournament date has a
+    single game and its winner never lost in the tournament. Leagues still playing are simply absent."""
+    wins, losers = {}, set()
+    for g in games:
+        if g["type"] != 2 or _d(g["date"]) > day: continue
+        if g["win"]: wins.setdefault(g["conf"], []).append((_d(g["date"]), g["team"]))
+        else: losers.add(g["team"])
+    out = {}
+    for conf, rows in wins.items():
+        last = max(d for d, _ in rows); final = [t for d, t in rows if d == last]
+        if len(final) == 1 and final[0] not in losers: out[conf] = final[0]
+    return out
+
 def build_year(year: int, hist="data/history") -> tuple[list[dict], dict]:
     day = history.SELECTION_SUNDAY[year]
     net = json.load(open(f"{hist}/{year}_net.json"))["rows"]

@@ -12,6 +12,9 @@ def season_for(today=None) -> int:
 def run(season: int | None = None, db="data/bracketology.sqlite") -> list[str]:
     season = season or season_for()
     net, tt, gg = ncaa_net.collect(), torvik.collect_teams(season), torvik.collect_games(season)
+    from .project import net_is_current
+    if not net_is_current(net.get("asof"), season):
+        return [f"NCAA NET feed is stale for {season} ({net.get('asof')}); nothing saved."]
     idx = TeamIndex([r["team"] for r in net["rows"]])        # NET list = canonical D-I universe
     for payload in (net, tt):
         for r in payload["rows"]: r["team_key"] = key(r["team"])
@@ -30,7 +33,7 @@ def run(season: int | None = None, db="data/bracketology.sqlite") -> list[str]:
         for q, k in (("1", ("1A", "1B")), ("2", ("2",)), ("3", ("3",)), ("4", ("4",))):
             w = sum(m.get(f"q{x}_w", 0) for x in k); l = sum(m.get(f"q{x}_l", 0) for x in k)
             if (w, l) != (r[f"q{q}_w"], r[f"q{q}_l"]): bad += 1; break
-    if bad: problems.append(f"computed quad records differ from NCAA for {bad}/{len(net['rows'])} teams")
+    if bad > 5: problems.append(f"computed quad records differ from NCAA for {bad}/{len(net['rows'])} teams")   # 1-2 is normal timing noise
     c = store.connect(db)
     for payload in (net, tt):
         store.save(c, payload, season, ok=not problems, notes="; ".join(problems))

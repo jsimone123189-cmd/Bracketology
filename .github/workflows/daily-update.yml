@@ -1,6 +1,7 @@
 name: daily-update
 on:
-  schedule: [{cron: "17 10 * 11-12,1-4 *"}]   # daily 10:17 UTC, Nov-Apr (season)
+  # Daily schedule is off until Torvik and Warren Nolan reply and storage for training data exists.
+  # schedule: [{cron: "17 10 * 11-12,1-4 *"}]
   workflow_dispatch:
 jobs:
   collect:
@@ -9,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.11"}
-      - run: pip install requests pytest
+      - run: pip install requests pytest openpyxl numpy scipy scikit-learn
       - run: PYTHONPATH=src pytest -q
       - run: PYTHONPATH=src python -m bracketology.pipeline
         env: {BRACKETOLOGY_UA: "bracketology-bot/0.1 (see repo README for contact)"}

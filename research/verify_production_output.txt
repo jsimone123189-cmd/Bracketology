@@ -1,0 +1,17 @@
+2019 champions old/new 32 32 differ: {}
+2021 champions old/new 31 31 differ: {}
+2022 champions old/new 32 32 differ: {}
+2023 champions old/new 32 32 differ: {}
+2024 champions old/new 32 32 differ: {}
+2025 champions old/new 31 31 differ: {}
+2026 champions old/new 31 31 differ: {}
+2019 {'picked': 65, 'exact': 40, 'within1': 60, 'score': 335}
+2021 {'picked': 67, 'exact': 33, 'within1': 59, 'score': 326}
+2022 {'picked': 65, 'exact': 45, 'within1': 62, 'score': 347}
+2023 {'picked': 67, 'exact': 42, 'within1': 59, 'score': 344}
+2024 {'picked': 65, 'exact': 37, 'within1': 60, 'score': 329}
+2025 {'picked': 67, 'exact': 49, 'within1': 64, 'score': 363}
+2026 {'picked': 67, 'exact': 45, 'within1': 65, 'score': 356}
+production LOSO [335, 326, 347, 344, 329, 363, 356] mean 342.9 research reference [335, 326, 347, 344, 329, 363, 356] mean 342.9
+76-team dry run, 2026 data: 76 extra 8: [('Indiana', 'NET', 41, 'p', 0.109, 'line', 11), ('Oklahoma', 'NET', 48, 'p', 0.429, 'line', 11), ('Stanford', 'NET', 61, 'p', 0.144, 'line', 11), ('Seton Hall', 'NET', 53, 'p', 0.095, 'line', 11), ('Florida St.', 'NET', 62, 'p', 0.09, 'line', 12), ('San Diego St.', 'NET', 47, 'p', 0.348, 'line', 12), ('Oklahoma St.', 'NET', 75, 'p', 0.154, 'line', 12), ('Miami (OH)', 'NET', 64, 'p', 0.257, 'line', 12)]
+Per line sizes [4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 8, 4, 4, 4, 6, 8] max score 456

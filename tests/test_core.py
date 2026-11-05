@@ -39,3 +39,29 @@ def test_picker_respects_capacity_and_reproduces_rank_slotting():
     lines = picker.assign(mu, 0.8)
     assert [int((lines == l).sum()) for l in range(1, 17)] == picker.CAP
     assert list(lines) == picker.SLOT_LINE           # symmetric uncertainty + fixed capacities => rank order is optimal
+
+def test_formats():
+    from bracketology import fieldformat as ff
+    assert ff.field_size(2026) == 68 and ff.field_size(2027) == 76 and ff.max_score(2027) == 456
+    assert ff.slot_lines(2027).count(11) == 8 and len(ff.slot_lines(2027)) == 76
+
+def test_net_feed_staleness():
+    from bracketology.project import net_is_current
+    assert not net_is_current("Through Games Apr. 06 2026", 2027) and net_is_current("Through Games Dec. 01 2026", 2027) and not net_is_current(None, 2027)
+
+def test_champion_not_named_mid_tournament():
+    from bracketology.dataset import completed_champions
+    g = lambda d, t, w: dict(type=2, date=d, team=t, conf="X", win=w)
+    semis = [g("3/9/26", "A", True), g("3/9/26", "B", False), g("3/9/26", "C", True), g("3/9/26", "D", False)]
+    assert completed_champions(semis, "2026-03-09") == {}
+    assert completed_champions(semis + [g("3/10/26", "A", True), g("3/10/26", "C", False)], "2026-03-10") == {"X": "A"}
+
+def test_projected_auto_and_overrides():
+    from bracketology import model, project
+    rows = [dict(team=f"T{i}", key=f"t{i}", lg="L1" if i < 60 else f"L{i}", champ=False, p_in=1 - i / 200, rank_score=-i, is_power=0.0) for i in range(100)]
+    field, rest = model.choose_field(rows, 2026)
+    assert len(field) == 68 and sum(1 for r in field if r.get("projected_auto")) == 41
+    order = model.assign_lines(field, 2026)
+    final, notes = project.apply_overrides(order, rest, {"T0": {"line": 3, "reason": "x"}, "T1": {"out": True}, rest[0]["team"]: {"line": 11}}, 2026)
+    by = {r["team"]: r for r in final}
+    assert by["T0"]["line"] == 3 and by["T0"]["model_line"] == 1 and "T1" not in by and rest[0]["team"] in by and len(final) == 68
