@@ -1,0 +1,64 @@
+preseason names unmatched {2024: ['saintmaryscollege']}
+BASE (no conference flag)                    [339, 322, 337, 323, 318, 352, 363] mean 336.3
+noise floor: same model, different random seed, means [335.7 336.4 335.9 335.1]
+--- recent form
+drop last10 entirely                         [340, 320, 333, 328, 322, 352, 363] mean 336.9 vs base +0.6, better in 3, worse in 2 of 7
++ last 5 win pct                             [335, 322, 333, 328, 322, 352, 363] mean 336.4 vs base +0.1, better in 2, worse in 2 of 7
++ WAB over last 10 games                     [327, 326, 341, 329, 323, 355, 359] mean 337.1 vs base +0.9, better in 5, worse in 2 of 7
++ recent minus season WAB pace               [325, 326, 341, 329, 318, 351, 362] mean 336.0 vs base -0.3, better in 3, worse in 3 of 7
++ conference tournament wins                 [335, 326, 341, 326, 323, 356, 363] mean 338.6 vs base +2.3, better in 5, worse in 1 of 7
+--- programs
++ prior_bid                                  [330, 325, 337, 326, 319, 355, 355] mean 335.3 vs base -1.0, better in 4, worse in 2 of 7
++ mean past seed                             [330, 323, 333, 330, 322, 351, 359] mean 335.4 vs base -0.9, better in 3, worse in 4 of 7
+--- preseason AP rank (2021-26 only, no 2019 poll)
++ preseason log rank                         [330, 330, 331, 322, 343, 364] mean 336.7 vs base +0.8, better in 4, worse in 2 of 6
++ preseason ranked flag                      [325, 333, 333, 330, 349, 359] mean 338.2 vs base +2.3, better in 3, worse in 3 of 6
++ preseason top 10                           [322, 333, 326, 322, 348, 359] mean 335.0 vs base -0.8, better in 2, worse in 3 of 6
+--- conferences
++ is_power                                   [331, 320, 342, 337, 327, 352, 363] mean 338.9 vs base +2.6, better in 3, worse in 2 of 7
++ each power conference                      [330, 320, 334, 331, 330, 350, 364] mean 337.0 vs base +0.7, better in 3, worse in 4 of 7
++ league strength                            [333, 322, 335, 326, 317, 356, 359] mean 335.4 vs base -0.9, better in 2, worse in 4 of 7
++ top mid-major leagues flag                 [328, 322, 337, 333, 322, 352, 363] mean 336.7 vs base +0.4, better in 2, worse in 1 of 7
++ is_power + top mid-major flag              [331, 320, 335, 335, 327, 352, 367] mean 338.1 vs base +1.9, better in 3, worse in 3 of 7
+--- recent seasons count more (weight per season of distance)
+season weight 0.85                           [322, 330, 337, 328, 322, 352, 363] mean 336.3 vs base +0.0, better in 3, worse in 1 of 7
+season weight 0.7                            [316, 330, 334, 326, 330, 352, 359] mean 335.3 vs base -1.0, better in 3, worse in 3 of 7
+season weight 0.5                            [305, 326, 333, 324, 330, 352, 363] mean 333.3 vs base -3.0, better in 3, worse in 2 of 7
+train only on earlier seasons (real-life order) [332, 319, 348, 363] mean 340.5 vs base +1.5, better in 2, worse in 1 of 4
+--- where the base model is biased (true seed minus model line; negative = committee seeded them BETTER)
+league ACC                             n= 38 mean -0.21  same sign in 4 of 7 seasons
+league B12                             n= 49 mean +0.04  same sign in 4 of 7 seasons
+league BE                              n= 28 mean -0.29  same sign in 5 of 7 seasons
+league B10                             n= 54 mean +0.04  same sign in 3 of 7 seasons
+league SEC                             n= 58 mean -0.07  same sign in 4 of 7 seasons
+league A10                             n= 12 mean -0.83  same sign in 4 of 7 seasons
+league MWC                             n= 22 mean +0.91  same sign in 4 of 7 seasons
+league WCC                             n= 16 mean -0.38  same sign in 4 of 7 seasons
+league Amer                            n= 13 mean -0.46  same sign in 4 of 7 seasons
+league MVC                             n=  8 mean -0.12  same sign in 2 of 7 seasons
+low majors                             n=165 mean +0.10  same sign in 5 of 7 seasons
+won league tournament, power           n= 35 mean +0.23  same sign in 5 of 7 seasons
+did not win league tournament, power   n=192 mean -0.12  same sign in 5 of 7 seasons
+last 10: 9+ wins                       n=120 mean +0.05  same sign in 3 of 7 seasons
+last 10: 5 or fewer wins               n= 81 mean -0.11  same sign in 5 of 7 seasons
+preseason top 10                       n= 56 mean -0.02  same sign in 2 of 6 seasons
+preseason ranked                       n=171 mean -0.08  same sign in 3 of 6 seasons
+preseason unranked, at-large           n= 78 mean +0.05  same sign in 3 of 6 seasons
+made field 2+ of prior seasons         n=176 mean -0.02  same sign in 2 of 5 seasons
+no prior bids, at-large                n= 21 mean -0.29  same sign in 3 of 5 seasons
+team duke                              n=  6 mean -0.17  same sign in 1 of 6 seasons
+team kansas                            n=  7 mean +0.00  same sign in 1 of 7 seasons
+team kentucky                          n=  6 mean -0.67  same sign in 2 of 6 seasons
+team northcarolina                     n=  6 mean -0.33  same sign in 2 of 6 seasons
+team gonzaga                           n=  7 mean -0.43  same sign in 4 of 7 seasons
+team michiganstate                     n=  6 mean +0.17  same sign in 2 of 6 seasons
+team villanova                         n=  4 mean -0.50  same sign in 2 of 4 seasons
+team ucla                              n=  5 mean +0.00  same sign in 1 of 5 seasons
+team uconn                             n=  6 mean +0.00  same sign in 1 of 6 seasons
+team houston                           n=  7 mean +0.00  same sign in 1 of 7 seasons
+team purdue                            n=  7 mean -0.57  same sign in 3 of 7 seasons
+team saintmarysca                      n=  6 mean -0.17  same sign in 2 of 6 seasons
+team memphis                           n=  3 mean +0.00  same sign in 1 of 3 seasons
+team sandiegostate                     n=  5 mean +0.20  same sign in 2 of 5 seasons
+
+[exited with code 0]
