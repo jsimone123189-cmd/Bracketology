@@ -17,12 +17,12 @@ class FetchError(RuntimeError):
 def _host(url: str) -> str:
     return url.split("/")[2].removeprefix("www.")
 
-def fetch(url: str, *, ttl: int = 3600, retries: int = 4, timeout: int = 60) -> str:
+def fetch(url: str, *, ttl: int = 3600, retries: int = 4, timeout: int = 60, allow_empty: bool = False) -> str:
     """GET url -> text. Cached for ttl seconds; stale cache is used if the network fails (graceful degradation)."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     key = CACHE_DIR / hashlib.sha256(url.encode()).hexdigest()
     meta = key.with_suffix(".meta")
-    if key.exists() and time.time() - key.stat().st_mtime < ttl:
+    if key.exists() and (key.stat().st_size or allow_empty) and time.time() - key.stat().st_mtime < ttl:
         return key.read_text(encoding="utf-8")
     host, last_err = _host(url), None
     for attempt in range(retries):
@@ -32,7 +32,7 @@ def fetch(url: str, *, ttl: int = 3600, retries: int = 4, timeout: int = 60) -> 
         _last[host] = time.time()
         try:
             r = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout)
-            if r.status_code == 200 and r.text.strip():
+            if r.status_code == 200 and (r.text.strip() or allow_empty):
                 key.write_text(r.text, encoding="utf-8")
                 meta.write_text(json.dumps({"url": url, "fetched_at": time.time(), "status": 200}))
                 return r.text

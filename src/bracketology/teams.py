@@ -31,8 +31,11 @@ ABBREV = {"ark": "arkansas", "ill": "illinois", "mich": "michigan", "ky": "kentu
 # Torvik / game-log name -> NCAA.com name (NCAA list is the canonical D-I universe). Verified 41/41 against 2026 data.
 TORVIK_TO_NCAA = {'Albany': 'UAlbany', 'Alcorn St.': 'Alcorn', 'Appalachian St.': 'App State', 'Arkansas Pine Bluff': 'Ark.-Pine Bluff', 'Army': 'Army West Point', 'Boston University': 'Boston U.', 'Cal Baptist': 'California Baptist', 'Cal St. Bakersfield': 'CSU Bakersfield', 'Cal St. Northridge': 'CSUN', 'Central Connecticut': 'Central Conn. St.', 'Charleston': 'Col. of Charleston', 'Charleston Southern': 'Charleston So.', 'Fairleigh Dickinson': 'FDU', 'Florida Gulf Coast': 'FGCU', 'Grambling St.': 'Grambling', 'Incarnate Word': 'UIW', 'Lamar': 'Lamar University', 'Louisiana Monroe': 'ULM', 'Loyola MD': 'Loyola Maryland', 'Loyola Marymount': 'LMU (CA)', 'Maryland Eastern Shore': 'UMES', 'McNeese St.': 'McNeese', 'Mississippi': 'Ole Miss', 'Mississippi Valley St.': 'Mississippi Val.', 'Nicholls St.': 'Nicholls', 'North Carolina A&T': 'N.C. A&T', 'North Carolina Central': 'N.C. Central', 'Northern Illinois': 'NIU', 'Northern Iowa': 'UNI', 'Prairie View A&M': 'Prairie View', 'SIU Edwardsville': 'SIUE', "Saint Mary's": "Saint Mary's (CA)", 'Sam Houston St.': 'Sam Houston', 'Seattle': 'Seattle U', 'Southern': 'Southern U.', 'St. Thomas': 'St. Thomas (MN)', 'Stephen F. Austin': 'SFA', 'Tennessee Martin': 'UT Martin', 'Texas A&M Corpus Chris': 'A&M-Corpus Christi', 'UMKC': 'Kansas City', 'UT Rio Grande Valley': 'UTRGV'}
 
+# Bracket Matrix / older spellings -> NCAA.com name.
+MATRIX_TO_NCAA = {"St. Mary's (CA)": "Saint Mary's (CA)", 'Cal State Fullerton': 'Cal St. Fullerton', "St. Peter's": "Saint Peter's", 'Texas A&M-Corpus Christi': 'A&M-Corpus Christi', 'College of Charleston': 'Col. of Charleston', 'Louisiana-Lafayette': 'Louisiana', 'NC-Asheville': 'UNC Asheville', 'McNeese State': 'McNeese', 'NC-Wilmington': 'UNC Wilmington', 'SIU-Edwardsville': 'SIUE', 'St. Francis (PA.)': 'Saint Francis', 'Long Island': 'LIU', 'Appalachian State': 'App State'}
+
 def clean(name: str) -> str:
-    name = TORVIK_TO_NCAA.get(name.strip(), name)
+    name = TORVIK_TO_NCAA.get(name.strip(), MATRIX_TO_NCAA.get(name.strip(), name))
     n = name.strip().lower()
     n = re.sub(r"\s+\d+\*?$", "", n)          # V1 workbook annotations like "Merrimack 153", "LIU 227*"
     n = n.replace("*", "").replace("&", "and")
