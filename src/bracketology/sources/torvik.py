@@ -27,7 +27,8 @@ def collect_games(year: int, ttl: int = 3600) -> dict:
             continue
         res = r[6]  # e.g. "W, 96-62"
         wl, score = res.split(", ")
-        pf, pa = (int(x) for x in score.split("-"))
+        hi, lo = (int(x) for x in score.split("-"))   # score is listed winner-first
+        pf, pa = (hi, lo) if wl == "W" else (lo, hi)
         rows.append({"date": r[0], "type": int(r[1]), "team": r[2], "conf": r[3], "opp": r[4], "loc": r[5],
                      "win": wl == "W", "pf": pf, "pa": pa})
     return {"source": "torvik_games", "year": year, "url": games_url(year), "rows": rows}
