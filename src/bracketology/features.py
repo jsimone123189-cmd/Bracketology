@@ -24,5 +24,17 @@ def build_year(year: int, outdir="data/features") -> list[dict]:
     nr = {r["key"]: r["net"] for r in rows}
     M = metrics.compute(games, nr, day)
     for r in rows: r.update(M.get(r["key"], {}))
+    # conference context (committee bias vs. pure metrics): league code from the game log, league strength
+    conf_of = {}
+    for g in games:
+        conf_of.setdefault(g["team_key"], g["conf"])
+    byconf = {}
+    for r in rows:
+        r["lg"] = conf_of.get(r["key"], "")
+        byconf.setdefault(r["lg"], []).append(r.get("rating", 0.0))
+    strength = {c: float(sorted(v, reverse=True)[:4] and sum(sorted(v, reverse=True)[:4]) / len(sorted(v, reverse=True)[:4])) for c, v in byconf.items()}
+    for r in rows:
+        r["conf_strength"] = strength.get(r["lg"], 0.0)
+        r["is_power"] = 1.0 if r["lg"] in ("ACC", "B12", "BE", "B10", "SEC") else 0.0
     os.makedirs(outdir, exist_ok=True); json.dump(rows, open(path, "w"))
     return rows

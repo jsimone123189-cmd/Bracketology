@@ -91,3 +91,32 @@ Differences among the top four rows are inside the noise. Stats-only is saturate
 **Conclusion:** the independent model is ~326-330 vs human median ~360 and consensus ~365. More features,
 normalization, and a better line picker did not close that. The gap is information the committee/crowd has and
 public stats do not.
+
+---
+# Update: "smarter information" search for the independent model (owner named Brad Evans, Bracket Science, EvanMiya)
+
+Sources checked (access + relevance):
+- **Brad Evans** ("Bracket Brad", Yahoo/Substack): tournament pick'em/advancement commentary, no published selection/seeding
+  method or data feed. Not a data source; nothing to automate.
+- **Bracket Science** (Peter Tiernan, CBS): by his own description it predicts who ADVANCES once the bracket is set,
+  not who is selected or seeded. Wrong problem for the Selection Sunday score.
+- **EvanMiya**: premium-gated (~$30/mo Premium), a JavaScript app with no documented API or bulk export, and no
+  as-of-date history we could backtest. Not a selection-committee input either (committee uses NET, KPI, SOR, BPI,
+  KenPom, Torvik, Sagarin, WAB). Not usable without bypassing access controls, so not used.
+- **Massey composite**: robots.txt allows /cb/ but the site serves a bot challenge (HTTP 403 "Just a moment");
+  we do not bypass bot protection. Not used.
+Using other bracketologists' *projections* as inputs would be the consensus-copy approach we set aside (option 2).
+
+Independent-model experiments that WERE testable (LOSO, 7 seasons):
+| Variant | Mean | Exact |
+|---|---|---|
+| within-year z-scores + log-ranks (previous best) | 329.6 | 37.0 |
+| + is_power (ACC/Big 12/Big East/Big Ten/SEC flag; committee conference bias) | **333.6** | 38.7 |
+| + is_power + league strength (mean rating of top-4 teams) | 331.6 | 38.0 |
+| + prior_bid (program's share of prior seasons in the field) | 331.4 | 37.7 |
+| drop all NET/quad features (own metrics only) | 317.0 | 32.9 |
+- NET/quad inputs are worth ~16 points (so the real committee inputs matter); an all-own-metrics model costs that much.
+- Power-conference flag: +4, positive in 5 of 7 seasons; plausible mechanism (committee/crowd seed power leagues
+  above what metrics imply). Treat as small and unproven (inside the noise of a 7-season sample).
+- Program-prestige prior: no help.
+**Independent V2 ceiling with available free data: ~330-334 mean (human median ~360).**
