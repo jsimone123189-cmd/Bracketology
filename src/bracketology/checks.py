@@ -1,6 +1,6 @@
 from __future__ import annotations
 """Daily data checks. An alert blocks the public page and fails the run, so GitHub emails the owner; the snapshot is still saved. A note is only recorded.
-Game-count baseline, 2026 final: our D-I count matched the NCAA NET record for 363 of 365 teams, and our all-games count matched Warren Nolan's record for all teams checked."""
+Game-count baseline, 2026 final: our D-I count matched the NCAA NET record for 363 of 365 teams. Warren Nolan's records are D-I only too."""
 from datetime import date
 
 GAME_TOLERANCE = 2          # a feed may trail by a day or two of games
@@ -17,7 +17,7 @@ def _games(record: str) -> int | None:
         return None
 
 def game_counts(counts: dict[str, int], records: dict[str, str], net: dict[str, int], source: str) -> list[dict]:
-    """counts and records must define a game the same way: D-I only for the NET feed, all games for Warren Nolan."""
+    """counts = D-I games by team. Both record sources leave out non-D-I games."""
     off = {}
     for k, rec in records.items():
         n = _games(rec)

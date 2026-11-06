@@ -80,7 +80,7 @@ About 45 variants have now been tried against this baseline, so a best result ne
 
 ## Live data audit (2026-11-06). research/neutral_audit.py, ncaa_parity.py.
 Live records counted non-D-I games while training records don't. On 2026 that alone scored 352 instead of 356, moving 6 teams. Live now counts D-I only. The earlier "same 356" parity test borrowed the correct records, so it could not catch this.
-D-I counts match NCAA NET records for 363 of 365 teams on 2026, which is now a daily check. Warren Nolan's records match our all-games count.
+D-I counts match NCAA NET records for 363 of 365 teams on 2026, which is now a daily check. Warren Nolan's records are D-I only as well.
 Neutral rule: conference tournament games could make a tournament arena look like home (Duke at Spectrum Center). Leaving them out found 430 of 487 Torvik neutral games among NET top-90 teams instead of 380, with wrong neutral labels unchanged at 19 of 2,436 and nothing that was right becoming wrong. Judged against Torvik locations only, not committee results. 37 of the original 126 differences have no arena listed.
 2026 parity with both fixes: 360 (Torvik log 356). One season, and these are data corrections, so this isn't evidence of a better model. Production weights and method are unchanged. Training locations still come from Torvik.
 Champions from NCAA results alone match 30 of 31 auto-bids in both 2025 and 2026, missing the Mountain West each time (Colorado St., Utah St.). Cause not confirmed; both are on the list as champions, so these stay notes, not alerts.

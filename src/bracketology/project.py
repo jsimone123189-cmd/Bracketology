@@ -69,8 +69,9 @@ def live_rows(season: int, today: str | None = None, info: dict | None = None) -
     if m and info["net_source"] == "ncaa": age = (today_d - datetime.strptime(" ".join(m.groups()), "%b %d %Y").date()).days
     found = checks.source_health(today_d, season, info["net_source"], age, len(universe), status["missing_days"], status["arena_unknown"], status["arena_total"])
     found += checks.team_matching(universe, set(net) if info["net_source"] == "ncaa" else set(), played_all, today_d, season)
-    if feed_records: found += checks.game_counts({k: sum(v) for k, v in rec.items()}, feed_records, ranks, "the NCAA NET records")
-    found += checks.game_counts(played_all, {k: r["record"] for k, r in wn.items()}, ranks, "Warren Nolan's records")
+    di_games = {k: sum(v) for k, v in rec.items()}
+    if feed_records: found += checks.game_counts(di_games, feed_records, ranks, "the NCAA NET records")
+    found += checks.game_counts(di_games, {k: r["record"] for k, r in wn.items()}, ranks, "Warren Nolan's records")
     if listed_ok: found += checks.champions(set(ncaa_champs), champs, decided)
     else: found.append({"level": "alert", "check": "champions", "message": "Auto-bid list unavailable, so champions come from NCAA results alone."})
     info["checks"] = found

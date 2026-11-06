@@ -277,9 +277,13 @@ def test_live_records_count_only_division_one_games(monkeypatch):
     def fake(season, today, universe, key, end=None, warn=None, status=None):
         status.update(missing_days=0, arena_unknown=0, arena_total=1); return games
     monkeypatch.setattr(project.ncaa_games, "season_games", fake)
-    rows, _ = project.live_rows(2027, today="2026-11-22")
+    info = {}; rows, _ = project.live_rows(2027, today="2026-11-22", info=info)
     a = next(r for r in rows if r["team"] == "Aaa")
     assert (a["w"], a["l"]) == (1, 0)
+    wn["rows"][0]["record"] = "1-0"     # the source's record is D-I only: a non-D-I game must not read as a mismatch
+    games += [dict(g, id=f"x{i}", opp="Small College") for i, g in enumerate(games[-1:] * 3)]
+    info = {}; project.live_rows(2027, today="2026-11-22", info=info)
+    assert not [c for c in info["checks"] if c["check"] == "game_counts" and "aaa" in c["message"]]
 
 def test_ledger_rejects_undocumented_moves():
     from datetime import datetime, timezone
