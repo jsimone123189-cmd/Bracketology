@@ -21,5 +21,21 @@ The test is invalid if the control doesn't reproduce, or if coverage is under 90
 
 If it passes, it goes to shadow tracking for 2027 next to v2.0. It doesn't replace v2.0 without the owner's decision. If it fails, the feature stays out, and retesting needs a specifically named flaw in this run.
 
+## First run and restart
+Added after the first run and before the rerun. The measure, the one test and the pass bar above are unchanged.
+
+**The first run was invalid.** Using NCAA box scores through the third-party wrapper, coverage was 0% in 2019, 2021 and 2022 (the wrapper returns 502 for those box scores on every try) and 55% in 2023 (empty box scores). The control reproduced. On those partial values, with four seasons effectively all zeros, the scores were 334 326 347 344 329 359 360, mean -0.1 against v2.0, which would not have cleared the bar. That result was seen before this restart and is kept in `research/availability_test_output_invalid_first_run.txt`. It is not the result of this test.
+
+**A flaw in that run:** an empty or incomplete box score in a team's last three games counted players as missing, when the rule says it should count against coverage. Boise State 2024 showed 0.19 and Purdue 2026 showed 0.08 for this reason.
+
+**What changes for the rerun:**
+- **Source:** all seven seasons come from one source, the [hoopR-mbb-data](https://github.com/sportsdataverse/hoopR-mbb-data) archive of ESPN box scores, CC BY 4.0, by the hoopR.mbb authors, downloaded as public files. This is research only. The values are built locally and not committed. Any public use would need attribution, and a look at ESPN's terms for the underlying data.
+- **Incomplete box scores:** a box score with under 190 team minutes counts as missing. In the last three it fails the team, which gets 0 and counts against coverage. In the baseline that game is dropped.
+- **Players** are matched by ID rather than name.
+
+**Source check, done before the rerun without looking at any bracket score:** on teams present in both sources in 2024-26, 289 of 298 values match within 0.005. The largest gaps trace to incomplete NCAA box scores or to source differences. Game counts match within 1 for 2021-26. In 2019 the archive has more games than our NCAA list (Auburn 35 vs 29), and 35 is Auburn's correct count. Coverage is 99-100% in every season.
+
+Live 2027 would still read NCAA box scores, so if this passes, shadow tracking must first confirm those are complete as the games come in.
+
 ## Reported, can't change the result
 Selection Brier score among non-champions with NET 100 or better, two-or-more-line misses, mean seed error beyond one line, boundary pair agreement, and the same test on seeds alone. Also how far the committee actually placed teams with `avail_missing` of at least 0.2 from v2.0's held-out line. None of these can be promoted on this data.

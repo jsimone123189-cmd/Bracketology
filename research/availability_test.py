@@ -7,6 +7,7 @@ from bracketology.report import bracket_stats
 from bracketology.sources import bracketmatrix as bm
 A = json.load(open("data/history/availability.json")); Y = sorted(history.SELECTION_SUNDAY)
 print("coverage", {y: round(A[y]["coverage"], 3) for y in A})
+print("coverage valid:", all(A[y]["coverage"] >= .9 for y in A), "(a PASS line below means nothing if this is False)")
 def with_feature(y):
     rows = raw_build(y)
     for r in rows: r["avail_missing"] = A[str(y)]["values"].get(r["key"], {}).get("avail_missing", 0.0)

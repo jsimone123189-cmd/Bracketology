@@ -1,0 +1,23 @@
+2019 coverage 0.0 failed [('alabama', "FetchError('https://ncaa-api.henrygd.me/game/3166963/boxscore: HTTP 502')"), ('arizona', "FetchError('https://ncaa-api.henrygd.me/game/3167015/boxscore: HTTP 502')"), ('arizonastate', "FetchError('https://ncaa-api.henrygd.me/game/3169307/boxscore: HTTP 502')"), ('arkansas', "FetchError('https://ncaa-api.henrygd.me/game/3170242/boxscore: HTTP 502')")]
+2021 coverage 0.0 failed [('abilenechristian', "FetchError('https://ncaa-api.henrygd.me/game/5764656/boxscore: HTTP 502')"), ('alabama', "FetchError('https://ncaa-api.henrygd.me/game/5810197/boxscore: HTTP 502')"), ('arizona', "FetchError('https://ncaa-api.henrygd.me/game/5768868/boxscore: HTTP 502')"), ('arkansas', "FetchError('https://ncaa-api.henrygd.me/game/5803091/boxscore: HTTP 502')")]
+2022 coverage 0.0 failed [('alabama', "FetchError('https://ncaa-api.henrygd.me/game/5896461/boxscore: HTTP 502')"), ('arizona', "FetchError('https://ncaa-api.henrygd.me/game/5896600/boxscore: HTTP 502')"), ('arizonastate', "FetchError('https://ncaa-api.henrygd.me/game/5896507/boxscore: HTTP 502')"), ('arkansas', "FetchError('https://ncaa-api.henrygd.me/game/5896425/boxscore: HTTP 502')")]
+2023 0 100
+2023 75 100
+2023 coverage 0.55 failed [('bradley', 'no baseline minutes'), ('byu', 'no baseline minutes'), ('cincinnati', 'no baseline minutes'), ('clemson', 'no baseline minutes')]
+2024 0 100
+2024 25 100
+2024 50 100
+2024 75 100
+2024 coverage 1.0 failed []
+2025 0 100
+2025 25 100
+2025 50 100
+2025 75 100
+2025 coverage 0.98 failed [('nebraska', 'no baseline minutes'), ('pennstate', 'no baseline minutes')]
+2026 0 100
+2026 25 100
+2026 50 100
+2026 75 100
+2026 coverage 1.0 failed []
+done
+exit 0
