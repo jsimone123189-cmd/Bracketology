@@ -71,10 +71,10 @@ class Model:
         for r, a, b in zip(rows, p, q): r["p_in"], r["rank_score"] = float(a), float(b)
         return rows
 
-def choose_field(rows: list[dict], season: int, project_autos: bool = True) -> tuple[list[dict], list[dict]]:
+def choose_field(rows: list[dict], season: int, project_autos: bool = True, fmt: fieldformat.Format | None = None) -> tuple[list[dict], list[dict]]:
     """Auto-bids first: real champions, else each unfinished league's top team (independents get none).
     Remaining bids go to at-large by p_in. Set project_autos=False once every league is decided, as in backtests."""
-    size = fieldformat.field_size(season)
+    size = (fmt or fieldformat.format_for(season)).size
     done = {r.get("lg") for r in rows if r["champ"]}; autos = [r for r in rows if r["champ"]]; proj = {}
     for r in rows:
         lg = r.get("lg")
@@ -86,7 +86,7 @@ def choose_field(rows: list[dict], season: int, project_autos: bool = True) -> t
     n = size - len(autos)
     return autos + pool[:n], pool[n:]
 
-def assign_lines(field: list[dict], season: int) -> list[dict]:
-    order = sorted(field, key=lambda r: -r["rank_score"]); lines = fieldformat.slot_lines(season)
+def assign_lines(field: list[dict], season: int, fmt: fieldformat.Format | None = None) -> list[dict]:
+    order = sorted(field, key=lambda r: -r["rank_score"]); lines = (fmt or fieldformat.format_for(season)).slots
     for i, r in enumerate(order): r["overall"], r["line"] = i + 1, lines[i]
     return order

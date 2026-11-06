@@ -1,0 +1,8 @@
+2019 autos 32 at-large 44 | differ from printed: old 6 strict 4 biggest strict move 1 | champions on lines 11-12 2 | at-large below line 12 ['UNC Greensboro']
+2021 autos 31 at-large 45 | differ from printed: old 6 strict 5 biggest strict move 2 | champions on lines 11-12 1 | at-large below line 12 ['Colorado St.', 'Boise St.']
+2022 autos 32 at-large 44 | differ from printed: old 6 strict 3 biggest strict move 2 | champions on lines 11-12 0 | at-large below line 12 ['North Texas']
+2023 autos 32 at-large 44 | differ from printed: old 6 strict 0 biggest strict move 0 | champions on lines 11-12 0 | at-large below line 12 []
+2024 autos 32 at-large 44 | differ from printed: old 6 strict 11 biggest strict move 2 | champions on lines 11-12 5 | at-large below line 12 ['Princeton']
+2025 autos 31 at-large 45 | differ from printed: old 6 strict 6 biggest strict move 1 | champions on lines 11-12 3 | at-large below line 12 ['UC Irvine']
+2026 autos 31 at-large 45 | differ from printed: old 6 strict 4 biggest strict move 1 | champions on lines 11-12 2 | at-large below line 12 []
+mean teams on a different line: old 6.0 strict 4.7

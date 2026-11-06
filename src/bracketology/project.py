@@ -19,22 +19,24 @@ def net_is_current(asof: str | None, season: int) -> bool:
     if not m: return False
     return datetime.strptime(" ".join(m.groups()), "%b %d %Y").date() >= date(season - 1, 11, 1)
 
-def live_rows(season: int, today: str | None = None) -> tuple[list[dict], list[str]]:
+def live_rows(season: int, today: str | None = None, info: dict | None = None) -> tuple[list[dict], list[str]]:
     """Live data reachable from GitHub Actions: NCAA results, arenas and NET, plus Warren Nolan's table and auto-bids.
-    Torvik refuses cloud servers, so his files are used only for the local training history."""
-    today = today or time.strftime("%Y-%m-%d", time.gmtime()); warn = []
+    Torvik refuses cloud servers, so his files are used only for the local training history.
+    info, if given, receives what the snapshot needs to show where this run's inputs came from."""
+    today = today or time.strftime("%Y-%m-%d", time.gmtime()); warn = []; info = info if info is not None else {}
     wn = {key(r["team"]): r for r in warrennolan.collect(season)["rows"]}
-    net = {}
+    net = {}; info.update(net_source="ncaa", net_asof=None)
     try:
-        feed = ncaa_net.collect()
+        feed = ncaa_net.collect(); info["net_asof"] = feed["asof"]
         if net_is_current(feed["asof"], season): net = {key(r["team"]): r["net"] for r in feed["rows"]}
         else: warn.append(f"Official NCAA NET not published for {season} yet (feed shows {feed['asof']}).")
     except Exception as e: warn.append(f"NCAA NET unavailable: {e}")
     if not net:
-        net = {k: r["r_net"] for k, r in wn.items() if "r_net" in r}; warn.append("Using Warren Nolan's NET column in place of the official feed.")
+        net = {k: r["r_net"] for k, r in wn.items() if "r_net" in r}; warn.append("Using Warren Nolan's NET column in place of the official feed."); info["net_source"] = "warren_nolan"
     universe = set(wn)
     cutoff = SELECTION_SUNDAY_LIVE.get(season)
-    games = ncaa_games.season_games(season, date.fromisoformat(today), universe, key, end=cutoff)
+    games = ncaa_games.season_games(season, date.fromisoformat(today), universe, key, end=cutoff, warn=warn)
+    info.update(games_through=min(date.fromisoformat(today), cutoff).isoformat() if cutoff else today, game_rows=len(games))
     names, lg, rec = {}, {}, {}
     for g in games:
         g["team_key"], g["opp_key"], g["date_iso"] = key(g["team"]), key(g["opp"]), _d(g["date"])
@@ -49,6 +51,7 @@ def live_rows(season: int, today: str | None = None) -> tuple[list[dict], list[s
     M = metrics.compute(games, ranks, today)
     try: champs = {key(t) for t in warrennolan.autobids(season).values()}
     except Exception as e: champs = set(); warn.append(f"Auto-bid list unavailable, projecting every league: {e}")
+    info["champions"] = sorted(champs)
     unknown = sorted(c for c in champs if c not in universe)
     if unknown: warn.append(f"Auto-bid names not matched: {unknown}")
     rows = []
@@ -66,6 +69,11 @@ def training_rows(exclude=()) -> list[dict]:
         if y in exclude: continue
         rows = model.prepare(build_year(y)); model.attach_overall(rows, y); out += rows
     return out
+
+def model_bracket(order: list[dict]) -> list[dict]:
+    """The untouched model bracket. Take this before apply_overrides, which removes and moves teams."""
+    return [{"key": r["key"], "team": r["team"], "line": r["line"], "overall": r["overall"], "p_in": round(r["p_in"], 4),
+             "champ": bool(r["champ"]), "projected_auto": bool(r.get("projected_auto"))} for r in order]
 
 def apply_overrides(order: list[dict], rest: list[dict], overrides: dict, season: int) -> tuple[list[dict], list[str]]:
     """Returns the final field and warnings. Every team keeps model_line so your edits can be graded separately."""
@@ -97,18 +105,19 @@ def closest_calls(order: list[dict], rest: list[dict], n: int = 12) -> dict:
 
 def build(rows: list[dict], season: int, fitted: model.Model, overrides: dict | None = None) -> dict:
     model.prepare(rows); fitted.score(rows)
-    field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season)
+    field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); untouched = model_bracket(order)
     final, notes = apply_overrides(order, rest, overrides or {}, season)
-    keep = ("overall", "team", "line", "model_line", "override_reason", "p_in", "champ", "projected_auto", "lg", "w", "l", "net", "r_kpi", "r_sor", "r_wab", "r_bpi", "r_kp", "r_trk")
-    return {"season": season, "max_score": fieldformat.max_score(season), "notes": notes,
+    keep =("overall", "team", "line", "model_line", "override_reason", "p_in", "champ", "projected_auto", "lg", "w", "l", "net", "r_kpi", "r_sor", "r_wab", "r_bpi", "r_kp", "r_trk")
+    return {"season": season, "max_score": fieldformat.max_score(season), "notes": notes, "model_bracket": untouched,
             "field": [{k: r[k] for k in keep if k in r} for r in final], "closest_calls": closest_calls(order, rest)}
 
 def grade(result: dict, official: dict[str, int]) -> dict:
-    """After Selection Sunday: did the model or your edits score better? official = {team: seed line}."""
+    """After Selection Sunday: did the model or your edits score better? official = {team: seed line}.
+    Takes a saved snapshot or the output of build()."""
     from .sources.bracketmatrix import score
     off = {key(t): s for t, s in official.items()}
-    final = {key(r["team"]): r["line"] for r in result["field"]}
-    base = {key(r["team"]): r["model_line"] for r in result["field"] if r.get("model_line")}
+    final = {key(r["team"]): r["line"] for r in result.get("teams", result.get("field"))}
+    base = {key(r["team"]): r["line"] for r in result["model_bracket"]}
     return {"model": score(base, off), "final": score(final, off)}
 
 def main(season: int | None = None) -> int:

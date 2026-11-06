@@ -5,13 +5,14 @@
 - **Model:** trained locally and saved to models/v2.joblib, which holds fitted weights only. Training data stays local until permissions are confirmed.
 - **Failure handling:** retries and cached responses in http.py; if a run fails, nothing is deployed and yesterday's page stays up. GitHub emails the owner on a failed run.
 - **Early season:** sitebuild refuses to publish below a median of 15 games per team.
-- **History:** each run saves a dated JSON to the public `snapshots` branch, using the same fields as the public page (no third-party metric values). Free, and simpler than D1 for one file a day. The branch step has not run in Actions yet.
+- **History:** the schedule is on. Each run saves one timestamped JSON to the public `snapshots` branch, with a snapshot ID, model version, the untouched model bracket, all teams ranked, overrides, and source details. No third-party metric values. A later run never overwrites an earlier one.
+- **Public switch:** the bracket deploys only when the repository variable `PUBLISH_BRACKET` is `true`. It is unset, so the page stays on Coming Soon even after the 15-game guard clears.
 
 ## To go live
 1. Owner decided (2026-11-05) not to wait for Torvik: use only his public CSVs under robots.txt rules (10-second delay, no .json or time-machine pages), credit and link him, and do not republish his ratings. Warren Nolan email is drafted, unsent as far as known.
 2. Owner approves the public page.
 3. Domain jaysbracketplays.com (Cloudflare Registrar, paid by owner). Add CLOUDFLARE_API_TOKEN (the "Edit Cloudflare Workers" template, zone jaysbracketplays.com) and CLOUDFLARE_ACCOUNT_ID as repo secrets. Worker jays-bracket-plays already exists with a "Coming soon" placeholder.
-4. Uncomment the schedule.
+4. Set the repository variable `PUBLISH_BRACKET` to `true` (Settings > Secrets and variables > Actions > Variables).
 5. Add 2027 reclassifying teams to INELIGIBLE_CHAMPS.
 
 ## Data sources in production (updated)

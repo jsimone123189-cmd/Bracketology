@@ -1,8 +1,8 @@
 name: daily-update
 # $0 plan: GitHub Actions runs the update, Cloudflare Workers hosts the static page. See docs/07-deployment.md.
 on:
-  # Off until Torvik and Warren Nolan reply and the owner approves going public.
-  # schedule: [{cron: "17 10 * 11-12,1-4 *"}]     # daily, November to April
+  # Daily snapshots, November to April. The page stays on Coming Soon until the owner sets the repository variable PUBLISH_BRACKET to true.
+  schedule: [{cron: "17 10 * 11-12,1-4 *"}]
   workflow_dispatch:
     inputs:
       placeholder_only:
@@ -51,7 +51,7 @@ jobs:
           git worktree add ../snap snapshots
           mkdir -p ../snap/snapshots ../snap/gamecache; cp data/output/snapshots/*.json ../snap/snapshots/; cp data/output/gamecache/*.json ../snap/gamecache/
           cd ../snap; git add snapshots gamecache; git diff --cached --quiet || (git commit -m "Snapshot $(date -u +%F)" && git push origin snapshots)
-      - if: steps.build.outputs.publish == 'true'
+      - if: steps.build.outputs.publish == 'true' && vars.PUBLISH_BRACKET == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

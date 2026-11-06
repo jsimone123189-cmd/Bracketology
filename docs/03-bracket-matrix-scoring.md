@@ -1,6 +1,6 @@
 > **Correction (2026-11-05):** the "76 teams, 456" text is NOT stale. The NCAA expands to 76 teams in 2027, 24 of them in 12 opening-round games.
 > Past Matrix scores (through 2026) were on 68 teams, max 408, and the parser reproduces them exactly. From 2027 the max is 456.
-> The live 2027 preseason Matrix shows line sizes 4 x 9, 6 on line 10, 8 on line 11, 4 x 3, 6 on line 15, 8 on line 16. Not confirmed as committee rules.
+> The NCAA's 2027 printable bracket shows 4 x 10, 6 on line 11, 8 on line 12, 4 on lines 13-14, 6 on line 15, 8 on line 16. The preseason Matrix layout had the 6 and 8 on lines 10-11. The committee has moved at-large opening-round games between lines before, so recheck on Selection Sunday.
 
 # Bracket Matrix scoring (from the site's "What's this all about?" text, provided by owner 2026-11-05)
 

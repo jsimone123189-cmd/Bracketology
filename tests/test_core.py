@@ -43,7 +43,104 @@ def test_picker_respects_capacity_and_reproduces_rank_slotting():
 def test_formats():
     from bracketology import fieldformat as ff
     assert ff.field_size(2026) == 68 and ff.field_size(2027) == 76 and ff.max_score(2027) == 456
-    assert ff.slot_lines(2027).count(11) == 8 and len(ff.slot_lines(2027)) == 76
+    assert len(ff.slot_lines(2027)) == 76 and ff.line_sizes(2027) == [4] * 10 + [6, 8, 4, 4, 6, 8]
+    f = ff.format_for(2027)
+    assert f.automatic == 32 and f.at_large == 44 and sum(f.opening_at_large.values()) == sum(f.opening_automatic.values()) == 6
+    assert ff.line_sizes(2026) == [4] * 10 + [6] + [4] * 4 + [6]
+
+def test_format_rejects_inconsistent_layouts():
+    import pytest
+    from bracketology.fieldformat import Format
+    with pytest.raises(ValueError): Format(tuple([4] * 10 + [6, 8, 4, 4, 6, 8]), 32, 40, {11: 2, 12: 4}, {15: 2, 16: 4})    # bids don't add up
+    with pytest.raises(ValueError): Format(tuple([4] * 9 + [6, 8, 4, 4, 4, 6, 8]), 32, 44, {11: 2, 12: 4}, {15: 2, 16: 4})  # games on the wrong lines
+
+def _stub_feed(monkeypatch, days=None, venues=None):
+    """days: iso date -> game list, or an exception to raise. venues: game id -> arena, or an exception."""
+    import json as _json
+    from bracketology.sources import ncaa_games
+    calls = []
+    def fake(url, **kw):
+        calls.append(url)
+        if "/game/" in url:
+            v = (venues or {}).get(url.rsplit("/", 1)[1], "Arena")
+            if isinstance(v, Exception): raise v
+            return _json.dumps({"contests": [{"location": {"venue": v}}]})
+        y, m, d = url.split("/")[-4:-1]; v = (days or {}).get(f"{y}-{m}-{d}", [])
+        if isinstance(v, Exception): raise v
+        return _json.dumps({"games": v})
+    monkeypatch.setattr(ncaa_games, "fetch", fake)
+    return calls
+
+def _game(i, home="A", away="B"):
+    t = lambda n, s: {"score": s, "names": {"short": n}, "conferences": [{"conferenceSeo": "c"}]}
+    return {"game": {"gameState": "final", "gameID": i, "home": t(home, 70), "away": t(away, 60)}}
+
+def test_failed_date_is_retried_after_the_refetch_window(monkeypatch, tmp_path):
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    run = lambda today, warn: ng.season_games(2027, today, {"a", "b"}, str.lower, cache_dir=str(tmp_path), warn=warn)
+    _stub_feed(monkeypatch, {"2026-11-03": RuntimeError("down")})
+    warn = []; run(date(2026, 11, 4), warn)
+    assert "2026-11-03" in warn[0] and "1 dates" in warn[0]
+    _stub_feed(monkeypatch, {"2026-11-03": [_game("g1")]})      # back up, ten days later and well past the two-day window
+    warn = []; rows = run(date(2026, 11, 14), warn)
+    assert warn == [] and {r["id"] for r in rows} == {"g1"}
+
+def test_a_quiet_date_is_not_a_failure(monkeypatch, tmp_path):
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    calls = _stub_feed(monkeypatch)
+    warn = []; ng.season_games(2027, date(2026, 11, 3), {"a"}, str.lower, cache_dir=str(tmp_path), warn=warn)
+    assert warn == [] and len(calls) == 3
+
+def test_failed_arena_lookup_is_retried_but_a_blank_arena_is_not(monkeypatch, tmp_path):
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    day = {"2026-11-01": [_game("g1"), _game("g2", "C", "D")]}
+    run = lambda warn: ng.season_games(2027, date(2026, 11, 1), set("abcd"), str.lower, cache_dir=str(tmp_path), warn=warn)
+    _stub_feed(monkeypatch, day, {"g1": RuntimeError("down"), "g2": None})
+    warn = []; run(warn)
+    assert "1 games" in warn[0]
+    calls = _stub_feed(monkeypatch, day, {"g1": "Barn"})
+    warn = []; run(warn)
+    assert warn == [] and [c for c in calls if "/game/" in c] == ["https://ncaa-api.henrygd.me/game/g1"]
+
+def test_old_cache_with_lost_arenas_gets_refetched(monkeypatch, tmp_path):
+    import json as _json
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    (tmp_path / "2027.json").write_text(_json.dumps({"rows": [], "venues": {"g1": None}, "through": "2026-11-05"}))
+    calls = _stub_feed(monkeypatch, {"2026-11-01": [_game("g1")]}, {"g1": "Barn"})
+    rows = ng.season_games(2027, date(2026, 11, 6), {"a", "b"}, str.lower, cache_dir=str(tmp_path))
+    assert {r["id"] for r in rows} == {"g1"} and "https://ncaa-api.henrygd.me/game/g1" in calls
+    assert _json.loads((tmp_path / "2027.json").read_text())["venues"] == {"g1": "Barn"}
+
+def test_outage_stops_early_and_keeps_everything_for_retry(monkeypatch, tmp_path):
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    down = {f"2026-11-{d:02d}": RuntimeError("down") for d in range(1, 21)}
+    calls = _stub_feed(monkeypatch, down)
+    warn = []; ng.season_games(2027, date(2026, 11, 20), {"a"}, str.lower, cache_dir=str(tmp_path), warn=warn)
+    assert len(calls) == ng.MAX_STRAIGHT_FAILURES and "20 dates" in warn[0]
+
+def test_grade_scores_the_untouched_model_when_a_team_is_removed():
+    from bracketology import model, project
+    rows = [dict(team=f"T{i}", key=f"t{i}", lg=f"L{i}" if i < 32 else "big", champ=i < 32, p_in=1 - i / 200, rank_score=-i, is_power=0.0) for i in range(100)]
+    field, rest = model.choose_field(rows, 2026, project_autos=False); order = model.assign_lines(field, 2026)
+    untouched = project.model_bracket(order)
+    t0_line = next(r["line"] for r in untouched if r["team"] == "T0")
+    final, _ = project.apply_overrides(order, rest, {"T0": {"out": True, "reason": "x"}}, 2026)
+    g = project.grade({"teams": final, "model_bracket": untouched}, {"T0": t0_line})
+    assert g["model"]["picked"] == 1 and g["model"]["exact"] == 1 and g["final"]["picked"] == 0
+
+def test_snapshot_records_version_and_time():
+    import time
+    from bracketology import sitebuild
+    data = {"season": 2027, "teams": [], "accuracy": {"big": 1}, "archive": {"model_bracket": [], "ranked": [], "overrides": {}, "sources": {}}}
+    s = sitebuild.snapshot(data, time.gmtime(0))
+    assert s["snapshot_id"] == "2027-19700101T000000Z" and s["generated_at"] == "1970-01-01T00:00:00Z"
+    assert s["model"]["version"] == "v2.0" and s["model"]["weights_match"] is True
+    assert "accuracy" not in s and "archive" not in s and "ranked" in s
 
 def test_saved_model_matches_frozen_version():
     import hashlib
