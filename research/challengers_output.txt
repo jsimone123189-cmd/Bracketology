@@ -1,0 +1,45 @@
+selection Brier/log loss among at-large candidates (NET<=100, not champions):
+ Brier 0.0377 n 576
+  p 0.0-0.1: n 277 predicted 0.02 actual 0.01
+  p 0.1-0.3: n  27 predicted 0.18 actual 0.15
+  p 0.3-0.5: n  17 predicted 0.41 actual 0.41
+  p 0.5-0.7: n  21 predicted 0.61 actual 0.76
+  p 0.7-0.9: n  36 predicted 0.81 actual 0.81
+  p 0.9-1.0: n 198 predicted 0.98 actual 0.99
+BASE [335, 326, 347, 344, 329, 363, 356] 342.85714285714283 reproduces production: True
+--- seed objective
+ridge on seed line alpha 1                         [338, 317, 331, 327, 310, 347, 341] mean 330.1 diff -12.7 better 1 worse 6 worst -19 p 0.03 
+ridge on seed line alpha 10                        [339, 322, 333, 325, 318, 345, 345] mean 332.4 diff -10.4 better 1 worse 6 worst -19 p 0.05 
+ridge on seed line alpha 100                       [310, 323, 322, 329, 333, 368, 345] mean 332.9 diff -10.0 better 2 worse 5 worst -25 p 0.11 
+ridge on seed line alpha 500                       [304, 320, 322, 324, 327, 353, 349] mean 328.4 diff -14.4 better 0 worse 7 worst -31 p 0.02 
+ridge on 1-68 position alpha 10                    [340, 321, 328, 325, 318, 349, 352] mean 333.3 diff -9.6 better 1 worse 6 worst -19 p 0.06 
+ridge on 1-68 position alpha 100                   [314, 323, 326, 332, 333, 368, 356] mean 336.0 diff -6.9 better 2 worse 4 worst -21 p 0.22 
+ordinal, order by expected line C 0.01             [312, 325, 308, 336, 325, 351, 353] mean 330.0 diff -12.9 better 0 worse 7 worst -39 p 0.02 
+ordinal, order by expected line C 0.05             [315, 321, 319, 342, 326, 358, 356] mean 333.9 diff -9.0 better 0 worse 6 worst -28 p 0.03 
+ordinal, order by expected line C 0.3              [316, 335, 333, 334, 319, 362, 352] mean 335.9 diff -7.0 better 1 worse 6 worst -19 p 0.08 
+ordinal + expected-score assignment C 0.01         [305, 309, 306, 330, 319, 347, 343] mean 322.7 diff -20.1 better 0 worse 7 worst -41 p 0.02 
+ordinal + expected-score assignment C 0.05         [310, 317, 309, 334, 320, 358, 337] mean 326.4 diff -16.4 better 0 worse 7 worst -38 p 0.02 
+ordinal + expected-score assignment C 0.3          [313, 318, 328, 319, 316, 355, 346] mean 327.9 diff -15.0 better 0 worse 7 worst -25 p 0.02 
+--- effective sample size / simplification
+pairwise, all pairs                                [335, 327, 344, 348, 329, 363, 352] mean 342.6 diff -0.3 better 2 worse 2 worst -4 p 1.00 
+pairwise, all pairs, each team equal weight        [320, 326, 329, 341, 323, 365, 355] mean 337.0 diff -5.9 better 1 worse 5 worst -18 p 0.09 
+pairwise, window 16, each team equal weight        [324, 331, 336, 340, 328, 361, 353] mean 339.0 diff -3.9 better 1 worse 6 worst -11 p 0.16 
+no interaction features                            [331, 327, 342, 338, 329, 359, 360] mean 340.9 diff -2.0 better 2 worse 4 worst -6 p 0.28 
+composite features, pairwise                       [328, 332, 338, 330, 325, 364, 346] mean 337.6 diff -5.3 better 2 worse 5 worst -14 p 0.11 
+composite features, ridge alpha 10                 [320, 321, 323, 333, 319, 345, 351] mean 330.3 diff -12.6 better 0 worse 7 worst -24 p 0.02 
+pairwise C 0.01                                    [327, 330, 340, 340, 327, 361, 354] mean 339.9 diff -3.0 better 1 worse 6 worst -8 p 0.14 
+pairwise C 0.03                                    [335, 324, 343, 344, 330, 361, 352] mean 341.3 diff -1.6 better 1 worse 4 worst -4 p 0.12 
+pairwise C 1                                       [333, 328, 343, 348, 327, 359, 352] mean 341.4 diff -1.4 better 2 worse 5 worst -4 p 0.38 
+--- feature families, added to seeding
+wins by NET tier and road                          [338, 323, 336, 343, 323, 360, 356] mean 339.9 diff -3.0 better 1 worse 5 worst -11 p 0.16 
+continuous win and loss quality                    [335, 328, 345, 338, 333, 363, 363] mean 343.6 diff +0.7 better 3 worse 2 worst -6 p 0.75 
+bad home losses, worst loss                        [335, 323, 343, 348, 329, 359, 356] mean 341.9 diff -1.0 better 1 worse 3 worst -4 p 0.62 
+all three                                          [335, 329, 337, 335, 325, 360, 363] mean 340.6 diff -2.3 better 2 worse 4 worst -10 p 0.41 
+--- selection
+logistic only                                      [329, 320, 347, 338, 329, 357, 356] mean 339.4 diff -3.4 better 0 worse 4 worst -6 p 0.12 
+boosting only                                      [330, 326, 343, 344, 333, 363, 356] mean 342.1 diff -0.7 better 1 worse 2 worst -5 p 0.75 
+selection + wins by NET tier and road              [331, 326, 347, 344, 329, 363, 356] mean 342.3 diff -0.6 better 0 worse 1 worst -4 p 1.00 
+selection + continuous win and loss quality        [328, 326, 347, 344, 329, 363, 356] mean 341.9 diff -1.0 better 0 worse 1 worst -7 p 1.00 
+selection + bad home losses, worst loss            [331, 326, 347, 344, 332, 363, 356] mean 342.7 diff -0.1 better 1 worse 1 worst -4 p 1.00 
+selection + all three                              [331, 326, 347, 344, 332, 363, 356] mean 342.7 diff -0.1 better 1 worse 1 worst -4 p 1.00 
+shared resume score in selection                   [335, 326, 347, 344, 333, 363, 356] mean 343.4 diff +0.6 better 1 worse 0 worst +0 p 1.00 

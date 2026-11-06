@@ -9,6 +9,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from . import fieldformat
 
+MODEL_VERSION = "v2.0"     # frozen baseline, docs/08-baseline.md. Change it and the tag whenever weights or method change.
+MODEL_SHA256 = "5b5ab24ad90cdedf858f6fea7d59e4e5aa9b402486922712e814c9ae46edde8c"
+
 BASE = ["net_log", "wab", "sor", "rating", "q1a_w", "cq1_w", "cq3_l", "cq4_l", "win_pct", "sos", "road_w", "neutral_w",
         "last10", "best3", "cq2_w", "cq1_l"]
 SELECT = ["z_" + n for n in BASE] + ["rk_wab", "rk_sor", "rk_rating", "is_power"]

@@ -64,3 +64,16 @@ Points lost per season: model 67, T-Rank 59, median site 54. Largest gaps to med
 src/bracketology/model.py + project.py reproduce research exactly on 68-team seasons: 335 326 347 344 329 363 356, mean 342.9.
 Below T-Rank (348.9) and the median (354.0) before owner adjustments. Field/lines switch to 76 for 2027; line sizes are an assumption and no 76-team season exists to test on.
 overrides/{season}.json holds adjustments separately so grade() can score model and adjustments apart. Reclassifying teams for 2027 still need adding to INELIGIBLE_CHAMPS.
+
+## Outside audit round (2026-11-05). research/loss_audit.py, challengers.py, benchmark_losses.py.
+Production loses 65.1 points a season: field 11.1, one line off 39.4, two or more off 14.6. Real field given: 352.1. Perfect seeds on its own field: 396.9. Real line sizes add 0.3.
+Cutoff audit found no leakage: game logs filter post-cutoff rows, NET files stop before the tournament. 2019 has no through date, but its deep tournament teams show no extra games.
+Bar set before running: +3 mean, better in 5+ of 7, no season below -5. Nothing passed. Best: shared resume score in selection +0.6 (one season changed), continuous win and loss quality in seeding +0.7 (better 3, worse 2).
+Clearly worse: ridge on seed line (-10 to -14), ordinal by expected line (-7 to -13), ordinal with expected-score assignment (-15 to -20, worse in 7 of 7).
+Caveat: production settings were chosen on these same seasons, so small negatives are not evidence against a challenger. Production unchanged.
+
+## Big-miss round (2026-11-05). research/big_misses.py, pattern_tests.py.
+Same bar, test list fixed before running. Nothing passed. Best: non-power at-large flag in seeding +1.3 (better 4, worse 2), conference record x power in field +0.7 (better 2, worse 0; 2014-18 field 63.2 vs 62.8 of 68).
+Counting the Pac-12 as power through 2024 scored -5.7 (better 1, worse 6), so the five-league flag stays, though the flag was itself chosen on these seasons.
+Big misses run both ways with no stable group: every group's mean signed error is within about 0.3 lines except a small non-conference group (n=14). Mountain West teams were too high 5 times in 2023-24, but too low in 2019 and 2022, and San Diego St. was too low in 2024.
+About 45 variants have now been tried against this baseline, so a best result near +1.3 is what chance alone could produce. Production unchanged.

@@ -1,0 +1,93 @@
+=== model too HIGH on the team (committee seeded worse), 2+ lines
+2021 Colgate           Pat    seed 14   model 7     NET   9 WAB   1.5 ratRk   9 Q1 0-0 Q3/4L 1/0 rec 14-1 conf 0.92 ncOpp 200 p 0.82 champ 1
+2019 Iowa              B10    seed 10   model 7     NET  43 WAB   3.3 ratRk  39 Q1 4-10 Q3/4L 1/0 rec 22-11 conf 0.50 ncOpp 199 p 0.96 champ 0
+2021 Wisconsin         B10    seed 9    model 6     NET  27 WAB   2.3 ratRk  19 Q1 5-10 Q3/4L 0/0 rec 17-12 conf 0.50 ncOpp 170 p 0.97 champ 0
+2023 Fla. Atlantic     CUSA   seed 9    model 6     NET  13 WAB   4.1 ratRk  20 Q1 2-1 Q3/4L 0/0 rec 29-3 conf 0.90 ncOpp 187 p 0.99 champ 1
+2023 Texas A&M         SEC    seed 7    model 4     NET  19 WAB   3.9 ratRk  32 Q1 7-6 Q3/4L 0/2 rec 25-9 conf 0.83 ncOpp 185 p 1.00 champ 0
+2023 Memphis           Amer   seed 8    model 5     NET  23 WAB   4.2 ratRk  25 Q1 4-4 Q3/4L 1/0 rec 26-8 conf 0.72 ncOpp 122 p 1.00 champ 1
+2024 Nevada            MWC    seed 10   model 7     NET  34 WAB   2.5 ratRk  45 Q1 6-6 Q3/4L 1/0 rec 25-7 conf 0.72 ncOpp 175 p 0.99 champ 0
+2025 Louisville        ACC    seed 8    model 5     NET  23 WAB   5.4 ratRk  22 Q1 4-6 Q3/4L 0/0 rec 27-7 conf 0.90 ncOpp 125 p 0.99 champ 0
+2019 Minnesota         B10    seed 10   model 8     NET  61 WAB   2.5 ratRk  50 Q1 5-10 Q3/4L 1/0 rec 21-13 conf 0.45 ncOpp 169 p 0.91 champ 0
+2021 Loyola Chicago    MVC    seed 8    model 6     NET  10 WAB   2.1 ratRk  15 Q1 2-2 Q3/4L 0/0 rec 22-4 conf 0.89 ncOpp 157 p 0.98 champ 1
+2022 Iowa St.          B12    seed 11   model 9     NET  49 WAB   2.1 ratRk  52 Q1 9-8 Q3/4L 0/0 rec 20-12 conf 0.39 ncOpp 201 p 0.95 champ 0
+2023 Utah St.          MWC    seed 10   model 8     NET  18 WAB   3.5 ratRk  19 Q1 2-5 Q3/4L 0/2 rec 25-8 conf 0.72 ncOpp 123 p 0.99 champ 0
+2023 Boise St.         MWC    seed 10   model 8     NET  29 WAB   2.4 ratRk  33 Q1 3-5 Q3/4L 2/0 rec 23-9 conf 0.72 ncOpp 159 p 0.99 champ 0
+2024 New Mexico        MWC    seed 11   model 9     NET  22 WAB   1.4 ratRk  21 Q1 5-6 Q3/4L 1/1 rec 25-9 conf 0.56 ncOpp 174 p 0.98 champ 1
+2024 Boise St.         MWC    seed 10   model 8     NET  27 WAB   0.6 ratRk  41 Q1 6-5 Q3/4L 1/0 rec 20-10 conf 0.72 ncOpp 107 p 0.97 champ 0
+2026 Vanderbilt        SEC    seed 5    model 3     NET  13 WAB   7.5 ratRk  10 Q1 10-7 Q3/4L 0/0 rec 26-7 conf 0.61 ncOpp 164 p 1.00 champ 0
+=== model too LOW (committee seeded better), 2+ lines
+2019 VCU               A10    seed 8    model 11    NET  34 WAB   0.6 ratRk  41 Q1 2-2 Q3/4L 3/0 rec 25-7 conf 0.89 ncOpp 110 p 0.67 champ 0
+2022 Murray St.        OVC    seed 7    model 10    NET  21 WAB   3.1 ratRk  33 Q1 2-1 Q3/4L 1/0 rec 27-2 conf 1.00 ncOpp 128 p 0.97 champ 1
+2025 Memphis           Amer   seed 5    model 8     NET  50 WAB   4.5 ratRk  54 Q1 6-1 Q3/4L 2/0 rec 28-5 conf 0.89 ncOpp  63 p 0.99 champ 1
+2019 Utah St.          MWC    seed 8    model 10    NET  29 WAB   2.2 ratRk  33 Q1 3-2 Q3/4L 1/0 rec 28-6 conf 0.83 ncOpp 150 p 0.95 champ 1
+2019 UCF               Amer   seed 9    model 11    NET  30 WAB   0.9 ratRk  47 Q1 2-5 Q3/4L 1/0 rec 23-8 conf 0.72 ncOpp 170 p 0.84 champ 0
+2021 Texas Tech        B12    seed 6    model 8     NET  16 WAB   0.7 ratRk  17 Q1 4-10 Q3/4L 0/0 rec 17-10 conf 0.53 ncOpp 205 p 0.88 champ 0
+2021 West Virginia     B12    seed 3    model 5     NET  24 WAB   2.9 ratRk  28 Q1 7-7 Q3/4L 0/0 rec 18-9 conf 0.65 ncOpp  67 p 0.99 champ 0
+2021 Florida           SEC    seed 7    model 9     NET  31 WAB   1.1 ratRk  32 Q1 5-5 Q3/4L 1/0 rec 14-9 conf 0.56 ncOpp 124 p 0.97 champ 0
+2021 North Carolina    ACC    seed 8    model 10    NET  32 WAB   2.0 ratRk  26 Q1 3-9 Q3/4L 1/0 rec 18-10 conf 0.62 ncOpp 125 p 0.95 champ 0
+2021 Oklahoma          B12    seed 8    model 10    NET  36 WAB   0.0 ratRk  33 Q1 5-9 Q3/4L 1/0 rec 15-10 conf 0.53 ncOpp 136 p 0.76 champ 0
+2022 San Diego St.     MWC    seed 8    model 10    NET  25 WAB   2.7 ratRk  26 Q1 5-8 Q3/4L 0/0 rec 23-8 conf 0.76 ncOpp 128 p 0.98 champ 0
+2023 Virginia          ACC    seed 4    model 6     NET  27 WAB   3.7 ratRk  36 Q1 5-5 Q3/4L 1/0 rec 25-7 conf 0.75 ncOpp 146 p 0.99 champ 0
+2023 Maryland          B10    seed 8    model 10    NET  31 WAB   0.8 ratRk  28 Q1 3-10 Q3/4L 0/0 rec 21-12 conf 0.55 ncOpp 191 p 0.76 champ 0
+2023 Miami (FL)        ACC    seed 5    model 7     NET  35 WAB   3.2 ratRk  40 Q1 5-5 Q3/4L 1/1 rec 25-7 conf 0.75 ncOpp 134 p 0.99 champ 0
+2024 San Diego St.     MWC    seed 5    model 7     NET  21 WAB   2.3 ratRk  23 Q1 4-9 Q3/4L 0/0 rec 22-10 conf 0.61 ncOpp  92 p 0.98 champ 0
+2024 Fla. Atlantic     Amer   seed 8    model 10    NET  39 WAB   0.7 ratRk  38 Q1 2-2 Q3/4L 1/2 rec 25-8 conf 0.78 ncOpp 125 p 0.92 champ 0
+2025 Purdue            B10    seed 4    model 6     NET  19 WAB   4.6 ratRk  16 Q1 7-10 Q3/4L 0/0 rec 22-11 conf 0.65 ncOpp  99 p 0.99 champ 0
+2026 Saint Louis       A10    seed 9    model 11    NET  30 WAB   1.4 ratRk  31 Q1 2-1 Q3/4L 1/0 rec 27-5 conf 0.83 ncOpp 203 p 0.89 champ 0
+=== committee took, model left out
+2019 Temple            Amer   seed 11   model None  NET  56 WAB   0.3 ratRk  72 Q1 2-6 Q3/4L 1/0 rec 23-9 conf 0.72 ncOpp 156 p 0.21 champ 0
+2019 Arizona St.       P12    seed 11   model None  NET  63 WAB   0.1 ratRk  59 Q1 3-3 Q3/4L 2/2 rec 22-10 conf 0.67 ncOpp 143 p 0.23 champ 0
+2019 St. John's (NY)   BE     seed 11   model None  NET  73 WAB  -0.9 ratRk  82 Q1 5-7 Q3/4L 2/0 rec 21-12 conf 0.44 ncOpp 190 p 0.08 champ 0
+2021 Utah St.          MWC    seed 11   model None  NET  39 WAB  -1.2 ratRk  44 Q1 2-5 Q3/4L 2/0 rec 19-8 conf 0.79 ncOpp 127 p 0.04 champ 0
+2022 Indiana           B10    seed 12   model None  NET  39 WAB   0.0 ratRk  32 Q1 4-8 Q3/4L 1/0 rec 20-13 conf 0.45 ncOpp 200 p 0.36 champ 0
+2022 Notre Dame        ACC    seed 11   model None  NET  53 WAB   0.8 ratRk  56 Q1 2-8 Q3/4L 1/0 rec 21-10 conf 0.75 ncOpp 151 p 0.40 champ 0
+2022 Rutgers           B10    seed 11   model None  NET  77 WAB  -0.7 ratRk  81 Q1 6-6 Q3/4L 2/1 rec 18-13 conf 0.60 ncOpp 234 p 0.21 champ 0
+2023 Pittsburgh        ACC    seed 11   model None  NET  67 WAB  -1.0 ratRk  78 Q1 4-4 Q3/4L 1/1 rec 22-11 conf 0.70 ncOpp 185 p 0.07 champ 0
+2024 Michigan St.      B10    seed 9    model None  NET  24 WAB  -0.3 ratRk  18 Q1 3-9 Q3/4L 0/0 rec 19-14 conf 0.50 ncOpp 126 p 0.59 champ 0
+2024 Texas A&M         SEC    seed 9    model None  NET  45 WAB  -0.4 ratRk  49 Q1 7-7 Q3/4L 4/0 rec 20-14 conf 0.50 ncOpp 138 p 0.58 champ 0
+2024 Virginia          ACC    seed 10   model None  NET  54 WAB   0.9 ratRk  67 Q1 2-7 Q3/4L 0/0 rec 23-10 conf 0.65 ncOpp 176 p 0.79 champ 0
+2025 Xavier            BE     seed 11   model None  NET  45 WAB   0.5 ratRk  40 Q1 1-9 Q3/4L 0/0 rec 21-11 conf 0.65 ncOpp 178 p 0.42 champ 0
+2026 Miami (OH)        MAC    seed 11   model None  NET  64 WAB   1.7 ratRk  90 Q1 0-0 Q3/4L 0/1 rec 28-1 conf 1.00 ncOpp 266 p 0.26 champ 0
+=== model took, committee left out
+2019 NC State          ACC    seed None model 8     NET  33 WAB   2.1 ratRk  28 Q1 3-9 Q3/4L 2/0 rec 22-11 conf 0.50 ncOpp 235 p 0.90 champ 0
+2019 Clemson           ACC    seed None model 11    NET  35 WAB   0.6 ratRk  31 Q1 1-10 Q3/4L 0/0 rec 19-13 conf 0.50 ncOpp 146 p 0.69 champ 0
+2019 TCU               B12    seed None model 10    NET  52 WAB   0.5 ratRk  43 Q1 3-9 Q3/4L 0/0 rec 20-13 conf 0.39 ncOpp 149 p 0.50 champ 0
+2021 Louisville        ACC    seed None model 11    NET  56 WAB   1.1 ratRk  60 Q1 1-6 Q3/4L 1/0 rec 13-7 conf 0.62 ncOpp 110 p 0.63 champ 0
+2022 Oklahoma          B12    seed None model 11    NET  40 WAB   0.4 ratRk  27 Q1 4-12 Q3/4L 1/0 rec 18-15 conf 0.39 ncOpp 162 p 0.53 champ 0
+2022 Texas A&M         SEC    seed None model 11    NET  42 WAB   1.5 ratRk  51 Q1 4-10 Q3/4L 2/0 rec 22-11 conf 0.50 ncOpp 186 p 0.92 champ 0
+2022 SMU               Amer   seed None model 11    NET  44 WAB   1.2 ratRk  54 Q1 2-2 Q3/4L 1/1 rec 23-8 conf 0.76 ncOpp 178 p 0.83 champ 0
+2023 North Texas       CUSA   seed None model 11    NET  38 WAB   0.7 ratRk  59 Q1 1-3 Q3/4L 1/1 rec 24-7 conf 0.80 ncOpp 159 p 0.27 champ 0
+2024 Indiana St.       MVC    seed None model 11    NET  29 WAB   1.3 ratRk  36 Q1 1-4 Q3/4L 0/1 rec 27-6 conf 0.85 ncOpp 200 p 0.85 champ 0
+2024 Oklahoma          B12    seed None model 10    NET  46 WAB   0.8 ratRk  35 Q1 4-12 Q3/4L 0/0 rec 20-12 conf 0.44 ncOpp 199 p 0.83 champ 0
+2024 Seton Hall        BE     seed None model 11    NET  67 WAB   0.4 ratRk  64 Q1 5-8 Q3/4L 1/0 rec 20-12 conf 0.65 ncOpp 174 p 0.80 champ 0
+2025 West Virginia     B12    seed None model 10    NET  51 WAB   1.2 ratRk  45 Q1 6-10 Q3/4L 0/0 rec 19-13 conf 0.50 ncOpp 158 p 0.84 champ 0
+2026 Auburn            SEC    seed None model 11    NET  38 WAB   0.4 ratRk  36 Q1 4-13 Q3/4L 1/0 rec 17-16 conf 0.39 ncOpp 130 p 0.53 champ 0
+=== signed error by group (+ = model line worse than the committee's)
+non-power champions                          n 186 mean err -0.04 big   8 same sign 2/7
+non-power champions, model line <= 12        n  60 mean err -0.20 big   8 same sign 4/7
+power champions                              n  35 mean err -0.17 big   0 same sign 4/7
+non-power at-large                           n  50 mean err +0.30 big  10 same sign 4/7
+power at-large                               n 192 mean err +0.01 big  16 same sign 2/7
+0-2 Q1 wins, NET<=50                         n  40 mean err +0.12 big   9 same sign 4/7
+6+ Q1 losses at-large                        n  97 mean err +0.11 big  11 same sign 4/7
+12+ losses                                   n  96 mean err +0.02 big   4 same sign 3/7
+NET much better than WAB rank                n  38 mean err -0.21 big   4 same sign 3/7
+WAB rank much better than NET                n  51 mean err -0.10 big   3 same sign 4/7
+NET much better than own rating              n  21 mean err -0.14 big   6 same sign 3/7
+conference record .700+                      n 188 mean err -0.01 big  20 same sign 4/7
+conference record under .500                 n  25 mean err -0.12 big   2 same sign 4/7
+strong non-conference schedule (avg NET<=90) n  14 mean err +0.57 big   2 same sign 2/5
+weak non-conference schedule (avg NET>=200)  n  37 mean err -0.27 big   4 same sign 4/7
+=== OUT vs IN group means
+net        committee-only   53.77   model-only   43.92
+wab        committee-only   -0.01   model-only    0.93
+cq1_w      committee-only    3.15   model-only    3.00
+cq1_l      committee-only    6.08   model-only    8.31
+cq3_l      committee-only    1.23   model-only    0.77
+cq4_l      committee-only    0.38   model-only    0.23
+l          committee-only   10.46   model-only   11.08
+conf_pct   committee-only    0.65   model-only    0.56
+nc_opp     committee-only  174.80   model-only  168.12
+nc_q       committee-only    3.31   model-only    3.00
+ct_w       committee-only    0.85   model-only    0.85
+is_power   committee-only    0.69   model-only    0.77

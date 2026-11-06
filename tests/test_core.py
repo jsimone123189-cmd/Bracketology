@@ -45,6 +45,11 @@ def test_formats():
     assert ff.field_size(2026) == 68 and ff.field_size(2027) == 76 and ff.max_score(2027) == 456
     assert ff.slot_lines(2027).count(11) == 8 and len(ff.slot_lines(2027)) == 76
 
+def test_saved_model_matches_frozen_version():
+    import hashlib
+    from bracketology import model
+    assert hashlib.sha256(open("models/v2.joblib", "rb").read()).hexdigest() == model.MODEL_SHA256
+
 def test_net_feed_staleness():
     from bracketology.project import net_is_current
     assert not net_is_current("Through Games Apr. 06 2026", 2027) and net_is_current("Through Games Dec. 01 2026", 2027) and not net_is_current(None, 2027)

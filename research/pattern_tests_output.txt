@@ -1,0 +1,25 @@
+BASE [335, 326, 347, 344, 329, 363, 356] 342.9 reproduces production True picked 66.1 big misses 4.9
+--- field
+field + conference record                      [334, 326, 347, 344, 329, 363, 356] mean 342.7 diff -0.1 better 0 worse 1 worst -1 p 1.00 picked 66.1 big 5.0 
+field + under .500 in league                   [334, 326, 347, 344, 329, 363, 356] mean 342.7 diff -0.1 better 0 worse 1 worst -1 p 1.00 picked 66.1 big 4.7 
+field + conference record x power              [335, 326, 349, 344, 332, 363, 356] mean 343.6 diff +0.7 better 2 worse 0 worst +0 p 0.50 picked 66.3 big 4.7 
+field + non-conference opponents               [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 p 1.00 picked 66.1 big 4.9 
+field + Q1 win rate                            [334, 326, 339, 344, 329, 363, 356] mean 341.6 diff -1.3 better 0 worse 2 worst -8 p 0.50 picked 66.0 big 5.0 
+field + 10+ Q1 losses                          [335, 326, 343, 344, 335, 363, 356] mean 343.1 diff +0.3 better 1 worse 1 worst -4 p 1.00 picked 66.3 big 4.9 
+--- seeds
+seeds + conference record                      [329, 332, 338, 344, 337, 362, 356] mean 342.6 diff -0.3 better 2 worse 3 worst -9 p 0.88 picked 66.1 big 4.9 
+seeds + non-conference opponents               [325, 333, 340, 345, 335, 366, 354] mean 342.6 diff -0.3 better 4 worse 3 worst -10 p 0.95 picked 66.1 big 5.1 
+seeds + Q1 win rate                            [335, 325, 343, 348, 328, 363, 355] mean 342.4 diff -0.4 better 1 worse 4 worst -4 p 0.62 picked 66.1 big 5.0 
+seeds + non-power at-large flag                [335, 328, 353, 340, 333, 361, 359] mean 344.1 diff +1.3 better 4 worse 2 worst -4 p 0.44 picked 66.1 big 5.0 
+seeds + champion flag                          [334, 326, 353, 340, 323, 357, 368] mean 343.0 diff +0.1 better 2 worse 4 worst -6 p 1.00 picked 66.1 big 5.3 
+--- both, and the league definition
+both + conference record                       [327, 332, 338, 344, 337, 362, 356] mean 342.3 diff -0.6 better 2 worse 3 worst -9 p 0.75 picked 66.1 big 4.9 
+Pac-12 counted as power through 2024           [330, 327, 339, 334, 321, 358, 351] mean 337.1 diff -5.7 better 1 worse 6 worst -10 p 0.03 picked 66.1 big 5.1 
+--- independent check, 2014-18 field picks (trained on 2019-26, real field 68)
+base                           correct teams [62, 64, 59, 66, 63] mean 62.8 of 68
+conference record              correct teams [63, 64, 59, 66, 62] mean 62.8 of 68
+under .500 in league           correct teams [62, 64, 60, 66, 62] mean 62.8 of 68
+conference record x power      correct teams [63, 64, 60, 67, 62] mean 63.2 of 68
+non-conference opponents       correct teams [62, 64, 59, 66, 63] mean 62.8 of 68
+Q1 win rate                    correct teams [62, 64, 60, 66, 63] mean 63.0 of 68
+10+ Q1 losses                  correct teams [62, 64, 59, 66, 62] mean 62.6 of 68

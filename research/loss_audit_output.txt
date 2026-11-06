@@ -1,0 +1,21 @@
+=== Cutoff audit ===
+2019 NET through None | NET games minus log games through Sunday: {-1: 6, 0: 126, 1: 66, 2: 99, 3: 34, 4: 16} | log rows after cutoff by type: {3: 280} | champs 32 champs out of field [] | field 68
+   more NET games than log: [('Wofford', 3), ('Buffalo', 1), ('Utah St.', 1), ('New Mexico St.', 2), ('Furman', 3), ('Murray St.', 2), ('Belmont', 1), ('Nebraska', 1)]
+2021 NET through Mar. 14 2021 | NET games minus log games through Sunday: {0: 341} | log rows after cutoff by type: {3: 178} | champs 31 champs out of field [] | field 68
+2022 NET through Mar. 12 2022 | NET games minus log games through Sunday: {-1: 10, 0: 344} | log rows after cutoff by type: {3: 260} | champs 32 champs out of field [] | field 68
+2023 NET through Mar. 12 2023 | NET games minus log games through Sunday: {0: 358, 1: 2} | log rows after cutoff by type: {3: 226} | champs 32 champs out of field [] | field 68
+   more NET games than log: [('Morgan St.', 1), ('Delaware St.', 1)]
+2024 NET through Mar. 16 2024 | NET games minus log games through Sunday: {-1: 10, 0: 350} | log rows after cutoff by type: {3: 240} | champs 32 champs out of field [] | field 68
+2025 NET through Mar. 15 2025 | NET games minus log games through Sunday: {-1: 10, 0: 354} | log rows after cutoff by type: {3: 246} | champs 31 champs out of field [] | field 68
+2026 NET through Mar. 14 2026 | NET games minus log games through Sunday: {-1: 10, 0: 355} | log rows after cutoff by type: {3: 210} | champs 31 champs out of field [] | field 68
+
+=== Loss decomposition ===
+2019 score 335 | picked 65 exact 40 off1 20 off2+ 5 | lost: field 18 off1 40 off2+ 15 | auto 23 at-large 50 | oracle real field 351 +real line sizes 351 | oracle perfect seeds 390
+2021 score 326 | picked 67 exact 33 off1 26 off2+ 8 | lost: field 6 off1 52 off2+ 24 | auto 32 at-large 50 | oracle real field 332 +real line sizes 332 | oracle perfect seeds 402
+2022 score 347 | picked 65 exact 45 off1 17 off2+ 3 | lost: field 18 off1 34 off2+ 9 | auto 21 at-large 40 | oracle real field 359 +real line sizes 357 | oracle perfect seeds 390
+2023 score 344 | picked 67 exact 42 off1 17 off2+ 8 | lost: field 6 off1 34 off2+ 24 | auto 16 at-large 48 | oracle real field 350 +real line sizes 350 | oracle perfect seeds 402
+2024 score 329 | picked 65 exact 37 off1 23 off2+ 5 | lost: field 18 off1 46 off2+ 15 | auto 23 at-large 56 | oracle real field 340 +real line sizes 344 | oracle perfect seeds 390
+2025 score 363 | picked 67 exact 49 off1 15 off2+ 3 | lost: field 6 off1 30 off2+ 9 | auto 13 at-large 32 | oracle real field 371 +real line sizes 371 | oracle perfect seeds 402
+2026 score 356 | picked 67 exact 45 off1 20 off2+ 2 | lost: field 6 off1 40 off2+ 6 | auto 18 at-large 34 | oracle real field 362 +real line sizes 362 | oracle perfect seeds 402
+means: {'score': 342.9, 'picked': 66.1, 'exact': 41.6, 'one': 19.7, 'two': 4.9, 'lf': 11.1, 'l1': 39.4, 'l2': 14.6, 'auto': 20.9, 'al': 44.3, 'A': 352.1, 'B': 352.4, 'C': 396.9}
+points lost per season by true seed line: {1: 0.6, 2: 1.1, 3: 3.0, 4: 4.6, 5: 5.1, 6: 4.1, 7: 4.4, 8: 7.1, 9: 6.3, 10: 6.9, 11: 10.3, 12: 2.3, 13: 2.3, 14: 2.7, 15: 2.6, 16: 1.7}
