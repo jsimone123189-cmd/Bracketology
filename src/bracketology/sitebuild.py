@@ -2,7 +2,7 @@ from __future__ import annotations
 """Builds the static site: site/template.html + data -> data/output/site/preview.html (private Artifact) and data/output/public/index.html (Cloudflare).
 Run: python -m bracketology.sitebuild demo-2026   (held-out 2026 preview). Live seasons get the same data shape from project.py."""
 import hashlib, itertools, json, os, statistics, sys, time
-from . import fieldformat, model, project
+from . import checks, fieldformat, ledger, model, project
 from .features import build_year
 from .sources import bracketmatrix as bm
 
@@ -75,29 +75,33 @@ def live(season: int, fitted: model.Model) -> dict:
     info = {}; rows, warn = project.live_rows(season, info=info); model.prepare(rows); fitted.score(rows)
     field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); untouched = project.model_bracket(order)
     fmt = fieldformat.format_for(season); autos = sum(1 for r in field if r["champ"] or r.get("projected_auto"))
-    if autos != fmt.automatic: warn.append(f"{autos} automatic bids found, format expects {fmt.automatic}, so {len(field) - autos} at-large instead of {fmt.at_large}.")
+    found = info.pop("checks") + checks.autos(autos, fmt.automatic)
     ranked = [{"key": r["key"], "team": r["team"], "lg": r.get("lg"), "net": r["net"], "w": r["w"], "l": r["l"], "p_in": round(r["p_in"], 4), "rank_score": round(r["rank_score"], 4), "champ": bool(r["champ"])}
               for r in sorted(rows, key=lambda r: -r["p_in"])]
-    path = f"overrides/{season}.json"; overrides = json.load(open(path)) if os.path.exists(path) else {}
+    path = f"overrides/{season}.json"; overrides, rejected = ledger.validate(json.load(open(path)) if os.path.exists(path) else {})
+    found += [{"level": "alert", "check": "ledger", "message": m} for m in rejected]
     final, notes = project.apply_overrides(order, rest, overrides, season)
+    found += checks.field_size(len(final), fmt.size)
     final.sort(key=lambda r: (r["line"], r["overall"] if r.get("overall") else 99))
     for i, r in enumerate(final): r["overall"] = i + 1
     assign_regions(final)
     ids = {r["key"] for r in final}; rest = [r for r in rest if r["key"] not in ids]
     atl = sorted((r for r in final if not r["champ"] and not r.get("projected_auto")), key=lambda r: r["p_in"])
     return {"mode": "live", "season": season, "generated": time.strftime("%B %-d, %Y"), "max": fieldformat.max_score(season), "lines": fieldformat.line_sizes(season), "order": ORDER,
-            "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + notes,
+            "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + notes + [c["message"] for c in found], "checks": found,
             "teams": [team_record(r, table, season) for r in final], "out": [team_record(r, table, season) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
             "missed": [], "accuracy": acc,
-            "archive": {"model_bracket": untouched, "ranked": ranked, "overrides": overrides, "sources": info}}
+            "archive": {"model_bracket": untouched, "ranked": ranked, "overrides": overrides, "sources": info, "ledger": ledger.records(overrides, untouched, final, project.key, model.MODEL_VERSION)}}
 
 def snapshot(data: dict, stamp: time.struct_time, model_path: str = "models/v2.joblib") -> dict:
     """Permanent record of one run. Holds official NET and NCAA-derived figures, never third-party metric columns (r_*).
     With gamecache from the same commit on the snapshots branch, it is enough to rerun the model."""
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", stamp); weights = hashlib.sha256(open(model_path, "rb").read()).hexdigest() if os.path.exists(model_path) else None
     keep = {k: v for k, v in data.items() if k not in ("archive", "accuracy")}
-    return {"schema": 2, "snapshot_id": f"{data['season']}-{time.strftime('%Y%m%dT%H%M%SZ', stamp)}", "generated_at": ts,
+    sid = f"{data['season']}-{time.strftime('%Y%m%dT%H%M%SZ', stamp)}"
+    for e in data["archive"].get("ledger", []): e["snapshot_id"] = sid
+    return {"schema": 2, "snapshot_id": sid, "generated_at": ts,
             "model": {"version": model.MODEL_VERSION, "weights_sha256": weights, "weights_match": weights == model.MODEL_SHA256, "code_commit": os.environ.get("GITHUB_SHA")},
             **keep, **data["archive"]}
 
@@ -129,6 +133,10 @@ if __name__ == "__main__":
         stamp = time.gmtime()     # one file per run, so a second run the same day keeps the first
         json.dump(snapshot(data, stamp), open(f"data/output/snapshots/{season}_{time.strftime('%Y-%m-%dT%H%M%SZ', stamp)}.json", "w"), separators=(",", ":"))
         data.pop("archive")
+        alerts = [c["message"] for c in data["checks"] if c["level"] == "alert"] if "--ignore-alerts" not in sys.argv and "--force" not in sys.argv else []
+        for m in alerts: print(f"ALERT: {m}")
         if data["median_games"] < MIN_MEDIAN_GAMES and "--force" not in sys.argv:
-            print(f"Not publishing: median {data['median_games']} games played, need {MIN_MEDIAN_GAMES}."); sys.exit(3)
+            print(f"Not publishing: median {data['median_games']} games played, need {MIN_MEDIAN_GAMES}."); sys.exit(4 if alerts else 3)
+        if alerts:
+            print("Not publishing: data checks raised alerts."); sys.exit(4)
         print(render(data))

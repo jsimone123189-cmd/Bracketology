@@ -2,11 +2,19 @@ name: daily-update
 # $0 plan: GitHub Actions runs the update, Cloudflare Workers hosts the static page. See docs/07-deployment.md.
 on:
   # Daily snapshots, November to April. The page stays on Coming Soon until the owner sets the repository variable PUBLISH_BRACKET to true.
-  schedule: [{cron: "17 10 * 11-12,1-4 *"}]
+  # The two March 14 runs catch Selection Sunday's late conference finals, 5:10 and 5:40 p.m. ET. Update the date each season.
+  schedule:
+    - {cron: "17 10 * 11-12,1-4 *"}
+    - {cron: "10 21 14 3 *"}
+    - {cron: "40 21 14 3 *"}
   workflow_dispatch:
     inputs:
       placeholder_only:
         description: "Publish only the Coming Soon page, with no projection build"
+        type: boolean
+        default: false
+      publish_despite_alerts:
+        description: "Build the page even though data checks raised alerts. Use only after reading them"
         type: boolean
         default: false
 permissions:
@@ -41,9 +49,14 @@ jobs:
           fi
       - id: build
         run: |
-          code=0; PYTHONPATH=src python -m bracketology.sitebuild 2027 || code=$?
-          if [ "$code" = "3" ]; then echo "publish=false" >> "$GITHUB_OUTPUT"; elif [ "$code" = "0" ]; then echo "publish=true" >> "$GITHUB_OUTPUT"; else exit "$code"; fi
-        env: {BRACKETOLOGY_UA: "bracketology-bot/0.1 (free open bracketology project)"}
+          code=0; PYTHONPATH=src python -m bracketology.sitebuild 2027 $IGNORE || code=$?
+          if [ "$code" = "3" ]; then echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = "4" ]; then echo "publish=false" >> "$GITHUB_OUTPUT"; echo "alert=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = "0" ]; then echo "publish=true" >> "$GITHUB_OUTPUT"
+          else exit "$code"; fi
+        env:
+          BRACKETOLOGY_UA: "bracketology-bot/0.1 (free open bracketology project)"
+          IGNORE: ${{ inputs.publish_despite_alerts == true && '--ignore-alerts' || '' }}
       - name: Save dated snapshot to the snapshots branch
         run: |
           git config user.name "bracketology-bot"; git config user.email "bracketology-bot@users.noreply.github.com"
@@ -58,3 +71,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4.158.0"
           command: deploy
+      - if: steps.build.outputs.alert == 'true'
+        run: |
+          echo "::error::Data checks raised alerts. The snapshot was saved and the page was not updated. See the build step's ALERT lines."
+          exit 1

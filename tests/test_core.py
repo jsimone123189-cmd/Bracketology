@@ -86,6 +86,21 @@ def test_failed_date_is_retried_after_the_refetch_window(monkeypatch, tmp_path):
     warn = []; rows = run(date(2026, 11, 14), warn)
     assert warn == [] and {r["id"] for r in rows} == {"g1"}
 
+def test_empty_answer_on_a_game_day_is_retried(monkeypatch, tmp_path):
+    from datetime import date
+    from bracketology.sources import ncaa_games as ng
+    day = "2026-12-05"
+    run = lambda today, warn: ng.season_games(2027, today, {"a", "b"}, str.lower, cache_dir=str(tmp_path), warn=warn)
+    days = {f"2026-{m}-{d:02d}": [_game(f"g{m}{d}")] for m, ds in (("11", range(1, 31)), ("12", range(1, 11))) for d in ds if f"2026-{m}-{d:02d}" != day}
+    _stub_feed(monkeypatch, days)
+    warn = []; run(date(2026, 12, 10), warn)
+    assert day in warn[0]
+    days[day] = [_game("late")]
+    _stub_feed(monkeypatch, days)
+    warn = []; rows = run(date(2026, 12, 20), warn)
+    assert "late" in {r["id"] for r in rows}
+    assert not ng.should_have_games(date(2026, 12, 25), date(2027, 1, 1)) and not ng.should_have_games(date(2026, 12, 5), date(2026, 12, 5))
+
 def test_a_quiet_date_is_not_a_failure(monkeypatch, tmp_path):
     from datetime import date
     from bracketology.sources import ncaa_games as ng
@@ -193,7 +208,122 @@ def test_neutral_sites_from_arena():
     out = {(g["id"], g["team"]): g["loc"] for g in mark_neutral(rows, v)}
     assert out[("a", "Home U")] == "H" and out[("n", "Home U")] == "N" and out[("n", "Other")] == "N" and out[("u", "Home U")] == "H"
 
+def test_conference_tournament_games_do_not_make_an_arena_home():
+    from bracketology.sources.ncaa_games import mark_neutral
+    r = lambda i, t, o, l, ct=False: dict(id=i, team=t, opp=o, loc=l, ct=ct)
+    rows = []
+    for i in "abcd": rows += [r(i, "Duke", "X" + i, "H"), r(i, "X" + i, "Duke", "A")]
+    for i in "efg": rows += [r(i, "Duke", "Y" + i, "H", True), r(i, "Y" + i, "Duke", "A", True)]
+    rows += [r("n", "Duke", "Texas", "H"), r("n", "Texas", "Duke", "A")]
+    v = dict(a="Cameron", b="Cameron", c="Cameron", d="Cameron", e="Spectrum", f="Spectrum", g="Spectrum", n="Spectrum")
+    out = {(g["id"], g["team"]): g["loc"] for g in mark_neutral(rows, v)}
+    assert out[("n", "Duke")] == "N" and out[("e", "Duke")] == "N" and out[("a", "Duke")] == "H"
+
 def test_autobid_parsing_skips_undecided():
     from bracketology.sources.warrennolan import parse_autobids
     t = "<table><tr><th>Conference</th><th>Automatic Bid</th></tr><tr><td>ACC</td><td><a>Duke</a></td></tr><tr><td>SEC</td><td></td></tr></table>"
     assert parse_autobids(t) == {"ACC": "Duke"}
+
+def _c(items): return [(c["level"], c["check"]) for c in items]
+
+def test_game_count_check():
+    from bracketology import checks
+    net = {"a": 10, "b": 200, "c": 300}
+    assert checks.game_counts({"a": 20, "b": 18, "c": 22}, {"a": "11-9", "b": "10-10", "c": "12-10"}, net, "x") == []
+    assert _c(checks.game_counts({"a": 16, "b": 20, "c": 22}, {"a": "11-9", "b": "10-10", "c": "12-10"}, net, "x")) == [("alert", "game_counts")]     # top-90 team
+    many = {str(i): "10-10" for i in range(100)}; few = {str(i): 20 for i in range(100)}; few["5"] = 10
+    assert _c(checks.game_counts(few, many, {}, "x")) == [("note", "game_counts")]                                                                     # one low-major, could be a slow feed
+    assert _c(checks.game_counts({str(i): 10 for i in range(100)}, many, {}, "x")) == [("alert", "game_counts")]                                       # everyone off
+
+def test_source_health_levels():
+    from datetime import date
+    from bracketology import checks as k
+    ok = dict(season=2027, n_teams=365, missing_days=0, arena_unknown=0, arena_total=1000)
+    assert k.source_health(date(2027, 1, 1), net_source="ncaa", net_age_days=1, **ok) == []
+    assert _c(k.source_health(date(2026, 11, 20), net_source="warren_nolan", net_age_days=None, **ok)) == [("note", "net_source")]
+    assert _c(k.source_health(date(2026, 12, 20), net_source="warren_nolan", net_age_days=None, **ok)) == [("alert", "net_source")]
+    assert _c(k.source_health(date(2027, 1, 1), net_source="ncaa", net_age_days=9, **ok)) == [("alert", "net_age")]
+    assert _c(k.source_health(date(2027, 1, 1), net_source="ncaa", net_age_days=1, **dict(ok, missing_days=2))) == [("alert", "missing_days")]
+    assert _c(k.source_health(date(2027, 1, 1), net_source="ncaa", net_age_days=1, **dict(ok, arena_unknown=5))) == [("note", "arenas")]
+    assert _c(k.source_health(date(2027, 1, 1), net_source="ncaa", net_age_days=1, **dict(ok, arena_unknown=50))) == [("alert", "arenas")]
+
+def test_champion_check_levels():
+    from bracketology import checks as k
+    assert k.champions({"a", "b"}, {"a", "b"}, True) == []
+    assert _c(k.champions({"a", "b"}, {"a"}, False)) == [("note", "champions")]     # staggered tournament, mid-March
+    assert _c(k.champions({"a", "b"}, {"a"}, True)) == [("alert", "champions")]
+    assert _c(k.champions({"a"}, {"a", "c"}, True)) == [("note", "champions")]
+
+def test_champions_from_ncaa_results_need_a_finished_tournament():
+    from bracketology.project import ncaa_champions
+    g = lambda d, t, o, w, ct=True: dict(date=d, team=t, opp=o, conf="x", win=w, ct=ct, type=1, team_key=t, opp_key=o)
+    semis = [g("3/9/27", "a", "b", True), g("3/9/27", "b", "a", False), g("3/9/27", "c", "d", True), g("3/9/27", "d", "c", False)]
+    final = [g("3/10/27", "a", "c", True), g("3/10/27", "c", "a", False)]
+    regular = [g("1/9/27", "e", "a", True, False)]
+    assert ncaa_champions(semis + regular, set("abcde"), "2027-03-09") == set()
+    assert ncaa_champions(semis + final + regular, set("abcde"), "2027-03-10") == {"a"}
+
+def test_live_records_count_only_division_one_games(monkeypatch):
+    """Training records are D-I only. Counting other games shifted the model's win percentage and cost 4 points on 2026."""
+    from datetime import date
+    from bracketology import project
+    names = ["Aaa", "Bbb"] + [f"Other{chr(97 + i // 26)}{chr(97 + i % 26)}" for i in range(60)]     # the metrics need a full-size table
+    wn = {"rows": [{"team": t, "record": "1-1", "r_net": i + 1} for i, t in enumerate(names)]}
+    games = [dict(team="Aaa", opp="Bbb", date="11/20/26", win=True, conf="x", loc="H", type=1, id="1", pf=2, pa=1), dict(team="Bbb", opp="Aaa", date="11/20/26", win=False, conf="x", loc="A", type=1, id="1", pf=1, pa=2),
+             dict(team="Aaa", opp="Small College", date="11/21/26", win=True, conf="x", loc="H", type=0, id="2", pf=2, pa=1)]
+    monkeypatch.setattr(project.warrennolan, "collect", lambda s: wn)
+    monkeypatch.setattr(project.warrennolan, "autobids", lambda s: {})
+    monkeypatch.setattr(project.ncaa_net, "collect", lambda: {"asof": None, "rows": []})
+    def fake(season, today, universe, key, end=None, warn=None, status=None):
+        status.update(missing_days=0, arena_unknown=0, arena_total=1); return games
+    monkeypatch.setattr(project.ncaa_games, "season_games", fake)
+    rows, _ = project.live_rows(2027, today="2026-11-22")
+    a = next(r for r in rows if r["team"] == "Aaa")
+    assert (a["w"], a["l"]) == (1, 0)
+
+def test_ledger_rejects_undocumented_moves():
+    from datetime import datetime, timezone
+    from bracketology import ledger
+    now = datetime(2027, 3, 14, 20, tzinfo=timezone.utc)
+    good = dict(line=5, at="2027-03-14T19:00:00Z", category="availability", reason="Star out", evidence="School release")
+    ok, bad = ledger.validate({"A": good, "B": {"line": 5, "reason": "gut"}, "C": dict(good, category="other sites have them higher"), "D": dict(good, at="2027-03-15T01:00:00Z"), "E": dict(good, line=None)}, now)
+    assert list(ok) == ["A"] and len(bad) == 4 and "missing at" in bad[0] and "category" in bad[1] and "future" in bad[2] and "line or out" in bad[3]
+
+def _bracket():
+    from bracketology import model
+    rows = [dict(team=f"T{i}", key=f"t{i}", lg=f"L{i}" if i < 32 else "big", champ=i < 32, p_in=1 - i / 200, rank_score=-i, is_power=0.0, net=i + 1) for i in range(100)]
+    field, rest = model.choose_field(rows, 2027, project_autos=False)
+    return rows, model.assign_lines(field, 2027), rest
+
+def test_swap_keeps_line_sizes():
+    from bracketology import project
+    rows, order, rest = _bracket(); a, b = order[0], order[10]; la, lb = a["line"], b["line"]
+    final, notes = project.apply_overrides(order, rest, {a["team"]: {"line": lb, "swap_with": b["team"]}}, 2027)
+    by = {r["team"]: r for r in final}
+    assert by[a["team"]]["line"] == lb and by[b["team"]]["line"] == la and notes == []
+    rows, order, rest = _bracket(); out, inn = order[-1], rest[0]
+    final, notes = project.apply_overrides(order, rest, {inn["team"]: {"line": 16, "swap_with": out["team"]}}, 2027)
+    assert len(final) == 76 and out["team"] not in {r["team"] for r in final} and notes == []
+
+def test_report_scores_both_brackets_and_each_adjustment():
+    from bracketology import ledger, project, report
+    from bracketology.teams import key
+    rows, order, rest = _bracket()
+    a, b = order[0], order[10]; la, lb = a["line"], b["line"]
+    official = {r["team"]: r["line"] for r in order}; official[b["team"]] = la; official[a["team"]] = lb      # the committee agreed with the swap
+    untouched = project.model_bracket(order)
+    entry = dict(line=lb, swap_with=b["team"], at="2027-03-14T19:00:00Z", category="availability", reason="r", evidence="e")
+    final, _ = project.apply_overrides(order, rest, {a["team"]: entry}, 2027)
+    snap = {"snapshot_id": "s", "generated_at": "2027-03-14T21:40:00Z", "season": 2027, "model": {"version": "v2.0"}, "model_bracket": untouched, "teams": final,
+            "ledger": ledger.records({a["team"]: entry}, untouched, final, key, "v2.0"), "bubble": {"last_in": [rest[0]["key"]], "first_out": [rest[1]["key"]]},
+            "ranked": [dict(key=r["key"], net=r["net"], champ=r["champ"], p_in=r["p_in"]) for r in rows]}
+    r = report.evaluate(snap, official)
+    assert r["adjusted"]["score"] == 456 and r["max"] == 456 and r["model"]["score"] == 456 - 6
+    adj = r["adjustments"][0]
+    assert adj["score_impact"] == 6 and adj["original_line"] == la and adj["adjusted_line"] == lb and adj["final_outcome"] == lb
+    assert "Selection Sunday report" in report.as_text(r, [r])
+
+def test_report_uses_only_snapshots_before_the_bracket():
+    from bracketology import report
+    s = [{"generated_at": "2027-03-14T21:40:00Z", "n": 1}, {"generated_at": "2027-03-15T10:17:00Z", "n": 2}]
+    assert report.final_before(s, "2027-03-14T22:00:00Z")["n"] == 1

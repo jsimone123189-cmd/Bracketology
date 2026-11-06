@@ -1,0 +1,13 @@
+arena known 5604 of 5646
+top-90 team-games, Torvik 2931 NCAA 2930 both 2923
+location Torvik -> NCAA [(('A', 'A'), 967), (('A', 'N'), 8), (('H', 'H'), 1450), (('H', 'N'), 11), (('N', 'A'), 46), (('N', 'H'), 61), (('N', 'N'), 380)]
+Torvik neutral games found 380 of 487 (78.0%); non-neutral games wrongly marked neutral 19 of 2436
+location differences that change a game's quadrant 35 of 126 ; teams affected 27 of 90; most [('houston', 3), ('virginiatech', 2), ('arkansas', 2), ('duke', 2), ('stjohns', 2)]
+wins among them 26 losses 9
+examples [(('2025-11-04', 'duke', 'texas'), 'N', 'H', 'Spectrum Center '), (('2025-11-08', 'gonzaga', 'oklahoma'), 'H', 'N', 'Spokane Veterans Memorial Arena'), (('2025-11-15', 'nebraska', 'oklahoma'), 'N', 'H', 'Pinnacle Bank Arena'), (('2025-11-21', 'purdue', 'texastech'), 'N', 'H', ''), (('2025-11-21', 'wakeforest', 'memphis'), 'N', 'A', ''), (('2025-11-23', 'mcneese', 'georgewashington'), 'N', 'H', ''), (('2025-11-24', 'houston', 'syracuse'), 'N', 'H', 'MGM Grand Garden Arena'), (('2025-11-24', 'yale', 'akron'), 'N', 'A', '')]
+differences with no arena listed 37 of 126
+without tournament games: location Torvik -> NCAA [(('A', 'A'), 967), (('A', 'N'), 8), (('H', 'H'), 1450), (('H', 'N'), 11), (('N', 'A'), 27), (('N', 'H'), 30), (('N', 'N'), 430)]
+neutral games found 430 of 487; wrongly marked neutral 19
+still different, conference tournament games 7
+became right [('2025-11-04', 'duke', 'texas'), ('2025-11-04', 'texas', 'duke'), ('2025-12-06', 'dayton', 'virginia'), ('2025-12-06', 'virginia', 'dayton'), ('2026-03-06', 'highpoint', 'gardnerwebb'), ('2026-03-07', 'highpoint', 'uncasheville')]
+became wrong []

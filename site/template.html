@@ -72,7 +72,7 @@ const rec=(a,b)=>`${a??0}-${b??0}`;
 const link=t=>`<a href="#team-${t.key}">${e(t.team)}</a>`;
 function tag(t){if(!demo&&t.override_reason!==undefined&&t.model_line!==t.line)return`<span class="tag near">Edited${t.model_line?` (model ${t.model_line})`:""}</span>`;if(!demo||!compare)return"";if(!t.in_field)return'<span class="tag off">Not in field</span>';const d=t.seed-t.line;
  if(d===0)return'<span class="tag exact">Exact</span>';return`<span class="tag ${Math.abs(d)===1?"near":"off"}">Actual ${t.seed}</span>`}
-function banner(){if(!demo)return`<p class="muted small">Updated ${e(D.generated)}. Model first, then manual edits, marked where they differ.</p>`;const s=D.score;
+function banner(){if(!demo)return`<p class="muted small">Updated ${e(D.generated)}. Model first, then manual edits, marked where they differ.</p>${(D.warnings||[]).length?`<details class="muted small"><summary>Data notes (${D.warnings.length})</summary><ul>${D.warnings.map(w=>`<li>${e(w)}</li>`).join("")}</ul></details>`:""}`;const s=D.score;
  return`<div class="notice"><b>Preview using the ${D.season} field.</b><p class="small">The model was trained without ${D.season}, using only what was known on Selection Sunday. It scored ${s.score} of ${D.max} under Bracket Matrix rules. Live ${D.season+1} projections start once teams have played enough games.</p></div>`}
 function bracket(){const rs=[0,1,2,3].map(g=>{const games=D.order.map(([a,b])=>{const side=l=>{const ts=D.teams.filter(t=>t.region===g&&t.line===l);
  if(!ts.length)return"";return ts.map((t,i)=>`<div class="slot"><span class="sd">${l}</span><span>${link(t)}${t.play_in?' <span class="pi">opening round</span>':""}</span>${tag(t)}</div>`).join("")};

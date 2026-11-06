@@ -1,11 +1,10 @@
 from __future__ import annotations
 """Daily projection: live data -> model bracket -> your overrides -> output files. Run: python -m bracketology.project [season]
-Your adjustments live in overrides/{season}.json and are never mixed into the model:
-  {"Team Name": {"line": 5, "reason": "..."}, "Other": {"out": true, "reason": "..."}, "Third": {"line": 11, "reason": "..."}}"""
+Your adjustments live in overrides/{season}.json and are never mixed into the model. ledger.py has the format and rules."""
 import json, os, re, statistics, sys, time
 from datetime import date, datetime
-from . import fieldformat, history, metrics, model
-from .dataset import _d
+from . import checks, fieldformat, history, ledger, metrics, model
+from .dataset import _d, completed_champions
 from .features import build_year
 from .sources import ncaa_games, ncaa_net, warrennolan
 from .teams import key
@@ -25,33 +24,38 @@ def live_rows(season: int, today: str | None = None, info: dict | None = None) -
     info, if given, receives what the snapshot needs to show where this run's inputs came from."""
     today = today or time.strftime("%Y-%m-%d", time.gmtime()); warn = []; info = info if info is not None else {}
     wn = {key(r["team"]): r for r in warrennolan.collect(season)["rows"]}
-    net = {}; info.update(net_source="ncaa", net_asof=None)
+    net = {}; info.update(net_source="ncaa", net_asof=None); feed_records = {}
     try:
         feed = ncaa_net.collect(); info["net_asof"] = feed["asof"]
-        if net_is_current(feed["asof"], season): net = {key(r["team"]): r["net"] for r in feed["rows"]}
+        if net_is_current(feed["asof"], season):
+            net = {key(r["team"]): r["net"] for r in feed["rows"]}; feed_records = {key(r["team"]): r["record"] for r in feed["rows"]}
         else: warn.append(f"Official NCAA NET not published for {season} yet (feed shows {feed['asof']}).")
     except Exception as e: warn.append(f"NCAA NET unavailable: {e}")
     if not net:
         net = {k: r["r_net"] for k, r in wn.items() if "r_net" in r}; warn.append("Using Warren Nolan's NET column in place of the official feed."); info["net_source"] = "warren_nolan"
-    universe = set(wn)
+    universe = set(wn); status = {}
     cutoff = SELECTION_SUNDAY_LIVE.get(season)
-    games = ncaa_games.season_games(season, date.fromisoformat(today), universe, key, end=cutoff, warn=warn)
+    games = ncaa_games.season_games(season, date.fromisoformat(today), universe, key, end=cutoff, warn=warn, status=status)
     info.update(games_through=min(date.fromisoformat(today), cutoff).isoformat() if cutoff else today, game_rows=len(games))
-    names, lg, rec = {}, {}, {}
+    names, lg, rec, played_all = {}, {}, {}, {}
     for g in games:
         g["team_key"], g["opp_key"], g["date_iso"] = key(g["team"]), key(g["opp"]), _d(g["date"])
         if g["team_key"] in universe:
             names[g["team_key"]] = g["team"]; lg[g["team_key"]] = g["conf"]
-            if g["opp_key"] in universe or True:
+            played_all[g["team_key"]] = played_all.get(g["team_key"], 0) + 1
+            if g["opp_key"] in universe:     # D-I games only, the same way training records are counted
                 w, l = rec.get(g["team_key"], (0, 0)); rec[g["team_key"]] = (w + g["win"], l + (not g["win"]))
     first = metrics.compute(games, {k: 100 for k in universe}, today)
     missing = [k for k in universe if k not in net]
     if missing: warn.append(f"{len(missing)} teams have no NET rank and use their own rating rank: {missing[:5]}")
     ranks = {k: net.get(k, first[k]["rating_rank"]) for k in universe}
     M = metrics.compute(games, ranks, today)
+    listed_ok = True
     try: champs = {key(t) for t in warrennolan.autobids(season).values()}
-    except Exception as e: champs = set(); warn.append(f"Auto-bid list unavailable, projecting every league: {e}")
-    info["champions"] = sorted(champs)
+    except Exception as e: champs = set(); listed_ok = False; warn.append(f"Auto-bid list unavailable, using champions from NCAA results: {e}")
+    ncaa_champs = ncaa_champions(games, universe, today)
+    if not listed_ok: champs = set(ncaa_champs)
+    info.update(champions=sorted(champs), ncaa_champions=sorted(ncaa_champs))
     unknown = sorted(c for c in champs if c not in universe)
     if unknown: warn.append(f"Auto-bid names not matched: {unknown}")
     rows = []
@@ -59,9 +63,25 @@ def live_rows(season: int, today: str | None = None, info: dict | None = None) -
         w, l = rec.get(k, (0, 0))
         rows.append({"team": names.get(k, wn[k]["team"]), "key": k, "year": season, "net": ranks[k], "w": w, "l": l, "lg": lg.get(k, ""), "champ": k in champs,
                      "is_power": 1.0 if lg.get(k) in POWER else 0.0, **M[k], **{c: v for c, v in wn[k].items() if c.startswith("r_")}})
+    today_d = date.fromisoformat(today); decided = bool(cutoff) and today_d >= cutoff
+    age = None
+    m = re.search(r"([A-Za-z]{3})\.? (\d+) (\d{4})", info["net_asof"] or "")
+    if m and info["net_source"] == "ncaa": age = (today_d - datetime.strptime(" ".join(m.groups()), "%b %d %Y").date()).days
+    found = checks.source_health(today_d, season, info["net_source"], age, len(universe), status["missing_days"], status["arena_unknown"], status["arena_total"])
+    found += checks.team_matching(universe, set(net) if info["net_source"] == "ncaa" else set(), played_all, today_d, season)
+    if feed_records: found += checks.game_counts({k: sum(v) for k, v in rec.items()}, feed_records, ranks, "the NCAA NET records")
+    found += checks.game_counts(played_all, {k: r["record"] for k, r in wn.items()}, ranks, "Warren Nolan's records")
+    if listed_ok: found += checks.champions(set(ncaa_champs), champs, decided)
+    else: found.append({"level": "alert", "check": "champions", "message": "Auto-bid list unavailable, so champions come from NCAA results alone."})
+    info["checks"] = found
     played = statistics.median(r["w"] + r["l"] for r in rows)
     if played < 15: warn.append(f"Early season: teams have played a median of {played:.0f} games. The model is trained on full Selection Sunday resumes, so treat this as a rough preview.")
     return rows, warn
+
+def ncaa_champions(games: list[dict], universe: set[str], day: str) -> set[str]:
+    """Conference champions worked out from NCAA results alone, as an independent check on the auto-bid list."""
+    ct = [dict(g, type=2) for g in games if g.get("ct") and g["team_key"] in universe and g["opp_key"] in universe]
+    return {key(t) for t in completed_champions(ct, day).values()}
 
 def training_rows(exclude=()) -> list[dict]:
     out = []
@@ -85,7 +105,13 @@ def apply_overrides(order: list[dict], rest: list[dict], overrides: dict, season
         if o.get("out"):
             if field.pop(k, None) is None: notes.append(f"{name}: already out of the field")
             continue
+        old = field[k]["line"] if k in field else None
         field[k] = by[k]; by[k].setdefault("model_line", None); by[k]["line"] = int(o["line"]); by[k]["override_reason"] = o.get("reason", "")
+        if o.get("swap_with"):      # the other team takes this team's old line, or its place in the field
+            other = field.get(key(o["swap_with"]))
+            if other is None: notes.append(f"{name}: swap team {o['swap_with']} is not in the field")
+            elif old is None: field.pop(key(o["swap_with"]))
+            else: other["line"] = old; other["override_reason"] = f"Swapped with {name}: {o.get('reason', '')}"
     final = sorted(field.values(), key=lambda r: (r["line"], -r["rank_score"]))
     sizes = fieldformat.line_sizes(season)
     if len(final) != sum(sizes): notes.append(f"Field has {len(final)} teams, expected {sum(sizes)}")
@@ -123,7 +149,7 @@ def grade(result: dict, official: dict[str, int]) -> dict:
 def main(season: int | None = None) -> int:
     t = time.gmtime(); season = season or (t.tm_year + (1 if t.tm_mon >= 8 else 0))
     rows, warn = live_rows(season)
-    path = f"overrides/{season}.json"; overrides = json.load(open(path)) if os.path.exists(path) else {}
+    path = f"overrides/{season}.json"; overrides, rejected = ledger.validate(json.load(open(path)) if os.path.exists(path) else {}); warn += rejected
     result = build(rows, season, model.Model().fit(training_rows(exclude={season})), overrides)
     result["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()); result["warnings"] = warn + result.pop("notes")
     os.makedirs("data/output", exist_ok=True); json.dump(result, open(f"data/output/projection_{season}.json", "w"), indent=1)

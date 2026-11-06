@@ -10,6 +10,12 @@ def url(d: date) -> str:
 
 MAX_STRAIGHT_FAILURES = 5      # stop asking during an outage; whatever is left stays on the retry list for the next run
 
+def should_have_games(d: date, today: date) -> bool:
+    """The feed can answer an outage with an empty list. In 2025-26 only December 24-26 had no D-I games between early November and Selection Sunday."""
+    if d >= today: return False
+    in_season = (d.month == 11 and d.day >= 15) or d.month in (1, 2) or (d.month == 12 and not 23 <= d.day <= 26) or (d.month == 3 and d.day <= 20)
+    return in_season
+
 def day_rows(d: date, ttl: int) -> list[dict]:
     try:
         return fetch_day(d, ttl)
@@ -31,8 +37,9 @@ def fetch_day(d: date, ttl: int) -> list[dict]:
         hc = (h.get("conferences") or [{}])[0].get("conferenceSeo", ""); ac = (a.get("conferences") or [{}])[0].get("conferenceSeo", "")
         typ = 1 if hc and hc == ac else 0
         ds = f"{d.month}/{d.day}/{d.year % 100}"
-        rows.append({"date": ds, "type": typ, "team": h["names"]["short"], "conf": hc, "opp": a["names"]["short"], "loc": "H", "win": hs > aw, "pf": hs, "pa": aw, "id": g["gameID"]})
-        rows.append({"date": ds, "type": typ, "team": a["names"]["short"], "conf": ac, "opp": h["names"]["short"], "loc": "A", "win": aw > hs, "pf": aw, "pa": hs, "id": g["gameID"]})
+        ct = bool(h.get("seed") and a.get("seed") and hc == ac)     # seeds appear only in tournaments; this is how results alone show conference tournament games
+        rows.append({"date": ds, "type": typ, "ct": ct, "team": h["names"]["short"], "conf": hc, "opp": a["names"]["short"], "loc": "H", "win": hs > aw, "pf": hs, "pa": aw, "id": g["gameID"]})
+        rows.append({"date": ds, "type": typ, "ct": ct, "team": a["names"]["short"], "conf": ac, "opp": h["names"]["short"], "loc": "A", "win": aw > hs, "pf": aw, "pa": hs, "id": g["gameID"]})
     return rows
 
 def collect(start: date, end: date, ttl: int = 86400 * 30) -> dict:
@@ -51,10 +58,11 @@ def venue(game_id: str, ttl: int = 86400 * 365) -> str | None:
 
 def mark_neutral(rows: list[dict], venues: dict[str, str | None]) -> list[dict]:
     """The feed has no neutral flag. A game is neutral when it isn't in an arena the labelled home team regularly hosts in.
-    Regular = at least 3 home-labelled games there, or that team's most used arena. Unknown arena keeps the feed's home/away label."""
+    Regular = at least 3 home-labelled games there, or that team's most used arena, not counting conference tournament games, which can make a tournament arena look like home.
+    Unknown arena keeps the feed's home/away label."""
     use = {}
     for g in rows:
-        if g["loc"] == "H" and venues.get(g["id"]): use.setdefault(g["team"], {}).setdefault(venues[g["id"]], set()).add(g["id"])
+        if g["loc"] == "H" and venues.get(g["id"]) and not g.get("ct"): use.setdefault(g["team"], {}).setdefault(venues[g["id"]], set()).add(g["id"])
     regular = {}
     for t, v in use.items():
         top = max(len(x) for x in v.values())
@@ -65,7 +73,7 @@ def mark_neutral(rows: list[dict], venues: dict[str, str | None]) -> list[dict]:
         if a and a not in regular.get(home[g["id"]], {a}): g["loc"] = "N"
     return rows
 
-def season_games(season: int, today: date, universe: set[str], key, cache_dir: str = "data/output/gamecache", end: date | None = None, warn: list[str] | None = None) -> list[dict]:
+def season_games(season: int, today: date, universe: set[str], key, cache_dir: str = "data/output/gamecache", end: date | None = None, warn: list[str] | None = None, status: dict | None = None) -> list[dict]:
     """All results so far, with neutral sites marked. Keeps a season file so each run only requests recent dates, new arenas and anything that failed before.
     A file saved before failures were tracked may have gaps, so it gets one full refetch."""
     import copy, os
@@ -85,7 +93,9 @@ def season_games(season: int, today: date, universe: set[str], key, cache_dir: s
     for d in sorted(days):
         if straight >= MAX_STRAIGHT_FAILURES: missing.append(d.isoformat()); continue
         try:
-            for g in fetch_day(d, 600): keep[(g["id"], g["team"])] = g
+            got = fetch_day(d, 600)
+            for g in got: keep[(g["id"], g["team"])] = g
+            if not got and should_have_games(d, today): missing.append(d.isoformat())
             straight = 0
         except Exception:
             missing.append(d.isoformat()); straight += 1
@@ -99,6 +109,7 @@ def season_games(season: int, today: date, universe: set[str], key, cache_dir: s
         else: venues[i] = v; straight = 0
     if missing: warn.append(f"Game results missing for {len(missing)} dates, {missing[0]} to {missing[-1]}. Will retry next run.")
     if lost: warn.append(f"Arena unknown for {len(lost)} games, so they keep the feed's home/away label. Will retry next run.")
+    if status is not None: status.update(missing_days=len(missing), arena_unknown=len(lost), arena_total=len(lost) + len(venues))
     store.update(rows=rows, venues=venues, through=last.isoformat(), missing_days=missing)
     os.makedirs(cache_dir, exist_ok=True); json.dump(store, open(path, "w"), separators=(",", ":"))
     return mark_neutral(copy.deepcopy(rows), venues)

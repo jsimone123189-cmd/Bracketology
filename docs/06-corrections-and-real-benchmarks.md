@@ -77,3 +77,10 @@ Same bar, test list fixed before running. Nothing passed. Best: non-power at-lar
 Counting the Pac-12 as power through 2024 scored -5.7 (better 1, worse 6), so the five-league flag stays, though the flag was itself chosen on these seasons.
 Big misses run both ways with no stable group: every group's mean signed error is within about 0.3 lines except a small non-conference group (n=14). Mountain West teams were too high 5 times in 2023-24, but too low in 2019 and 2022, and San Diego St. was too low in 2024.
 About 45 variants have now been tried against this baseline, so a best result near +1.3 is what chance alone could produce. Production unchanged.
+
+## Live data audit (2026-11-06). research/neutral_audit.py, ncaa_parity.py.
+Live records counted non-D-I games while training records don't. On 2026 that alone scored 352 instead of 356, moving 6 teams. Live now counts D-I only. The earlier "same 356" parity test borrowed the correct records, so it could not catch this.
+D-I counts match NCAA NET records for 363 of 365 teams on 2026, which is now a daily check. Warren Nolan's records match our all-games count.
+Neutral rule: conference tournament games could make a tournament arena look like home (Duke at Spectrum Center). Leaving them out found 430 of 487 Torvik neutral games among NET top-90 teams instead of 380, with wrong neutral labels unchanged at 19 of 2,436 and nothing that was right becoming wrong. Judged against Torvik locations only, not committee results. 37 of the original 126 differences have no arena listed.
+2026 parity with both fixes: 360 (Torvik log 356). One season, and these are data corrections, so this isn't evidence of a better model. Production weights and method are unchanged. Training locations still come from Torvik.
+Champions from NCAA results alone match 30 of 31 auto-bids in both 2025 and 2026, missing the Mountain West each time (Colorado St., Utah St.). Cause not confirmed; both are on the list as champions, so these stay notes, not alerts.

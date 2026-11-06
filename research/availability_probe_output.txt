@@ -1,0 +1,16 @@
+Florida        games 33/33 players listed at 0 min 7; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Arizona        games 34/34 players listed at 0 min 12; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+UConn          games 34/34 players listed at 0 min 7; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Virginia       games 34/34 players listed at 0 min 5; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Michigan St.   games 32/32 players listed at 0 min 6; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Houston        games 34/34 players listed at 0 min 7; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Iowa St.       games 34/34 players listed at 0 min 9; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Michigan       games 34/34 players listed at 0 min 8; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Illinois       games 32/32 players listed at 0 min 5; names with changing id 0; top-5 minutes share missing, last 3 games 0.00; missed: []
+Gonzaga        games 33/33 players listed at 0 min 0; names with changing id 0; top-5 minutes share missing, last 3 games 0.06; missed: ['Jalen Warley']
+Purdue         games 35/35 players listed at 0 min 9; names with changing id 0; top-5 minutes share missing, last 3 games 0.08; missed: ['Braden Smith']
+Duke           games 34/34 players listed at 0 min 4; names with changing id 0; top-5 minutes share missing, last 3 games 0.36; missed: ['Caleb Foster', 'Patrick Ngongba']
+box scores found 403 of 403 ; unreadable minutes 0
+player fields ['__typename', 'assists', 'blockedShots', 'elig', 'fieldGoalsAttempted', 'fieldGoalsMade', 'firstName', 'freeThrowsAttempted', 'freeThrowsMade', 'id', 'lastName', 'minutesPlayed', 'number', 'offensiveRebounds', 'personalFouls', 'points', 'position', 'starter', 'steals', 'threePointsAttempted', 'threePointsMade', 'totalRebounds', 'turnovers', 'year']
+older season box score, 2022: True
+exit 0
