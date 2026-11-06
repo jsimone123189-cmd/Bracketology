@@ -39,3 +39,18 @@ Live 2027 would still read NCAA box scores, so if this passes, shadow tracking m
 
 ## Reported, can't change the result
 Selection Brier score among non-champions with NET 100 or better, two-or-more-line misses, mean seed error beyond one line, boundary pair agreement, and the same test on seeds alone. Also how far the committee actually placed teams with `avail_missing` of at least 0.2 from v2.0's held-out line. None of these can be promoted on this data.
+
+## Result: failed, the feature stays out
+Valid run: the control reproduced 335 326 347 344 329 363 356, and coverage was 99-100% in every season.
+
+| Season | 2019 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | Mean |
+|---|---|---|---|---|---|---|---|---|
+| v2.0 | 335 | 326 | 347 | 344 | 329 | 363 | 356 | 342.9 |
+| With `avail_missing` | 335 | 326 | 345 | 344 | 325 | 359 | 360 | 342.0 |
+| Change | 0 | 0 | -2 | 0 | -4 | -4 | +4 | -0.9 |
+
+Against the bar: mean -0.9 (needed +3), better in 1 of 7 seasons (needed 5), worst season -4 (limit -5). The first two parts failed.
+
+Reported only: Brier 0.0378 vs 0.0377, two-or-more-line misses unchanged at 4.86 a season, boundary pair agreement 0.849 vs 0.851. Seeds-alone scored the same as the full test. Seven teams at 0.2 or higher were in both fields, and the committee seeded six of them on exactly v2.0's line and the seventh one line worse (mean 0.14). Seven teams is too few to conclude much.
+
+v2.0 is unchanged. A retest needs a specifically named flaw in this run. Output is in `research/availability_test_output.txt`.

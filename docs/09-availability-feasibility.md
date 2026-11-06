@@ -20,3 +20,5 @@ Box scores for the 2026 NET top 12, every game through Selection Sunday, through
 
 ## Next step, if wanted
 Run the measure on all seven seasons as one pre-registered test against the bar in `docs/08-baseline.md`. It can't move a seed automatically unless it passes.
+
+**Outcome:** the seven-season test failed. NCAA box scores turned out to be unavailable before 2023 through the wrapper and largely empty for 2023, which is more than this check's 12 teams could show. See `docs/10-availability-test.md`.

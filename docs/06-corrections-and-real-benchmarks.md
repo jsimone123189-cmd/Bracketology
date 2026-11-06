@@ -84,3 +84,6 @@ D-I counts match NCAA NET records for 363 of 365 teams on 2026, which is now a d
 Neutral rule: conference tournament games could make a tournament arena look like home (Duke at Spectrum Center). Leaving them out found 430 of 487 Torvik neutral games among NET top-90 teams instead of 380, with wrong neutral labels unchanged at 19 of 2,436 and nothing that was right becoming wrong. Judged against Torvik locations only, not committee results. 37 of the original 126 differences have no arena listed.
 2026 parity with both fixes: 360 (Torvik log 356). One season, and these are data corrections, so this isn't evidence of a better model. Production weights and method are unchanged. Training locations still come from Torvik.
 Champions from NCAA results alone match 30 of 31 auto-bids in both 2025 and 2026, missing the Mountain West each time (Colorado St., Utah St.). Cause not confirmed; both are on the list as champions, so these stay notes, not alerts.
+
+## Player availability test, 2026-11-06
+Failed, and the feature stays out of v2.0. With availability added, the seven-season mean was 342.0 against 342.9, better in 1 of 7 seasons. The bar was +3 and 5 of 7. The rules were committed before the data, and a first run on NCAA box scores was invalid on coverage and is disclosed. Details are in `docs/10-availability-test.md`.
