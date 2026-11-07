@@ -22,7 +22,7 @@ permissions:
 jobs:
   placeholder:
     if: ${{ inputs.placeholder_only == true }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # pinned: ubuntu-latest is 26.04, which has no Python 3.9 for the saved model
     steps:
       - uses: actions/checkout@v4
       - run: mkdir -p data/output/public && cp site/placeholder/index.html data/output/public/
@@ -34,7 +34,7 @@ jobs:
           command: deploy
   publish:
     if: ${{ inputs.placeholder_only != true }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # pinned: ubuntu-latest is 26.04, which has no Python 3.9 for the saved model
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
