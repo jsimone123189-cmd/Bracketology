@@ -28,7 +28,9 @@
       '<div><span class="flabel">Show</span><span class="seg" id="nView"></span></div>' +
       '<div><span class="flabel">Picks</span><span class="seg" id="nRec"></span></div>' +
       '<div id="nMarketWrap"><span class="flabel">Market</span><span class="seg" id="nMarket"></span></div></div>' +
-      '<section><h2>This week’s leans</h2><p class="muted lede" id="nLede"></p><div id="nUp" class="day"></div></section>' +
+      '<section><h2>Recommended bets</h2><p class="muted lede">My calls from how Betalytics’ NFL picks have actually hit in your tracked results. ' +
+      'Follow = their picks in that group have a proven edge; Fade = bet the other side.</p><div id="nRecs"></div></section>' +
+      '<section><h2>Betalytics’ picks this week</h2><p class="muted lede" id="nLede"></p><div id="nUp" class="day"></div></section>' +
       '<div class="strip" aria-live="polite">' +
       '<div><div class="k">Record</div><div class="v" id="nRecd">–</div><div class="d" id="nRecD">&nbsp;</div></div>' +
       '<div><div class="k">Units</div><div class="v" id="nUnits">–</div><div class="d">1 unit per pick</div></div>' +
@@ -152,6 +154,34 @@
       });
       var sg = u.signal(x), td = h('td'); td.appendChild(h('span', { className: 'sig ' + sg[1] }, sg[0])); tr.appendChild(td);
       tb.appendChild(tr);
+    });
+
+    // Recommendations from realized results (ignores the Picks/Market filters, uses the Show switch)
+    var pool = all.filter(function (r) { return st.view === 'games' ? r.kind === 'game' : r.kind === 'prop'; });
+    var rec = Ledger.recommend(pool,
+      function (r) { return r.kind === 'game' ? [r.key] : [r.key + '|' + r.p.side, r.key]; },
+      function (r) { return r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'; },
+      function (r) { return r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'; });
+    LedgerRecs.render(document.getElementById('nRecs'), rec, {
+      bet: function (it) {
+        var r = it.r, p = r.p;
+        if (it.action === 'follow') return pickText(r);
+        if (r.kind === 'prop') return p.n + ' ' + (p.side === 'over' ? 'under ' : 'over ') + p.line + ' ' + (MK[p.mk] || p.mk).toLowerCase() + ' (check price)';
+        if (r.key === 'sp') return (p.side === 'home' ? r.g.a : r.g.h) + ' ' + U().fmtLine(-p.line) + ' (about −110)';
+        return (p.side === 'over' ? 'Under ' : 'Over ') + p.line + ' (about −110)';
+      },
+      meta: function (it) {
+        var r = it.r, d = new Date(r.g.t);
+        var game = r.kind === 'prop' ? r.id.split('_').slice(2).join(' @ ') : r.g.a + ' @ ' + r.g.h;
+        return game + ' · ' + d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' +
+          d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + (it.action === 'fade' ? ' · Betalytics has ' + pickText(r) : '');
+      },
+      groupName: function (k) {
+        var parts = k.split('|');
+        var base = GK[parts[0]] || MK[parts[0]] || parts[0];
+        return parts.length > 1 ? base + ' ' + parts[1] + 's' : 'All ' + base.toLowerCase() + (GK[parts[0]] ? 's' : '');
+      },
+      order: function (keys) { return keys.sort(function (a, b) { return a.localeCompare(b); }); }
     });
 
     // Upcoming leans

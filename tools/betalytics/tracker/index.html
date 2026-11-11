@@ -102,6 +102,11 @@ footer p { margin: 0 0 8px; }
 .sig.up { background: var(--win); color: var(--surface); } .sig.lean-up { color: var(--win); }
 .sig.down { background: var(--loss); color: var(--surface); } .sig.lean-down { color: var(--loss); }
 #leans { display: grid; gap: 6px; }
+.recs { display: grid; gap: 6px; }
+.tag.rec-follow { background: var(--win); color: var(--surface); }
+.tag.rec-fade { background: var(--accent); color: var(--accent-ink); }
+.sig.fade { background: var(--accent); color: var(--accent-ink); }
+.subh { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 0; }
 .view { display: grid; gap: 18px; }
 .view[hidden] { display: none; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
@@ -133,6 +138,12 @@ footer p { margin: 0 0 8px; }
   </nav>
 
   <div id="viewNcaab" class="view">
+  <section>
+    <h2>Recommended bets</h2>
+    <p class="muted lede">My calls, based only on how Betalytics’ picks have actually hit in your tracked results, not on their labels.
+    Follow means their picks in that group have a proven edge; Fade means bet the other side.</p>
+    <div id="recs"></div>
+  </section>
   <div class="filters" role="group" aria-label="Filters">
     <div><span class="flabel">Market</span><span class="seg" id="fMarket"></span></div>
     <div><span class="flabel">Grade</span><span class="seg" id="fGrade"></span></div>
@@ -141,7 +152,7 @@ footer p { margin: 0 0 8px; }
   </div>
 
   <section>
-    <h2>Today's leans</h2>
+    <h2>Betalytics' picks today</h2>
     <p class="muted lede">Betalytics' picks for today, sorted by Betalytics' own labels (Top bet, grade, stars). These are their calls, not a recommendation from this tracker. The By price grade table below shows how those labels have actually done.</p>
     <div id="leans"></div>
   </section>
@@ -190,6 +201,7 @@ footer p { margin: 0 0 8px; }
 </div>
 
 <script src="ledger.js"></script>
+<script src="recs.js"></script>
 <script src="nfl.js"></script>
 <script>
 (function () {
@@ -293,6 +305,7 @@ footer p { margin: 0 0 8px; }
 
     renderChart(list);
     renderLeans(all);
+    renderRecs(all);
     renderPicks(list, all.length);
   }
 
@@ -306,6 +319,42 @@ footer p { margin: 0 0 8px; }
   }
 
   var GRADE_RANK = { A: 0, B: 1, C: 2, D: 3 };
+  var GRADE_NAME = { sp: 'spreads', tot: 'totals', ml: 'moneylines' };
+  function renderRecs(all) {
+    var rec = Ledger.recommend(all,
+      function (r) { return [r.key + '|' + (r.p.grade || '?'), r.key]; },
+      function (r) { return r.key !== 'ml'; },
+      function (r) { return r.key === 'ml'; });
+    LedgerRecs.render($('recs'), rec, {
+      bet: function (it) {
+        var r = it.r, p = r.p, g = r.g;
+        if (it.action === 'follow') return pickText(r);
+        if (r.key === 'sp') {
+          var other = p.side === 'home' ? g.a.s : g.h.s;
+          return other + ' ' + fmtLine(-p.line) + ' (about −110)';
+        }
+        return (p.side === 'over' ? 'Under ' : 'Over ') + p.line + ' (about −110)';
+      },
+      meta: function (it) {
+        var r = it.r, d = new Date(r.g.t);
+        return r.g.a.s + ' @ ' + r.g.h.s + ' · ' + d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' +
+          d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + ' · ' + KEYS[r.key] +
+          (it.action === 'fade' ? ' · Betalytics has ' + pickText(r) : '');
+      },
+      groupName: function (k) {
+        var parts = k.split('|');
+        return parts.length > 1 ? 'Grade ' + parts[1] + ' ' + GRADE_NAME[parts[0]] : 'All ' + GRADE_NAME[parts[0]];
+      },
+      order: function (keys) {
+        var rank = { sp: 0, tot: 1, ml: 2 };
+        return keys.sort(function (a, b) {
+          var A = a.split('|'), B = b.split('|');
+          return rank[A[0]] - rank[B[0]] || (A.length - B.length) || (A[1] || '').localeCompare(B[1] || '');
+        });
+      }
+    });
+  }
+
   function renderLeans(all) {
     var now = Date.now(), el = $('leans');
     var up = all.filter(function (r) {

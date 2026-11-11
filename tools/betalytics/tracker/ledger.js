@@ -308,7 +308,99 @@
     return out;
   }
 
-  var api = { findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
+  /* ---------------- Real edge: how Betalytics' picks actually hit ---------------- */
+
+  var PRIOR = 100;        // pseudo-picks on each side at 50%: the market is assumed efficient until shown otherwise
+  var CONFIDENT = 0.8;    // posterior probability needed to recommend following or fading
+  var MIN_N = 100;        // decided picks a group needs before any verdict
+  var FADE_BE = 110 / 210; // break-even of the other side, assumed priced at -110
+
+  function phi(x) {       // standard normal CDF (Abramowitz-Stegun erf approximation)
+    var t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+    var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t *
+      Math.exp(-x * x / 2);
+    return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+  }
+
+  /**
+   * Realized performance of a group of graded picks, shrunk toward 50%.
+   * est = posterior mean hit rate; edge = est - break-even when following; fadeEdge = (1 - est) - break-even of the other side.
+   * pFollow / pFade = probability the group really clears break-even following / fading.
+   * Moneylines (prices vary too much for a hit rate) use units instead: est is shrunk ROI.
+   */
+  function realEdge(list, opts) {
+    opts = opts || {};
+    var w = 0, l = 0, beSum = 0, units = 0, nullVar = 0;
+    list.forEach(function (r) {
+      if (!r.res || r.res.r === 'P') return;
+      if (r.res.r === 'W') w++; else l++;
+      var b = profit(r.p.price), be = 1 / (1 + b);
+      beSum += be; units += r.res.u; nullVar += be * (1 - be) * (1 + b) * (1 + b);
+    });
+    var n = w + l, out = { n: n, w: w, l: l, raw: n ? w / n : null };
+    if (opts.byUnits) {
+      var roi = units / (n + PRIOR), sd = Math.sqrt(Math.max(nullVar, 1)) / (n + PRIOR);
+      out.est = roi; out.edge = roi; out.pFollow = n ? phi(roi / sd) : 0.5; out.pFade = 0; out.fadeEdge = null;
+      return out;
+    }
+    var a = w + PRIOR, bb = l + PRIOR, mean = a / (a + bb);
+    var sdp = Math.sqrt(a * bb / ((a + bb) * (a + bb) * (a + bb + 1)));
+    var be = n ? beSum / n : FADE_BE;
+    out.est = mean; out.be = be;
+    out.edge = mean - be;
+    out.fadeEdge = (1 - mean) - FADE_BE;
+    out.pFollow = 1 - phi((be - mean) / sdp);
+    out.pFade = phi(((1 - FADE_BE) - mean) / sdp);
+    return out;
+  }
+
+  /** 'follow' | 'fade' | 'none' | 'few' for a group, given whether fading is possible for it. */
+  function verdict(e, canFade) {
+    if (e.n < MIN_N) return 'few';
+    if (e.pFollow >= CONFIDENT && e.edge > 0) return 'follow';
+    if (canFade && e.pFade >= CONFIDENT && e.fadeEdge > 0) return 'fade';
+    if (!canFade && e.pFollow <= 1 - CONFIDENT && e.edge < 0) return 'avoid';   // clearly losing, other side unpriced
+    return 'none';
+  }
+
+  /**
+   * Recommend upcoming picks from graded history.
+   * groupsOf(r) -> list of group keys, most specific first (e.g. ['sp|A', 'sp']); the first group with enough
+   * data decides. canFade(r) says whether the other side is a near -110 two-way bet.
+   * Returns {groups: {key: realEdge + verdict}, picks: [{r, group, e, action}]} for upcoming picks with an action.
+   */
+  function recommend(all, groupsOf, canFade, isUnits) {
+    var hist = {};
+    all.forEach(function (r) {
+      if (!r.res) return;
+      groupsOf(r).forEach(function (k) { (hist[k] = hist[k] || []).push(r); });
+    });
+    var groups = {};
+    Object.keys(hist).forEach(function (k) {
+      var sample = hist[k][0];
+      var e = realEdge(hist[k], { byUnits: isUnits(sample) });
+      e.verdict = verdict(e, canFade(sample));
+      groups[k] = e;
+    });
+    var now = Date.now(), picks = [];
+    all.forEach(function (r) {
+      if (r.res || r.void || Date.parse(r.g.t) <= now) return;
+      var keys = groupsOf(r), g = null, k = null;
+      for (var i = 0; i < keys.length; i++) {
+        if (groups[keys[i]] && groups[keys[i]].n >= MIN_N) { g = groups[keys[i]]; k = keys[i]; break; }
+      }
+      if (!g || (g.verdict !== 'follow' && g.verdict !== 'fade')) return;
+      picks.push({ r: r, group: k, e: g, action: g.verdict });
+    });
+    picks.sort(function (x, y) {
+      var ex = x.action === 'fade' ? x.e.fadeEdge : x.e.edge, ey = y.action === 'fade' ? y.e.fadeEdge : y.e.edge;
+      return ey - ex || Date.parse(x.r.g.t) - Date.parse(y.r.g.t);
+    });
+    return { groups: groups, picks: picks };
+  }
+
+  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, MIN_N: MIN_N, PRIOR: PRIOR,
+              findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
               gradeProp: gradeProp, nflRows: nflRows, PROP_STAT: PROP_STAT };
