@@ -142,7 +142,7 @@ footer p { margin: 0 0 8px; }
 
   <section>
     <h2>Today's leans</h2>
-    <p class="muted lede">Upcoming picks, strongest first by Betalytics' own signals: top bet, then price grade, then price edge.</p>
+    <p class="muted lede">Betalytics' picks for today, sorted by Betalytics' own labels (Top bet, grade, stars). These are their calls, not a recommendation from this tracker. The By price grade table below shows how those labels have actually done.</p>
     <div id="leans"></div>
   </section>
 
@@ -345,8 +345,8 @@ footer p { margin: 0 0 8px; }
     var when = (showDay ? d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' : '') +
       d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + '  ' + (sc ? sc.as + '–' + sc.hs : when) +
-      ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · ' + Math.round(r.p.hit * 100) + '% to hit' : '') +
-      (r.p.edge != null ? ' · edge ' + (r.p.edge > 0 ? '+' : '') + r.p.edge.toFixed(1) : '') + closeText(r);
+      ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · Betalytics says ' + Math.round(r.p.hit * 100) + '% to hit, needs ' +
+        Math.round(100 / (1 + Ledger.profit(r.p.price))) + '%' : '') + closeText(r);
     mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
     var res = document.createElement('div'); res.className = 'res';
     var tag = document.createElement('span');
