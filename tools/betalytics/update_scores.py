@@ -3,8 +3,8 @@
 Reads the tracker's stored documents (as saved by ArtifactData `list` with
 `out_dir`): <db_dir>/slates/<date>.json and <db_dir>/scores/<date>.json.
 Finds games that tipped at least 2.5 hours ago (and within the last 5 days,
-so games ESPN never lists stop being retried) and have no score yet, looks
-them up on ESPN, and writes one merged document per changed date to
+so games the NCAA feed never lists stop being retried) and have no score yet, looks
+them up on the NCAA scoreboard, and writes one merged document per changed date to
 <out_dir>/scores-<date>.json, ready for an ArtifactData `set` on
 collection "scores", doc_id <date>.
 
@@ -18,7 +18,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import scores as espn  # noqa: E402
+import scores as feed  # noqa: E402
 
 
 def load(pattern):
@@ -53,7 +53,7 @@ def main(db_dir, out_dir):
     import contextlib
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        espn.main(f.name)
+        feed.main(f.name)
     result = json.loads(buf.getvalue())
     os.unlink(f.name)
 
@@ -72,7 +72,7 @@ def main(db_dir, out_dir):
                       "existed": date in stored})
     print(json.dumps({"checked": len(todo), "new_scores": len(result["scores"]),
                       "still_pending": len(result["pending"]),
-                      "not_on_espn": len(result["unmatched"]), "files": files}, indent=1))
+                      "not_in_feed": len(result["unmatched"]), "files": files}, indent=1))
 
 
 if __name__ == "__main__":

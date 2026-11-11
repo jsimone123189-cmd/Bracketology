@@ -2,7 +2,7 @@
 
 - `capture.user.js` — browser script that saves the pick data Betalytics pages load.
 - `tracker/` — source of the private "Betalytics NCAAB Ledger" artifact (upload captures, see record/units/ROI).
-- `scores.py`, `update_scores.py` — match games to ESPN final scores; run daily by a scheduled task that writes scores into the artifact.
+- `scores.py`, `update_scores.py` — match games to NCAA.com final scores (ESPN is not used: its robots.txt disallows Anthropic's crawler); run daily by a scheduled task that writes scores into the artifact.
 
 ## Capture
 

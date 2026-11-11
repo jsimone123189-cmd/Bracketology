@@ -1,89 +1,113 @@
-"""Match Betalytics NCAAB games to ESPN final scores.
+"""Match Betalytics NCAAB games to NCAA.com final scores (via the public ncaa-api wrapper
+this repo already uses; see docs/02-data-source-feasibility.md).
 
 Input (JSON file): {"games": [{"id", "t" (ISO tip time), "h": {"n", "s", "a"}, "a": {...}}]}
   n = full name, s = short name, a = abbreviation (as Betalytics gives them).
-Output (stdout JSON): {"scores": {game_id: {"hs", "as", "espn"}}, "unmatched": [ids], "pending": [ids]}
+Output (stdout JSON): {"scores": {game_id: {"hs", "as", "ncaa"}}, "unmatched": [ids], "pending": [ids]}
   hs/as are the Betalytics home/away teams' final points (oriented by team, so
-  neutral-site games where ESPN lists the teams the other way round still grade right).
+  neutral-site games where the feed lists the teams the other way round still grade right).
 
 Usage: python3 scores.py games.json > scores.json
-Only uses ESPN's public scoreboard; no Betalytics access. Standard library only.
+Uses only the NCAA scoreboard feed; no Betalytics access. Standard library only.
+ESPN is not used: espn.com's robots.txt disallows Anthropic's crawler.
 """
 import json
 import re
 import sys
 from datetime import datetime, timedelta, timezone
 
-import urllib.parse
+import time
 import urllib.request
 
-ESPN = ("https://site.api.espn.com/apis/site/v2/sports/basketball/"
-        "mens-college-basketball/scoreboard")
-ALIASES = {"state": "st", "saint": "st", "university": "", "univ": "", "the": "",
-           "and": "", "&": "", "mount": "mt", "fort": "ft"}
+NCAA = "https://ncaa-api.henrygd.me/scoreboard/basketball-men/d1/{y}/{m:02d}/{d:02d}/all-conf"
+USER_AGENT = "bracketology-bot/0.1 (free open bracketology project)"
+ALIASES = {"state": "st", "saint": "st", "university": "", "univ": "", "u": "", "the": "",
+           "and": "", "&": "", "mount": "mt", "fort": "ft", "of": "",
+           # NCAA.com short-name abbreviations and Betalytics initials, mapped to full words
+           "ky": "kentucky", "mich": "michigan", "tenn": "tennessee", "la": "louisiana",
+           "ind": "indiana", "ark": "arkansas", "colo": "colorado", "ga": "georgia",
+           "fla": "florida", "miss": "mississippi", "ill": "illinois", "ala": "alabama",
+           "wash": "washington", "conn": "connecticut", "val": "valley", "col": "college",
+           "e": "eastern", "w": "western", "n": "northern", "s": "southern", "c": "central",
+           "se": "southeastern", "sw": "southwestern", "ne": "northeastern", "nw": "northwestern"}
 
 
 def norm(s):
-    s = re.sub(r"[^a-z0-9& ]+", " ", (s or "").lower().replace("'", ""))
+    s = re.sub(r"[^a-z0-9& ]+", " ", (s or "").lower().replace("'", "").replace(".", ""))
     return " ".join(ALIASES.get(w, w) for w in s.split() if ALIASES.get(w, w))
 
 
-def keys(team):
-    """Name forms a team can be recognized by."""
-    out = set()
-    for f in team:
-        if f:
-            out.add(norm(f))
-    return {k for k in out if k}
+def keys(forms):
+    """Normalized name forms a team can be recognized by."""
+    return {k for k in (norm(f) for f in forms if f) if k}
 
 
-def espn_keys(t):
-    return keys([t.get("displayName"), t.get("shortDisplayName"), t.get("location"),
-                 t.get("abbreviation"), t.get("name") and f"{t.get('location')} {t['name']}"])
+def feed_keys(t):
+    """(names, abbreviations) for one side of an NCAA.com game."""
+    n = t.get("names") or {}
+    return (keys([n.get("short"), n.get("full"), (n.get("seo") or "").replace("-", " ")]),
+            keys([n.get("char6")]))
 
 
 def bl_keys(side):
-    return keys([side.get("n"), side.get("s"), side.get("a"), side.get("k")])
+    """(names, abbreviations) for one side of a Betalytics game."""
+    return keys([side.get("n"), side.get("s"), side.get("k")]), keys([side.get("a")])
 
 
 def fetch_day(day):
-    q = urllib.parse.urlencode({"dates": day.strftime("%Y%m%d"), "groups": 50, "limit": 500})
-    req = urllib.request.Request(f"{ESPN}?{q}", headers={"User-Agent": "Mozilla/5.0"})
+    """Games the NCAA lists for one US Eastern date."""
+    req = urllib.request.Request(NCAA.format(y=day.year, m=day.month, d=day.day),
+                                 headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=30) as r:
         data = json.load(r)
     events = []
-    for e in data.get("events", []):
-        comp = e["competitions"][0]
-        teams = {c["homeAway"]: c for c in comp["competitors"]}
-        if "home" not in teams or "away" not in teams:
-            continue
+    for item in data.get("games", []):
+        g = item["game"]
+        try:
+            hs, aw = int(g["home"]["score"]), int(g["away"]["score"])
+        except (KeyError, TypeError, ValueError):
+            hs = aw = 0
         events.append({
-            "id": e["id"],
-            "t": datetime.fromisoformat(e["date"].replace("Z", "+00:00")),
-            "final": comp["status"]["type"].get("completed", False),
-            "teams": [(espn_keys(c["team"]), int(c.get("score") or 0))
-                      for c in (teams["home"], teams["away"])],
+            "id": g["gameID"],
+            "t": datetime.fromtimestamp(int(g["startTimeEpoch"]), timezone.utc),
+            "final": g.get("gameState") == "final",
+            "teams": [(feed_keys(g["home"]), hs), (feed_keys(g["away"]), aw)],
         })
+    time.sleep(0.5)  # the wrapper allows 5 requests/second; stay well under
     return events
 
 
 def match(game, events):
+    """The feed game for a Betalytics game, oriented to Betalytics' home/away, or None.
+
+    Both teams matching by name (or abbreviation) within 18 hours wins. Otherwise
+    one team matching by full name within 3 hours is enough: a D-I team plays at most
+    once a day, and Betalytics leaves many non-D-I opponents unnamed. That fallback
+    must be unambiguous.
+    """
     tip = datetime.fromisoformat(game["t"].replace("Z", "+00:00"))
-    hk, ak = bl_keys(game["h"]), bl_keys(game["a"])
-    best = None
+    (hn, ha), (an, aa) = bl_keys(game["h"]), bl_keys(game["a"])
+    both, single = [], []
     for ev in events:
-        if abs((ev["t"] - tip).total_seconds()) > 18 * 3600:
+        gap = abs((ev["t"] - tip).total_seconds())
+        if gap > 18 * 3600:
             continue
-        (k1, s1), (k2, s2) = ev["teams"]
-        if hk & k1 and ak & k2:
-            cand = (ev, s1, s2)
-        elif hk & k2 and ak & k1:
-            cand = (ev, s2, s1)
-        else:
-            continue
-        if best is None or abs(ev["t"] - tip) < abs(best[0]["t"] - tip):
-            best = cand
-    return best
+        ((n1, a1), s1), ((n2, a2), s2) = ev["teams"]
+        hit = lambda names, abbrs, fn, fa: bool(names & fn) or bool(abbrs & fa)
+        if hit(hn, ha, n1, a1) and hit(an, aa, n2, a2):
+            both.append((gap, (ev, s1, s2)))
+        elif hit(hn, ha, n2, a2) and hit(an, aa, n1, a1):
+            both.append((gap, (ev, s2, s1)))
+        elif gap <= 3 * 3600:
+            if hn & n1 or an & n2:
+                single.append((gap, (ev, s1, s2)))
+            elif hn & n2 or an & n1:
+                single.append((gap, (ev, s2, s1)))
+    if both:
+        return min(both, key=lambda x: x[0])[1]
+    if len(single) == 1:
+        return single[0][1]
+    return None
 
 
 def main(path):
@@ -91,7 +115,7 @@ def main(path):
     days = set()
     for g in games:
         tip = datetime.fromisoformat(g["t"].replace("Z", "+00:00"))
-        et = (tip - timedelta(hours=5)).date()  # ESPN groups by US Eastern date
+        et = (tip - timedelta(hours=5)).date()  # the feed groups by US Eastern date
         days.update({et, et - timedelta(days=1), et + timedelta(days=1)})
     events = []
     for d in sorted(days):
@@ -105,7 +129,7 @@ def main(path):
         elif not m[0]["final"]:
             out["pending"].append(g["id"])
         else:
-            out["scores"][g["id"]] = {"hs": m[1], "as": m[2], "espn": m[0]["id"]}
+            out["scores"][g["id"]] = {"hs": m[1], "as": m[2], "ncaa": m[0]["id"]}
     json.dump(out, sys.stdout, indent=1)
 
 
