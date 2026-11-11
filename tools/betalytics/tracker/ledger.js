@@ -163,8 +163,155 @@
     return s;
   }
 
+  /* ---------------- NFL ---------------- */
+
+  /** NFL game and player-prop predictions inside a capture. */
+  function findNfl(capture) {
+    var out = { games: [], props: [] };
+    var items = capture && Array.isArray(capture.items) ? capture.items : [];
+    items.forEach(function (it) {
+      var b = it && it.body, u = it && it.url || '';
+      if (!b || !Array.isArray(b.results)) return;
+      if (/\/nfl\/games\/model-predictions/.test(u)) out.games = out.games.concat(b.results);
+      if (/\/nfl\/players\/model-predictions/.test(u)) out.props = out.props.concat(b.results);
+    });
+    return out;
+  }
+
+  /** The model's side in one two-way market: the side with the higher hit chance. */
+  function nflSide(sig, a, b) {
+    if (!sig || !sig[a] || !sig[b] || sig[a].hit_chance == null || sig[b].hit_chance == null) return null;
+    return sig[a].hit_chance >= sig[b].hit_chance ? a : b;
+  }
+
+  function compactNflGame(g) {
+    var ts = g.two_signal || {}, picks = {};
+    [['sp', 'spread', 'home', 'away'], ['tot', 'total', 'over', 'under'], ['ml', 'moneyline', 'home', 'away']].forEach(function (m) {
+      var side = nflSide(ts[m[1]], m[2], m[3]);
+      if (!side) return;
+      var s = ts[m[1]][side];
+      var price = s.best_price;
+      if (price == null && m[0] === 'ml') return;          // a moneyline cannot be graded without a price
+      if (m[0] !== 'ml' && s.line == null) return;
+      picks[m[0]] = { side: side, line: s.line == null ? null : s.line, price: price == null ? -110 : price,
+                      priced: price != null, hit: s.hit_chance, grade: s.price_grade || null,
+                      stars: s.stars == null ? null : s.stars, top: !!s.top_bet,
+                      rec: !!((g.edges || {})[m[1]] || s.top_bet), edge: s.price_edge_pts == null ? null : s.price_edge_pts };
+    });
+    if (!Object.keys(picks).length) return null;
+    var bt = g.backtest || {}, b = {};
+    if (bt.spread && bt.spread.n) b.sp = { n: bt.spread.n, win: bt.spread.win_rate };
+    if (bt.total && bt.total.n) b.tot = { n: bt.total.n, win: bt.total.win_rate, bucket: bt.total.bucket || '' };
+    if (bt.moneyline && bt.moneyline.n) b.ml = { n: bt.moneyline.n, ll: bt.moneyline.log_loss, mll: bt.moneyline.market_log_loss };
+    return { t: g.kickoff_utc, wk: g.season + '-' + String(g.week).padStart(2, '0'), h: g.home_team, a: g.away_team,
+             ver: g.version || '', vin: g.vintage || '', at: g.created_at || '', picks: picks, bt: b };
+  }
+
+  /** A prop reduced to grading needs. Side = where the model's chance beats the market's. */
+  function compactProp(p) {
+    var ln = p.line || {};
+    if (ln.value == null || p.over_chance == null || p.market_over_chance == null) return null;
+    var side = p.over_chance >= p.market_over_chance ? 'over' : 'under';
+    var price = side === 'over' ? ln.over_price : ln.under_price;
+    if (price == null) return null;
+    var hit = side === 'over' ? p.over_chance : p.under_chance;
+    var mkt = side === 'over' ? p.market_over_chance : 1 - p.market_over_chance;
+    var sig = (p.two_signal || {})[side] || {};
+    return { pid: p.player_id, n: p.player_name, tm: p.team, pos: p.position, mk: p.market, line: ln.value,
+             side: side, price: sig.best_price != null ? sig.best_price : price, book: ln.book || '',
+             hit: hit, mkt: Math.round(mkt * 10000) / 10000, rec: !!((p.edges || {})[side]),
+             grade: sig.price_grade || null, vin: p.vintage || '', at: p.created_at || '' };
+  }
+
+  /**
+   * Merge NFL predictions into stored docs.
+   * stored = {games: {week: {gameId: game}}, props: {gameId: {propKey: prop}}}.
+   * Taken only when the model ran before kickoff; a newer pre-kickoff run replaces an older one.
+   */
+  function mergeNfl(stored, capture) {
+    var found = findNfl(capture);
+    var games = {}, props = {}, counts = { games: 0, props: 0, started: 0, skipped: 0 };
+    var kick = {};
+    Object.keys(stored.games || {}).forEach(function (wk) {
+      Object.keys(stored.games[wk]).forEach(function (id) { kick[id] = stored.games[wk][id].t; });
+    });
+    found.games.forEach(function (g) { if (g.game_id && g.kickoff_utc) kick[g.game_id] = g.kickoff_utc; });
+    found.games.forEach(function (g) {
+      var c = g.game_id && compactNflGame(g);
+      if (!c) { counts.skipped++; return; }
+      if (!c.at || Date.parse(c.at) >= Date.parse(c.t)) { counts.started++; return; }
+      var wk = games[c.wk] || Object.assign({}, (stored.games || {})[c.wk] || {});
+      var old = wk[g.game_id];
+      if (old && Date.parse(old.at) >= Date.parse(c.at)) return;
+      wk[g.game_id] = c; games[c.wk] = wk; counts.games++;
+    });
+    found.props.forEach(function (p) {
+      var c = p.game_id && compactProp(p);
+      if (!c) { counts.skipped++; return; }
+      var t = kick[p.game_id];
+      if (!t || !c.at || Date.parse(c.at) >= Date.parse(t)) { counts.started++; return; }
+      var k = c.pid + '|' + c.mk;
+      var doc = props[p.game_id] || Object.assign({}, (stored.props || {})[p.game_id] || {});
+      var old = doc[k];
+      if (old && Date.parse(old.at) >= Date.parse(c.at)) return;
+      c.t = t;
+      doc[k] = c; props[p.game_id] = doc; counts.props++;
+    });
+    return { games: games, props: props, counts: counts };
+  }
+
+  var PROP_STAT = {
+    player_anytime_td: ['rushing_tds', 'receiving_tds', 'special_teams_tds'], player_receptions: ['receptions'],
+    player_reception_yds: ['receiving_yards'], player_rush_attempts: ['carries'], player_rush_yds: ['rushing_yards'],
+    player_pass_attempts: ['attempts'], player_pass_completions: ['completions'],
+    player_pass_interceptions: ['passing_interceptions'], player_pass_tds: ['passing_tds'], player_pass_yds: ['passing_yards']
+  };
+
+  /** Grade a prop from the player's game stats ({market: value}); null stats = did not play (no action). */
+  function gradeProp(p, stats) {
+    if (!stats || stats[p.mk] == null) return null;
+    var v = stats[p.mk], diff = p.side === 'over' ? v - p.line : p.line - v;
+    var r = diff > 0 ? 'W' : diff < 0 ? 'L' : 'P';
+    return { r: r, u: r === 'W' ? profit(p.price) : r === 'L' ? -1 : 0, v: v };
+  }
+
+  /** Flat rows for NFL game picks and props. results = {week: {games: {id: {hs, as}}, stats: {gameId: {pid: {...}}}}} */
+  function nflRows(games, props, results) {
+    var out = [];
+    var res = {};
+    Object.keys(results || {}).forEach(function (wk) {
+      var r = results[wk] || {};
+      Object.keys(r.games || {}).forEach(function (id) { res[id] = { score: r.games[id], stats: (r.stats || {})[id] || null }; });
+    });
+    Object.keys(games || {}).forEach(function (wk) {
+      Object.keys(games[wk]).forEach(function (id) {
+        var g = games[wk][id];
+        Object.keys(g.picks).forEach(function (key) {
+          var sc = res[id] && res[id].score;
+          out.push({ kind: 'game', wk: wk, id: id, key: key, p: g.picks[key], g: g, res: gradePick(key, g.picks[key], sc) });
+        });
+      });
+    });
+    Object.keys(props || {}).forEach(function (gid) {
+      var doc = props[gid];
+      Object.keys(doc).forEach(function (k) {
+        var p = doc[k], r = res[gid], graded = null;
+        if (r && r.stats) {                     // the game is final once its stats are stored
+          graded = gradeProp(p, r.stats[p.pid] || null);
+          if (!graded) graded = { r: 'V', u: 0 };   // did not play: void
+        }
+        out.push({ kind: 'prop', id: gid, key: p.mk, p: p, g: { t: p.t }, res: graded && graded.r === 'V' ? null : graded,
+                   void: !!(graded && graded.r === 'V') });
+      });
+    });
+    out.sort(function (x, y) { return Date.parse(y.g.t) - Date.parse(x.g.t); });
+    return out;
+  }
+
   var api = { findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
-              gradePick: gradePick, clv: clv, rows: rows, summarize: summarize };
+              gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
+              findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
+              gradeProp: gradeProp, nflRows: nflRows, PROP_STAT: PROP_STAT };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Ledger = api;
 })(typeof window !== 'undefined' ? window : this);

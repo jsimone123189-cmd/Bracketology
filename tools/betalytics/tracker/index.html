@@ -1,4 +1,4 @@
-<title>Betalytics NCAAB Ledger</title>
+<title>Betalytics Ledger</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
@@ -102,13 +102,19 @@ footer p { margin: 0 0 8px; }
 .sig.up { background: var(--win); color: var(--surface); } .sig.lean-up { color: var(--win); }
 .sig.down { background: var(--loss); color: var(--surface); } .sig.lean-down { color: var(--loss); }
 #leans { display: grid; gap: 6px; }
+.view { display: grid; gap: 18px; }
+.view[hidden] { display: none; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tabs button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600; font-size: 15px;
+  padding: 10px 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 @media (prefers-reduced-motion: no-preference) { .seg button, .btn { transition: background .15s, color .15s; } }
 </style>
 
 <div class="wrap">
   <header>
     <div>
-      <h1>Betalytics NCAAB Ledger</h1>
+      <h1>Betalytics Ledger</h1>
       <div class="sub" id="status">Loading your picks…</div>
     </div>
     <div class="import">
@@ -121,6 +127,12 @@ footer p { margin: 0 0 8px; }
   </header>
   <div class="note" id="msg" hidden></div>
 
+  <nav class="tabs" role="tablist" aria-label="Sport">
+    <button type="button" role="tab" id="tabNcaab" aria-selected="true">College basketball</button>
+    <button type="button" role="tab" id="tabNfl" aria-selected="false">NFL</button>
+  </nav>
+
+  <div id="viewNcaab" class="view">
   <div class="filters" role="group" aria-label="Filters">
     <div><span class="flabel">Market</span><span class="seg" id="fMarket"></span></div>
     <div><span class="flabel">Grade</span><span class="seg" id="fGrade"></span></div>
@@ -172,9 +184,13 @@ footer p { margin: 0 0 8px; }
     Sharp bettors beat the close about 55%+ of the time; it shows skill with a few hundred picks, far sooner
     than wins and losses. It turns green or red once 100+ picks are clearly above or below 50%.</p>
   </footer>
+  </div>
+
+  <div id="viewNfl" class="view" hidden></div>
 </div>
 
 <script src="ledger.js"></script>
+<script src="nfl.js"></script>
 <script>
 (function () {
   'use strict';
@@ -424,6 +440,19 @@ footer p { margin: 0 0 8px; }
   function msg(text, err) { var m = $('msg'); m.hidden = !text; m.textContent = text || ''; m.className = 'note' + (err ? ' err' : ''); }
 
   var scoreMeta = {};
+  window.LedgerUI = { fmtOdds: fmtOdds, fmtLine: fmtLine, fmtU: fmtU, pct: pct, sign: sign, signal: signal, msg: msg };
+
+  function showTab(name) {
+    var nfl = name === 'nfl';
+    $('viewNcaab').hidden = nfl; $('viewNfl').hidden = !nfl;
+    $('tabNcaab').setAttribute('aria-selected', String(!nfl)); $('tabNfl').setAttribute('aria-selected', String(nfl));
+    if (window.NflTab) NflTab.render();
+  }
+  $('tabNcaab').onclick = function () { history.replaceState(null, '', '#ncaab'); showTab('ncaab'); };
+  $('tabNfl').onclick = function () { history.replaceState(null, '', '#nfl'); showTab('nfl'); };
+  window.addEventListener('hashchange', function () { showTab(location.hash === '#nfl' ? 'nfl' : 'ncaab'); });
+  showTab(location.hash === '#nfl' ? 'nfl' : 'ncaab');
+
   async function start() {
     renderFilters(); render();
     if (!window.claude || !claude.use) { $('status').textContent = 'Open this page on claude.ai to see your stored picks.'; return; }
@@ -432,6 +461,7 @@ footer p { margin: 0 0 8px; }
     var user = await claude.use('user');
     var canWrite = user ? await user.can('data.write') : null;
     if (canWrite !== false) $('fileBtn').setAttribute('aria-disabled', 'false');
+    if (window.NflTab) NflTab.start(db);
     var timer = setTimeout(function () { if (!loaded.s) $('status').textContent = 'Still loading your picks… the store is slow to answer.'; }, 10000);
     db.collection('slates').onSnapshot(function (snap) {
       slates = {};
@@ -468,25 +498,33 @@ footer p { margin: 0 0 8px; }
     if (!f || !db) return;
     var cap;
     try { cap = JSON.parse(await f.text()); } catch (_) { msg('That file isn’t a capture file. Choose the betalytics-capture-….json file the script downloaded.', true); return; }
-    if (!Ledger.findSlates(cap).length) {
-      msg('No NCAAB game slate in this file. If this is an NFL capture, NFL tracking isn’t set up yet. Otherwise open the NCAAB games page on Betalytics, let it load, then tap Download again.', true); return;
+    var hasNcaab = Ledger.findSlates(cap).length > 0;
+    var nfl = Ledger.findNfl(cap), hasNfl = nfl.games.length + nfl.props.length > 0;
+    if (!hasNcaab && !hasNfl) {
+      msg('No NCAAB or NFL picks in this file. Open the games or props page on Betalytics, let it load, then tap Download again.', true); return;
     }
-    var m = Ledger.merge(slates, cap);
-    var dates = Object.keys(m.slates).sort();
-    if (!dates.length) { msg('Nothing new: every pick in this file is already stored (' + m.counts.unchanged + ' unchanged).'); return; }
-    msg('Saving ' + dates.length + ' day' + (dates.length > 1 ? 's' : '') + '…');
+    var notes = [];
     try {
-      for (var i = 0; i < dates.length; i++) {
-        await db.doc('slates/' + dates[i]).set({ date: dates[i], games: m.slates[dates[i]], updated_at: new Date().toISOString() });
-      }
-      var c = m.counts;
-      msg('Saved ' + c.added + ' new game' + (c.added === 1 ? '' : 's') + (c.updated ? ' and updated ' + c.updated + ' with newer lines' : '') +
-          '. ' + (c.noPick ? c.noPick + ' games had no model pick yet.' : ''));
+      if (hasNcaab) notes.push(await saveNcaab(cap));
+      if (hasNfl && window.NflTab) notes.push(await NflTab.ingest(cap));
+      msg(notes.join(' '));
     } catch (err) {
       msg(err && err.code === 'quota_exceeded' ? 'Storage is full. Ask Claude to archive old days.' :
           'Saving failed (' + (err && err.code || 'error') + '). Try the upload again.', true);
     }
   });
+
+  async function saveNcaab(cap) {
+    var m = Ledger.merge(slates, cap);
+    var dates = Object.keys(m.slates).sort();
+    if (!dates.length) return 'College: nothing new (' + m.counts.unchanged + ' picks already stored).';
+    for (var i = 0; i < dates.length; i++) {
+      await db.doc('slates/' + dates[i]).set({ date: dates[i], games: m.slates[dates[i]], updated_at: new Date().toISOString() });
+    }
+    var c = m.counts;
+    return 'College: saved ' + c.added + ' new game' + (c.added === 1 ? '' : 's') +
+      (c.updated ? ', updated ' + c.updated + ' with newer lines' : '') + '.';
+  }
 
   start();
 })();
