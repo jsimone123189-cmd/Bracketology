@@ -16,7 +16,8 @@
     var items = capture && Array.isArray(capture.items) ? capture.items : [];
     items.forEach(function (it) {
       var b = it && it.body;
-      if (b && Array.isArray(b.results) && /\/games\/slate/.test(it.url || '')) out.push(b.results);
+      // NCAAB only; other sports' slates (e.g. NFL) share the URL shape and must not mix in.
+      if (b && Array.isArray(b.results) && /\/ncaab\/games\/slate/.test(it.url || '')) out.push(b.results);
     });
     if (!out.length && capture && Array.isArray(capture.results)) out.push(capture.results);
     return out;

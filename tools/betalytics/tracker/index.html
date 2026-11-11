@@ -469,7 +469,7 @@ footer p { margin: 0 0 8px; }
     var cap;
     try { cap = JSON.parse(await f.text()); } catch (_) { msg('That file isn’t a capture file. Choose the betalytics-capture-….json file the script downloaded.', true); return; }
     if (!Ledger.findSlates(cap).length) {
-      msg('No NCAAB game slate in this file. Open the NCAAB games page on Betalytics, let it load, then tap Download again.', true); return;
+      msg('No NCAAB game slate in this file. If this is an NFL capture, NFL tracking isn’t set up yet. Otherwise open the NCAAB games page on Betalytics, let it load, then tap Download again.', true); return;
     }
     var m = Ledger.merge(slates, cap);
     var dates = Object.keys(m.slates).sort();
