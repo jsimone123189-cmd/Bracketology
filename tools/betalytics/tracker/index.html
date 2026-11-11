@@ -144,7 +144,7 @@ footer p { margin: 0 0 8px; }
   <section>
     <h2>By price grade</h2>
     <div class="scroll"><table>
-      <thead><tr><th>Group</th><th>Picks</th><th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th><th>Signal</th></tr></thead>
+      <thead><tr><th>Group</th><th>Picks</th><th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th><th>Beat close</th><th>Signal</th></tr></thead>
       <tbody id="breakdown"></tbody>
     </table></div>
   </section>
@@ -167,6 +167,10 @@ footer p { margin: 0 0 8px; }
     Under 100 decided picks it reads "Too few". "Likely edge" or "Likely losing" means the result is more than
     2 standard deviations from luck. Even then, check that it holds as the sample grows: with many groups, one
     will look strong by chance. A realistic edge (54–55% at −110) usually takes 1,000+ picks to show.</p>
+    <p><b>Beat close</b> is how often Betalytics' number was better than the consensus closing line (median of
+    US sportsbooks from The Odds API, last snapshot before tip-off), counting only picks where the line moved.
+    Sharp bettors beat the close about 55%+ of the time; it shows skill with a few hundred picks, far sooner
+    than wins and losses. It turns green or red once 100+ picks are clearly above or below 50%.</p>
   </footer>
 </div>
 
@@ -176,7 +180,7 @@ footer p { margin: 0 0 8px; }
   'use strict';
   var KEYS = { sp: 'Spread', tot: 'Total', ml: 'Moneyline' };
   var state = { market: 'all', grade: 'all', top: 'all', period: 'all', shown: 40 };
-  var slates = {}, scores = {}, slateVersions = {}, db = null, loaded = { s: false, c: false };
+  var slates = {}, scores = {}, closing = {}, db = null, loaded = { s: false, c: false };
   var $ = function (id) { return document.getElementById(id); };
 
   function seg(id, key, opts) {
@@ -223,7 +227,7 @@ footer p { margin: 0 0 8px; }
   }
 
   function render() {
-    var all = Ledger.rows(slates, scores);
+    var all = Ledger.rows(slates, scores, closing);
     var list = filtered(all);
     var s = Ledger.summarize(list);
     $('sRec').textContent = s.graded ? s.w + '–' + s.l + (s.p ? '–' + s.p : '') : '–';
@@ -254,6 +258,15 @@ footer p { margin: 0 0 8px; }
         if ((i === 5 || i === 6) && x.graded) td.className = sign(x.units);
         tr.appendChild(td);
       });
+      var bc = document.createElement('td');
+      var moved = x.clvN - x.clvSame;
+      bc.textContent = moved ? pct(x.beatRate) + ' of ' + moved : '–';
+      if (moved) {
+        bc.title = (x.avgClvPts != null ? 'average ' + (x.avgClvPts > 0 ? '+' : '') + x.avgClvPts.toFixed(2) + ' pts vs close; ' : '') +
+          x.clvSame + ' closed at the same number';
+        if (moved >= 100 && Math.abs(x.beatZ) >= 2) bc.className = x.beatZ > 0 ? 'pos' : 'neg';
+      }
+      tr.appendChild(bc);
       var sg = signal(x), std = document.createElement('td'), pill = document.createElement('span');
       pill.className = 'sig ' + sg[1]; pill.textContent = sg[0];
       if (x.z != null) pill.title = 'z = ' + x.z.toFixed(2) + ' over ' + x.decided + ' decided picks';
@@ -317,7 +330,7 @@ footer p { margin: 0 0 8px; }
       d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + '  ' + (sc ? sc.as + '–' + sc.hs : when) +
       ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · ' + Math.round(r.p.hit * 100) + '% to hit' : '') +
-      (r.p.edge != null ? ' · edge ' + (r.p.edge > 0 ? '+' : '') + r.p.edge.toFixed(1) : '');
+      (r.p.edge != null ? ' · edge ' + (r.p.edge > 0 ? '+' : '') + r.p.edge.toFixed(1) : '') + closeText(r);
     mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
     var res = document.createElement('div'); res.className = 'res';
     var tag = document.createElement('span');
@@ -421,7 +434,7 @@ footer p { margin: 0 0 8px; }
     if (canWrite !== false) $('fileBtn').setAttribute('aria-disabled', 'false');
     var timer = setTimeout(function () { if (!loaded.s) $('status').textContent = 'Still loading your picks… the store is slow to answer.'; }, 10000);
     db.collection('slates').onSnapshot(function (snap) {
-      slates = {}; slateVersions = {};
+      slates = {};
       snap.docs.forEach(function (d) { var b = d.data(); if (b && b.games) slates[d.id] = b.games; });
       if (!snap.metadata.fromCache) { loaded.s = true; clearTimeout(timer); }
       setStatus(); render();
@@ -431,6 +444,22 @@ footer p { margin: 0 0 8px; }
       snap.docs.forEach(function (d) { var b = d.data(); if (b && b.games) { scores[d.id] = b.games; scoreMeta[d.id] = b.checked_at || ''; } });
       setStatus(); render();
     }, function () {});
+    db.collection('closing').onSnapshot(function (snap) {
+      closing = {};
+      snap.docs.forEach(function (d) { var b = d.data(); if (b && b.games) closing[d.id] = b.games; });
+      render();
+    }, function () {});
+  }
+
+  function closeText(r) {
+    if (!r.clv) return '';
+    if (r.clv.pts != null) {
+      var c = r.key === 'sp' ? fmtLine(r.clv.close) : String(r.clv.close);
+      var d = r.clv.pts;
+      return ' · close ' + c + (Math.abs(d) < 1e-9 ? ' (same)' : ' (' + (d > 0 ? 'beat by ' : 'worse by ') + Math.abs(d) + ')');
+    }
+    var pp = r.clv.prob * 100;
+    return ' · close ' + fmtOdds(Math.round(r.clv.close)) + ' (' + (pp > 0 ? '+' : '') + pp.toFixed(1) + '% value)';
   }
 
   $('file').addEventListener('change', async function (e) {

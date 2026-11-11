@@ -86,17 +86,40 @@
     return { r: r, u: r === 'W' ? profit(p.price) : r === 'L' ? -1 : 0 };
   }
 
-  /** Every pick as a flat row: {date, id, key, p, g, res|null}. */
-  function rows(slates, scores) {
+  /**
+   * Closing line value of a pick against the consensus closing line (oriented to Betalytics' home/away).
+   * Spreads and totals: points better than the close (positive = Betalytics got the better number).
+   * Moneylines: closing no-vig win chance minus the break-even of the pick's price.
+   */
+  function clv(key, p, c) {
+    if (!c) return null;
+    if (key === 'sp' && c.sp && c.sp.home != null && p.line != null) {
+      var close = p.side === 'home' ? c.sp.home : -c.sp.home;
+      return { pts: p.line - close, close: close };
+    }
+    if (key === 'tot' && c.tot && c.tot.line != null && p.line != null) {
+      return { pts: p.side === 'over' ? c.tot.line - p.line : p.line - c.tot.line, close: c.tot.line };
+    }
+    if (key === 'ml' && c.ml && c.ml.home_p != null) {
+      var fair = p.side === 'home' ? c.ml.home_p : 1 - c.ml.home_p;
+      return { prob: fair - 1 / (1 + profit(p.price)), close: p.side === 'home' ? c.ml.home : c.ml.away };
+    }
+    return null;
+  }
+
+  /** Every pick as a flat row: {date, id, key, p, g, res|null, clv|null}. */
+  function rows(slates, scores, closing) {
     var out = [];
+    closing = closing || {};
     Object.keys(slates).forEach(function (date) {
       var games = slates[date] || {};
       var sc = scores[date] || {};
+      var cl = closing[date] || {};
       Object.keys(games).forEach(function (id) {
         var g = games[id];
         Object.keys(g.picks || {}).forEach(function (key) {
           out.push({ date: date, id: id, key: key, p: g.picks[key], g: g,
-                     res: gradePick(key, g.picks[key], sc[id]) });
+                     res: gradePick(key, g.picks[key], sc[id]), clv: clv(key, g.picks[key], cl[id]) });
         });
       });
     });
@@ -105,8 +128,15 @@
   }
 
   function summarize(list) {
-    var s = { n: list.length, w: 0, l: 0, p: 0, open: 0, units: 0, expSum: 0, expN: 0, nullVar: 0 };
+    var s = { n: list.length, w: 0, l: 0, p: 0, open: 0, units: 0, expSum: 0, expN: 0, nullVar: 0,
+              clvN: 0, clvBeat: 0, clvSame: 0, clvPts: 0, clvPtsN: 0 };
     list.forEach(function (r) {
+      if (r.clv) {
+        var v = r.clv.pts != null ? r.clv.pts : r.clv.prob;
+        s.clvN++;
+        if (Math.abs(v) < 1e-9) s.clvSame++; else if (v > 0) s.clvBeat++;
+        if (r.clv.pts != null) { s.clvPts += r.clv.pts; s.clvPtsN++; }
+      }
       if (!r.res) { s.open++; return; }
       s[r.res.r.toLowerCase()]++;
       s.units += r.res.u;
@@ -125,11 +155,15 @@
     s.hit = decided ? s.w / decided : null;
     s.exp = s.expN ? s.expSum / s.expN : null;
     s.roi = s.graded ? s.units / s.graded : null;
+    var moved = s.clvN - s.clvSame;      // picks where the line moved at all
+    s.beatRate = moved ? s.clvBeat / moved : null;
+    s.beatZ = moved ? (s.clvBeat - moved / 2) / Math.sqrt(moved / 4) : null;
+    s.avgClvPts = s.clvPtsN ? s.clvPts / s.clvPtsN : null;
     return s;
   }
 
   var api = { findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
-              gradePick: gradePick, rows: rows, summarize: summarize };
+              gradePick: gradePick, clv: clv, rows: rows, summarize: summarize };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Ledger = api;
 })(typeof window !== 'undefined' ? window : this);
