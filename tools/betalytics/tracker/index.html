@@ -1,0 +1,398 @@
+<title>Betalytics NCAAB Ledger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one column ledger. Status + import, filter bar, summary strip, grade breakdown, units curve, pick-by-pick slips. */
+:root {
+  --bg: #f4f5f7; --surface: #ffffff; --ink: #151a21; --muted: #5d6573; --line: #e1e4e9;
+  --accent: #c8480f; --accent-ink: #ffffff; --chip: #eceef2;
+  --win: #1d7f47; --loss: #c0322f; --push: #7a6a2a; --open: #6b7380;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1217; --surface: #171b22; --ink: #e7eaef; --muted: #9aa3b0; --line: #282e38;
+  --accent: #ff7b3a; --accent-ink: #1a0d05; --chip: #222833;
+  --win: #43b874; --loss: #ff6b66; --push: #d2b863; --open: #8d95a2; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1217; --surface: #171b22; --ink: #e7eaef; --muted: #9aa3b0; --line: #282e38;
+  --accent: #ff7b3a; --accent-ink: #1a0d05; --chip: #222833;
+  --win: #43b874; --loss: #ff6b66; --push: #d2b863; --open: #8d95a2; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 18px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+h1 { font-size: 30px; line-height: 1.05; }
+h2 { font-size: 20px; text-transform: uppercase; letter-spacing: .04em; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+button, .btn { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; }
+header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.import { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: var(--accent-ink);
+  border: 0; border-radius: 8px; padding: 10px 14px; font-weight: 600; }
+.btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+#file { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.note { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--chip); }
+.note.err { color: var(--loss); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 6px 10px; border-radius: 6px; font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.flabel { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-right: 6px; }
+
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; }
+.strip > div { padding: 14px 16px; min-width: 0; }
+.strip > div + div { border-left: 1px solid var(--line); }
+.strip .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.strip .v { font-family: var(--display); font-size: 32px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.strip .d { font-size: 12px; color: var(--muted); }
+@media (max-width: 620px) { .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strip > div:nth-child(3) { border-left: 0; } .strip > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+.pos { color: var(--win); } .neg { color: var(--loss); }
+
+section { display: grid; gap: 10px; min-width: 0; }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
+tbody tr + tr td { border-top: 1px solid var(--line); }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+td:first-child { font-family: var(--body); font-weight: 600; }
+
+.grade { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px;
+  font-family: var(--display); font-weight: 700; font-size: 15px; border: 1.5px solid currentColor; }
+.grade.A { color: var(--win); } .grade.B { color: var(--accent); } .grade.C, .grade.D, .grade.x { color: var(--muted); }
+
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.chart svg { display: block; width: 100%; height: auto; }
+
+.day { display: grid; gap: 6px; }
+.day h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 8px 0 0; font-weight: 600; }
+.slip { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.slip .pick { font-weight: 600; overflow-wrap: anywhere; }
+.slip .meta { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.slip .res { text-align: right; display: grid; gap: 2px; justify-items: end; }
+.tag { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+.tag.top { background: var(--accent); color: var(--accent-ink); }
+.tag.W { background: var(--win); color: var(--surface); } .tag.L { background: var(--loss); color: var(--surface); }
+.tag.P { background: var(--push); color: var(--surface); } .tag.open { background: var(--chip); color: var(--open); }
+.stars { color: var(--accent); letter-spacing: 1px; font-size: 11px; }
+.more { justify-self: center; background: var(--chip); color: var(--ink); border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 500; }
+
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 22px; display: grid; gap: 8px; }
+.empty ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+footer { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .seg button, .btn { transition: background .15s, color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Betalytics NCAAB Ledger</h1>
+      <div class="sub" id="status">Loading your picks…</div>
+    </div>
+    <div class="import">
+      <label class="btn" for="file" id="fileBtn" aria-disabled="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M7.25 1.5h1.5v7.19l2.47-2.47 1.06 1.06L8 11.56 3.72 7.28l1.06-1.06 2.47 2.47V1.5ZM2 12.5h12V14H2v-1.5Z"/></svg>
+        Add capture file
+      </label>
+      <input type="file" id="file" accept=".json,application/json">
+    </div>
+  </header>
+  <div class="note" id="msg" hidden></div>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div><span class="flabel">Market</span><span class="seg" id="fMarket"></span></div>
+    <div><span class="flabel">Grade</span><span class="seg" id="fGrade"></span></div>
+    <div><span class="flabel">Picks</span><span class="seg" id="fTop"></span></div>
+    <div><span class="flabel">Period</span><span class="seg" id="fPeriod"></span></div>
+  </div>
+
+  <div class="strip" aria-live="polite">
+    <div><div class="k">Record</div><div class="v" id="sRec">–</div><div class="d" id="sRecD">&nbsp;</div></div>
+    <div><div class="k">Units</div><div class="v" id="sUnits">–</div><div class="d">1 unit per pick</div></div>
+    <div><div class="k">ROI</div><div class="v" id="sRoi">–</div><div class="d" id="sRoiD">&nbsp;</div></div>
+    <div><div class="k">Hit rate</div><div class="v" id="sHit">–</div><div class="d" id="sHitD">&nbsp;</div></div>
+  </div>
+
+  <section>
+    <h2>By price grade</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Group</th><th>Picks</th><th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th></tr></thead>
+      <tbody id="breakdown"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Units over time</h2>
+    <div class="chart" id="chart"></div>
+  </section>
+
+  <section>
+    <h2>Picks</h2>
+    <div id="picks"></div>
+  </section>
+
+  <footer>
+    Picks are the Betalytics model's side for each market, priced at the last run before tip-off.
+    Graded against ESPN final scores, flat 1 unit risked per pick. "Model %" is the average hit chance
+    Betalytics gave the graded picks.
+  </footer>
+</div>
+
+<script src="ledger.js"></script>
+<script>
+(function () {
+  'use strict';
+  var KEYS = { sp: 'Spread', tot: 'Total', ml: 'Moneyline' };
+  var state = { market: 'all', grade: 'all', top: 'all', period: 'all', shown: 40 };
+  var slates = {}, scores = {}, slateVersions = {}, db = null, loaded = { s: false, c: false };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function seg(id, key, opts) {
+    var el = $(id);
+    el.innerHTML = '';
+    opts.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = o[1]; b.id = id + '-' + o[0];
+      b.setAttribute('aria-pressed', String(state[key] === o[0]));
+      b.onclick = function () { state[key] = o[0]; state.shown = 40; renderFilters(); render(); };
+      el.appendChild(b);
+    });
+  }
+  function renderFilters() {
+    seg('fMarket', 'market', [['all', 'All'], ['sp', 'Spread'], ['tot', 'Total'], ['ml', 'Moneyline']]);
+    seg('fGrade', 'grade', [['all', 'All'], ['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D']]);
+    seg('fTop', 'top', [['all', 'All picks'], ['top', 'Top bets']]);
+    seg('fPeriod', 'period', [['all', 'Season'], ['30', '30 days'], ['7', '7 days']]);
+  }
+
+  var fmtOdds = function (p) { return p > 0 ? '+' + p : '−' + Math.abs(p); };
+  var fmtLine = function (l) { return l > 0 ? '+' + l : l < 0 ? '−' + Math.abs(l) : 'PK'; };
+  var fmtU = function (u) { return (u > 0 ? '+' : u < 0 ? '−' : '') + Math.abs(u).toFixed(2); };
+  var pct = function (x) { return x == null ? '–' : (x * 100).toFixed(1) + '%'; };
+  var sign = function (x) { return x > 0.0001 ? 'pos' : x < -0.0001 ? 'neg' : ''; };
+
+  function pickText(r) {
+    var g = r.g, p = r.p;
+    var t = p.side === 'home' ? g.h.s : p.side === 'away' ? g.a.s : (p.side === 'over' ? 'Over' : 'Under');
+    if (r.key === 'ml') return t + ' ML ' + fmtOdds(p.price);
+    if (r.key === 'sp') return t + ' ' + fmtLine(p.line) + ' (' + fmtOdds(p.price) + ')';
+    return t + ' ' + p.line + ' (' + fmtOdds(p.price) + ')';
+  }
+
+  function filtered(all, ignoreGrade) {
+    var cutoff = state.period === 'all' ? 0 : Date.now() - Number(state.period) * 864e5;
+    return all.filter(function (r) {
+      if (state.market !== 'all' && r.key !== state.market) return false;
+      if (!ignoreGrade && state.grade !== 'all' && r.p.grade !== state.grade) return false;
+      if (state.top === 'top' && !r.p.top) return false;
+      if (cutoff && Date.parse(r.g.t) < cutoff) return false;
+      return true;
+    });
+  }
+
+  function render() {
+    var all = Ledger.rows(slates, scores);
+    var list = filtered(all);
+    var s = Ledger.summarize(list);
+    $('sRec').textContent = s.graded ? s.w + '–' + s.l + (s.p ? '–' + s.p : '') : '–';
+    $('sRecD').textContent = s.open ? s.open + ' pending' : (s.graded ? 'all graded' : ' ');
+    $('sUnits').textContent = s.graded ? fmtU(s.units) : '–';
+    $('sUnits').className = 'v ' + sign(s.units);
+    $('sRoi').textContent = s.roi == null ? '–' : (s.roi > 0 ? '+' : '') + (s.roi * 100).toFixed(1) + '%';
+    $('sRoi').className = 'v ' + sign(s.roi || 0);
+    $('sRoiD').textContent = s.graded ? s.graded + ' graded picks' : ' ';
+    $('sHit').textContent = pct(s.hit);
+    $('sHitD').textContent = s.exp == null ? ' ' : 'model expected ' + pct(s.exp);
+
+    // Breakdown by grade (respects market, picks and period filters).
+    var base = filtered(all, true);
+    var groups = [['All', base]].concat(['A', 'B', 'C', 'D'].map(function (gr) {
+      return ['Grade ' + gr, base.filter(function (r) { return r.p.grade === gr; }), gr];
+    }));
+    if (state.top !== 'top') groups.push(['Top bets', base.filter(function (r) { return r.p.top; })]);
+    $('breakdown').innerHTML = '';
+    groups.forEach(function (g) {
+      var x = Ledger.summarize(g[1]);
+      var tr = document.createElement('tr');
+      var cells = [g[0], String(x.n), x.graded ? x.w + '–' + x.l + (x.p ? '–' + x.p : '') : '–',
+        pct(x.hit), pct(x.exp), x.graded ? fmtU(x.units) : '–',
+        x.roi == null ? '–' : (x.roi * 100).toFixed(1) + '%'];
+      cells.forEach(function (c, i) {
+        var td = document.createElement('td'); td.textContent = c;
+        if ((i === 5 || i === 6) && x.graded) td.className = sign(x.units);
+        tr.appendChild(td);
+      });
+      if (g[2] && g[2] === state.grade) tr.style.background = 'var(--chip)';
+      $('breakdown').appendChild(tr);
+    });
+
+    renderChart(list);
+    renderPicks(list, all.length);
+  }
+
+  function renderChart(list) {
+    var byDay = {};
+    list.forEach(function (r) { if (r.res) byDay[r.date] = (byDay[r.date] || 0) + r.res.u; });
+    var days = Object.keys(byDay).sort();
+    var el = $('chart');
+    if (days.length < 2) {
+      el.innerHTML = '<p class="muted" style="margin:4px">The curve appears once two days of picks are graded.' +
+        (days.length ? ' So far: ' + fmtU(byDay[days[0]]) + ' units on ' + days[0] + '.' : '') + '</p>';
+      return;
+    }
+    var cum = 0, pts = days.map(function (d) { cum += byDay[d]; return cum; });
+    var W = 900, H = 220, L = 46, R = 12, T = 12, B = 28;
+    var lo = Math.min(0, Math.min.apply(null, pts)), hi = Math.max(0, Math.max.apply(null, pts));
+    if (hi - lo < 1) { hi += .5; lo -= .5; }
+    var x = function (i) { return L + (W - L - R) * (days.length === 1 ? .5 : i / (days.length - 1)); };
+    var y = function (v) { return T + (H - T - B) * (hi - v) / (hi - lo); };
+    var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))); var ticks = [];
+    [1, 2, 5, 10].some(function (m) { if ((hi - lo) / (step * m) <= 5) { step *= m; return true; } return false; });
+    for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(6));
+    var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p).toFixed(1); }).join(' ');
+    var area = line + ' L' + x(pts.length - 1).toFixed(1) + ' ' + y(0).toFixed(1) + ' L' + x(0).toFixed(1) + ' ' + y(0).toFixed(1) + ' Z';
+    var end = pts[pts.length - 1], col = end >= 0 ? 'var(--win)' : 'var(--loss)';
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative units by day">';
+    ticks.forEach(function (t) {
+      svg += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="var(--line)" stroke-width="' + (t === 0 ? 1.5 : 1) + '"/>' +
+        '<text x="' + (L - 8) + '" y="' + (y(t) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--mono)">' + fmtU(t).replace('.00', '') + '</text>';
+    });
+    svg += '<path d="' + area + '" fill="' + col + '" fill-opacity=".12"/>';
+    svg += '<path d="' + line + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round"/>';
+    svg += '<circle cx="' + x(pts.length - 1) + '" cy="' + y(end) + '" r="4.5" fill="' + col + '"/>';
+    [0, days.length - 1].forEach(function (i) {
+      svg += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="' + (i ? 'end' : 'start') + '" font-size="11" fill="var(--muted)">' + days[i].slice(5) + '</text>';
+    });
+    el.innerHTML = svg + '</svg>';
+  }
+
+  function renderPicks(list, total) {
+    var el = $('picks');
+    el.innerHTML = '';
+    if (!total) {
+      el.innerHTML = '<div class="empty"><strong>No picks yet.</strong><ol>' +
+        '<li>Open the NCAAB games page on betalytics.com in Firefox with the capture script installed.</li>' +
+        '<li>Tap through the dates you want, then tap <b>Download</b>.</li>' +
+        '<li>Tap <b>Add capture file</b> above and choose the downloaded file.</li></ol></div>';
+      return;
+    }
+    if (!list.length) { el.innerHTML = '<p class="muted">No picks match these filters.</p>'; return; }
+    var day = null, box = null, now = Date.now();
+    list.slice(0, state.shown).forEach(function (r) {
+      var d = new Date(r.g.t);
+      var label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      if (label !== day) {
+        day = label; box = document.createElement('div'); box.className = 'day';
+        var h = document.createElement('h3'); h.textContent = label; box.appendChild(h); el.appendChild(box);
+      }
+      var slip = document.createElement('div'); slip.className = 'slip';
+      var gr = document.createElement('span'); gr.className = 'grade ' + (r.p.grade || 'x');
+      gr.textContent = r.p.grade || '–'; gr.title = 'Betalytics price grade'; slip.appendChild(gr);
+      var mid = document.createElement('div'); mid.style.minWidth = '0';
+      var pk = document.createElement('div'); pk.className = 'pick'; pk.textContent = pickText(r);
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var sc = (scores[r.date] || {})[r.id];
+      meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + (sc ? '  ' + sc.as + '–' + sc.hs : '  ' +
+        d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) +
+        ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · ' + Math.round(r.p.hit * 100) + '% to hit' : '');
+      mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
+      var res = document.createElement('div'); res.className = 'res';
+      var tag = document.createElement('span');
+      if (r.res) { tag.className = 'tag ' + r.res.r; tag.textContent = { W: 'Win', L: 'Loss', P: 'Push' }[r.res.r]; }
+      else { tag.className = 'tag open'; tag.textContent = now - Date.parse(r.g.t) > 36 * 36e5 ? 'No score' : 'Pending'; }
+      res.appendChild(tag);
+      var sub = document.createElement('span'); sub.className = 'num';
+      if (r.res) { sub.textContent = fmtU(r.res.u) + 'u'; sub.classList.add(sign(r.res.u) || 'muted'); }
+      else if (r.p.stars) { sub.className = 'stars'; sub.textContent = '★'.repeat(r.p.stars); sub.setAttribute('aria-label', r.p.stars + ' stars'); }
+      res.appendChild(sub);
+      if (r.p.top) { var t = document.createElement('span'); t.className = 'tag top'; t.textContent = 'Top bet'; res.appendChild(t); }
+      slip.appendChild(res);
+      box.appendChild(slip);
+    });
+    if (list.length > state.shown) {
+      var more = document.createElement('button'); more.className = 'more'; more.type = 'button'; more.id = 'more';
+      more.textContent = 'Show ' + Math.min(80, list.length - state.shown) + ' more of ' + (list.length - state.shown);
+      more.onclick = function () { state.shown += 80; render(); };
+      el.appendChild(more);
+    }
+  }
+
+  function setStatus() {
+    var dates = Object.keys(slates).sort();
+    var games = dates.reduce(function (n, d) { return n + Object.keys(slates[d]).length; }, 0);
+    var checked = Object.keys(scores).length ? Object.keys(scoreMeta).map(function (d) { return scoreMeta[d]; }).sort().pop() : null;
+    $('status').textContent = games
+      ? games + ' games from ' + dates[0] + ' to ' + dates[dates.length - 1] +
+        (checked ? ' · scores checked ' + new Date(checked).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ' · waiting for first scores')
+      : 'No picks stored yet';
+  }
+
+  function msg(text, err) { var m = $('msg'); m.hidden = !text; m.textContent = text || ''; m.className = 'note' + (err ? ' err' : ''); }
+
+  var scoreMeta = {};
+  async function start() {
+    renderFilters(); render();
+    if (!window.claude || !claude.use) { $('status').textContent = 'Open this page on claude.ai to see your stored picks.'; return; }
+    db = await claude.use('db');
+    if (!db) { $('status').textContent = 'Your stored picks can’t be reached in this view. Open the page on claude.ai while signed in.'; return; }
+    var user = await claude.use('user');
+    var canWrite = user ? await user.can('data.write') : null;
+    if (canWrite !== false) $('fileBtn').setAttribute('aria-disabled', 'false');
+    var timer = setTimeout(function () { if (!loaded.s) $('status').textContent = 'Still loading your picks… the store is slow to answer.'; }, 10000);
+    db.collection('slates').onSnapshot(function (snap) {
+      slates = {}; slateVersions = {};
+      snap.docs.forEach(function (d) { var b = d.data(); if (b && b.games) slates[d.id] = b.games; });
+      if (!snap.metadata.fromCache) { loaded.s = true; clearTimeout(timer); }
+      setStatus(); render();
+    }, function () { clearTimeout(timer); $('status').textContent = 'Your picks could not be loaded. Reload the page to try again.'; });
+    db.collection('scores').onSnapshot(function (snap) {
+      scores = {}; scoreMeta = {};
+      snap.docs.forEach(function (d) { var b = d.data(); if (b && b.games) { scores[d.id] = b.games; scoreMeta[d.id] = b.checked_at || ''; } });
+      setStatus(); render();
+    }, function () {});
+  }
+
+  $('file').addEventListener('change', async function (e) {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f || !db) return;
+    var cap;
+    try { cap = JSON.parse(await f.text()); } catch (_) { msg('That file isn’t a capture file. Choose the betalytics-capture-….json file the script downloaded.', true); return; }
+    if (!Ledger.findSlates(cap).length) {
+      msg('No NCAAB game slate in this file. Open the NCAAB games page on Betalytics, let it load, then tap Download again.', true); return;
+    }
+    var m = Ledger.merge(slates, cap);
+    var dates = Object.keys(m.slates).sort();
+    if (!dates.length) { msg('Nothing new: every pick in this file is already stored (' + m.counts.unchanged + ' unchanged).'); return; }
+    msg('Saving ' + dates.length + ' day' + (dates.length > 1 ? 's' : '') + '…');
+    try {
+      for (var i = 0; i < dates.length; i++) {
+        await db.doc('slates/' + dates[i]).set({ date: dates[i], games: m.slates[dates[i]], updated_at: new Date().toISOString() });
+      }
+      var c = m.counts;
+      msg('Saved ' + c.added + ' new game' + (c.added === 1 ? '' : 's') + (c.updated ? ' and updated ' + c.updated + ' with newer lines' : '') +
+          '. ' + (c.noPick ? c.noPick + ' games had no model pick yet.' : ''));
+    } catch (err) {
+      msg(err && err.code === 'quota_exceeded' ? 'Storage is full. Ask Claude to archive old days.' :
+          'Saving failed (' + (err && err.code || 'error') + '). Try the upload again.', true);
+    }
+  });
+
+  start();
+})();
+</script>
