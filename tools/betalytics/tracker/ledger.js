@@ -105,14 +105,22 @@
   }
 
   function summarize(list) {
-    var s = { n: list.length, w: 0, l: 0, p: 0, open: 0, units: 0, expSum: 0, expN: 0 };
+    var s = { n: list.length, w: 0, l: 0, p: 0, open: 0, units: 0, expSum: 0, expN: 0, nullVar: 0 };
     list.forEach(function (r) {
       if (!r.res) { s.open++; return; }
       s[r.res.r.toLowerCase()]++;
       s.units += r.res.u;
-      if (r.res.r !== 'P' && r.p.hit != null) { s.expSum += r.p.hit; s.expN++; }
+      if (r.res.r !== 'P') {
+        if (r.p.hit != null) { s.expSum += r.p.hit; s.expN++; }
+        // Variance of a 1-unit bet's profit if it only won at its break-even rate (no edge).
+        var b = profit(r.p.price), be = 1 / (1 + b);
+        s.nullVar += be * (1 - be) * (1 + b) * (1 + b);
+      }
     });
     var decided = s.w + s.l;
+    s.decided = decided;
+    // Standard deviations the units sit above (or below) pure luck at these prices.
+    s.z = s.nullVar ? s.units / Math.sqrt(s.nullVar) : null;
     s.graded = decided + s.p;
     s.hit = decided ? s.w / decided : null;
     s.exp = s.expN ? s.expSum / s.expN : null;

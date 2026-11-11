@@ -94,7 +94,14 @@ td:first-child { font-family: var(--body); font-weight: 600; }
 
 .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 22px; display: grid; gap: 8px; }
 .empty ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-footer { font-size: 12px; color: var(--muted); }
+footer { font-size: 12px; color: var(--muted); max-width: 72ch; }
+footer p { margin: 0 0 8px; }
+.lede { margin: -4px 0 0; font-size: 13px; }
+.sig { font-family: var(--body); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  padding: 2px 7px; border-radius: 4px; background: var(--chip); color: var(--muted); }
+.sig.up { background: var(--win); color: var(--surface); } .sig.lean-up { color: var(--win); }
+.sig.down { background: var(--loss); color: var(--surface); } .sig.lean-down { color: var(--loss); }
+#leans { display: grid; gap: 6px; }
 @media (prefers-reduced-motion: no-preference) { .seg button, .btn { transition: background .15s, color .15s; } }
 </style>
 
@@ -121,6 +128,12 @@ footer { font-size: 12px; color: var(--muted); }
     <div><span class="flabel">Period</span><span class="seg" id="fPeriod"></span></div>
   </div>
 
+  <section>
+    <h2>Today's leans</h2>
+    <p class="muted lede">Upcoming picks, strongest first by Betalytics' own signals: top bet, then price grade, then price edge.</p>
+    <div id="leans"></div>
+  </section>
+
   <div class="strip" aria-live="polite">
     <div><div class="k">Record</div><div class="v" id="sRec">–</div><div class="d" id="sRecD">&nbsp;</div></div>
     <div><div class="k">Units</div><div class="v" id="sUnits">–</div><div class="d">1 unit per pick</div></div>
@@ -131,7 +144,7 @@ footer { font-size: 12px; color: var(--muted); }
   <section>
     <h2>By price grade</h2>
     <div class="scroll"><table>
-      <thead><tr><th>Group</th><th>Picks</th><th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th></tr></thead>
+      <thead><tr><th>Group</th><th>Picks</th><th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th><th>Signal</th></tr></thead>
       <tbody id="breakdown"></tbody>
     </table></div>
   </section>
@@ -147,9 +160,13 @@ footer { font-size: 12px; color: var(--muted); }
   </section>
 
   <footer>
-    Picks are the Betalytics model's side for each market, priced at the last run before tip-off.
+    <p>Picks are the Betalytics model's side for each market, priced at the last run before tip-off.
     Graded against ESPN final scores, flat 1 unit risked per pick. "Model %" is the average hit chance
-    Betalytics gave the graded picks.
+    Betalytics gave the graded picks.</p>
+    <p><b>Signal</b> compares the units to what pure luck would produce at the same odds (a z-score).
+    Under 100 decided picks it reads "Too few". "Likely edge" or "Likely losing" means the result is more than
+    2 standard deviations from luck. Even then, check that it holds as the sample grows: with many groups, one
+    will look strong by chance. A realistic edge (54–55% at −110) usually takes 1,000+ picks to show.</p>
   </footer>
 </div>
 
@@ -237,12 +254,83 @@ footer { font-size: 12px; color: var(--muted); }
         if ((i === 5 || i === 6) && x.graded) td.className = sign(x.units);
         tr.appendChild(td);
       });
+      var sg = signal(x), std = document.createElement('td'), pill = document.createElement('span');
+      pill.className = 'sig ' + sg[1]; pill.textContent = sg[0];
+      if (x.z != null) pill.title = 'z = ' + x.z.toFixed(2) + ' over ' + x.decided + ' decided picks';
+      std.appendChild(pill); tr.appendChild(std);
       if (g[2] && g[2] === state.grade) tr.style.background = 'var(--chip)';
       $('breakdown').appendChild(tr);
     });
 
     renderChart(list);
+    renderLeans(all);
     renderPicks(list, all.length);
+  }
+
+  function signal(x) {
+    if (x.decided < 100) return ['Too few', ''];
+    if (x.z >= 2) return ['Likely edge', 'up'];
+    if (x.z >= 1) return ['Leaning +', 'lean-up'];
+    if (x.z <= -2) return ['Likely losing', 'down'];
+    if (x.z <= -1) return ['Leaning −', 'lean-down'];
+    return ['No signal', ''];
+  }
+
+  var GRADE_RANK = { A: 0, B: 1, C: 2, D: 3 };
+  function renderLeans(all) {
+    var now = Date.now(), el = $('leans');
+    var up = all.filter(function (r) {
+      if (r.res || Date.parse(r.g.t) <= now) return false;
+      if (state.market !== 'all' && r.key !== state.market) return false;
+      if (state.grade !== 'all' && r.p.grade !== state.grade) return false;
+      if (state.top === 'top' && !r.p.top) return false;
+      return true;
+    }).sort(function (x, y) {
+      return (y.p.top - x.p.top) ||
+        ((GRADE_RANK[x.p.grade] ?? 9) - (GRADE_RANK[y.p.grade] ?? 9)) ||
+        ((y.p.edge ?? -99) - (x.p.edge ?? -99)) || (Date.parse(x.g.t) - Date.parse(y.g.t));
+    });
+    el.innerHTML = '';
+    if (!up.length) {
+      el.innerHTML = '<p class="muted" style="margin:0">No upcoming picks stored. Upload a fresh capture before tip-off to see today’s card.</p>';
+      return;
+    }
+    up.slice(0, state.leans || 8).forEach(function (r) { el.appendChild(slipEl(r, now, true)); });
+    if (up.length > (state.leans || 8)) {
+      var more = document.createElement('button'); more.className = 'more'; more.type = 'button'; more.id = 'moreLeans';
+      more.textContent = 'Show all ' + up.length + ' upcoming picks';
+      more.onclick = function () { state.leans = up.length; render(); };
+      el.appendChild(more);
+    }
+  }
+
+  function slipEl(r, now, showDay) {
+    var d = new Date(r.g.t);
+    var slip = document.createElement('div'); slip.className = 'slip';
+    var gr = document.createElement('span'); gr.className = 'grade ' + (r.p.grade || 'x');
+    gr.textContent = r.p.grade || '–'; gr.title = 'Betalytics price grade'; slip.appendChild(gr);
+    var mid = document.createElement('div'); mid.style.minWidth = '0';
+    var pk = document.createElement('div'); pk.className = 'pick'; pk.textContent = pickText(r);
+    var meta = document.createElement('div'); meta.className = 'meta';
+    var sc = (scores[r.date] || {})[r.id];
+    var when = (showDay ? d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' : '') +
+      d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + '  ' + (sc ? sc.as + '–' + sc.hs : when) +
+      ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · ' + Math.round(r.p.hit * 100) + '% to hit' : '') +
+      (r.p.edge != null ? ' · edge ' + (r.p.edge > 0 ? '+' : '') + r.p.edge.toFixed(1) : '');
+    mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
+    var res = document.createElement('div'); res.className = 'res';
+    var tag = document.createElement('span');
+    if (r.res) { tag.className = 'tag ' + r.res.r; tag.textContent = { W: 'Win', L: 'Loss', P: 'Push' }[r.res.r]; }
+    else { tag.className = 'tag open'; tag.textContent = now - Date.parse(r.g.t) > 36 * 36e5 ? 'No score' : 'Pending'; }
+    res.appendChild(tag);
+    var sub = document.createElement('span'); sub.className = 'num';
+    if (r.res) { sub.textContent = fmtU(r.res.u) + 'u'; sub.classList.add(sign(r.res.u) || 'muted'); }
+    else if (r.p.stars) { sub.className = 'stars'; sub.textContent = '★'.repeat(r.p.stars); sub.setAttribute('aria-label', r.p.stars + ' stars'); }
+    res.appendChild(sub);
+    if (r.p.top) { var t = document.createElement('span'); t.className = 'tag top'; t.textContent = 'Top bet'; res.appendChild(t); }
+    slip.appendChild(res);
+    return slip;
   }
 
   function renderChart(list) {
@@ -300,29 +388,7 @@ footer { font-size: 12px; color: var(--muted); }
         day = label; box = document.createElement('div'); box.className = 'day';
         var h = document.createElement('h3'); h.textContent = label; box.appendChild(h); el.appendChild(box);
       }
-      var slip = document.createElement('div'); slip.className = 'slip';
-      var gr = document.createElement('span'); gr.className = 'grade ' + (r.p.grade || 'x');
-      gr.textContent = r.p.grade || '–'; gr.title = 'Betalytics price grade'; slip.appendChild(gr);
-      var mid = document.createElement('div'); mid.style.minWidth = '0';
-      var pk = document.createElement('div'); pk.className = 'pick'; pk.textContent = pickText(r);
-      var meta = document.createElement('div'); meta.className = 'meta';
-      var sc = (scores[r.date] || {})[r.id];
-      meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + (sc ? '  ' + sc.as + '–' + sc.hs : '  ' +
-        d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })) +
-        ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · ' + Math.round(r.p.hit * 100) + '% to hit' : '');
-      mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
-      var res = document.createElement('div'); res.className = 'res';
-      var tag = document.createElement('span');
-      if (r.res) { tag.className = 'tag ' + r.res.r; tag.textContent = { W: 'Win', L: 'Loss', P: 'Push' }[r.res.r]; }
-      else { tag.className = 'tag open'; tag.textContent = now - Date.parse(r.g.t) > 36 * 36e5 ? 'No score' : 'Pending'; }
-      res.appendChild(tag);
-      var sub = document.createElement('span'); sub.className = 'num';
-      if (r.res) { sub.textContent = fmtU(r.res.u) + 'u'; sub.classList.add(sign(r.res.u) || 'muted'); }
-      else if (r.p.stars) { sub.className = 'stars'; sub.textContent = '★'.repeat(r.p.stars); sub.setAttribute('aria-label', r.p.stars + ' stars'); }
-      res.appendChild(sub);
-      if (r.p.top) { var t = document.createElement('span'); t.className = 'tag top'; t.textContent = 'Top bet'; res.appendChild(t); }
-      slip.appendChild(res);
-      box.appendChild(slip);
+      box.appendChild(slipEl(r, now, false));
     });
     if (list.length > state.shown) {
       var more = document.createElement('button'); more.className = 'more'; more.type = 'button'; more.id = 'more';

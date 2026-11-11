@@ -7,14 +7,15 @@ Output (stdout JSON): {"scores": {game_id: {"hs", "as", "espn"}}, "unmatched": [
   neutral-site games where ESPN lists the teams the other way round still grade right).
 
 Usage: python3 scores.py games.json > scores.json
-Only uses ESPN's public scoreboard; no Betalytics access.
+Only uses ESPN's public scoreboard; no Betalytics access. Standard library only.
 """
 import json
 import re
 import sys
 from datetime import datetime, timedelta, timezone
 
-import requests
+import urllib.parse
+import urllib.request
 
 ESPN = ("https://site.api.espn.com/apis/site/v2/sports/basketball/"
         "mens-college-basketball/scoreboard")
@@ -45,12 +46,13 @@ def bl_keys(side):
     return keys([side.get("n"), side.get("s"), side.get("a"), side.get("k")])
 
 
-def fetch_day(day, session):
-    r = session.get(ESPN, params={"dates": day.strftime("%Y%m%d"), "groups": 50,
-                                  "limit": 500}, timeout=30)
-    r.raise_for_status()
+def fetch_day(day):
+    q = urllib.parse.urlencode({"dates": day.strftime("%Y%m%d"), "groups": 50, "limit": 500})
+    req = urllib.request.Request(f"{ESPN}?{q}", headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data = json.load(r)
     events = []
-    for e in r.json().get("events", []):
+    for e in data.get("events", []):
         comp = e["competitions"][0]
         teams = {c["homeAway"]: c for c in comp["competitors"]}
         if "home" not in teams or "away" not in teams:
@@ -86,7 +88,6 @@ def match(game, events):
 
 def main(path):
     games = json.load(open(path))["games"]
-    session = requests.Session()
     days = set()
     for g in games:
         tip = datetime.fromisoformat(g["t"].replace("Z", "+00:00"))
@@ -94,7 +95,7 @@ def main(path):
         days.update({et, et - timedelta(days=1), et + timedelta(days=1)})
     events = []
     for d in sorted(days):
-        events.extend(fetch_day(d, session))
+        events.extend(fetch_day(d))
     out = {"scores": {}, "unmatched": [], "pending": [],
            "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     for g in games:
