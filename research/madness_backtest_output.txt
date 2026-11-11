@@ -1,0 +1,28 @@
+
+== ratings: all pre-tournament games equal: 1196 games, 18 seasons; sigma fitted 8.3-8.8
+model     logloss   brier  fav won
+coin       0.6931  0.2500        -
+seed       0.5722  0.1957    69.8%
+rating     0.5497  0.1868    70.7%
+both       0.5500  0.1871    70.5%
+rating beats seed on log loss in 14 of 18 seasons
+calibration (rating model): predicted -> actual for the side oriented as better seed
+  0.00-0.40: n=  19  predicted 0.351  actual 0.263
+  0.40-0.55: n= 214  predicted 0.498  actual 0.551
+  0.55-0.70: n= 407  predicted 0.629  actual 0.607
+  0.70-0.85: n= 324  predicted 0.769  actual 0.787
+  0.85-1.00: n= 232  predicted 0.926  actual 0.922
+
+== ratings: recent games weighted (45-day half-life): 1196 games, 18 seasons; sigma fitted 7.4-7.9
+model     logloss   brier  fav won
+coin       0.6931  0.2500        -
+seed       0.5722  0.1957    69.9%
+rating     0.5764  0.1984    68.3%
+both       0.5599  0.1911    70.2%
+rating beats seed on log loss in 5 of 18 seasons
+calibration (rating model): predicted -> actual for the side oriented as better seed
+  0.00-0.40: n=  63  predicted 0.330  actual 0.524
+  0.40-0.55: n= 237  predicted 0.487  actual 0.591
+  0.55-0.70: n= 413  predicted 0.625  actual 0.637
+  0.70-0.85: n= 315  predicted 0.773  actual 0.781
+  0.85-1.00: n= 168  predicted 0.916  actual 0.929

@@ -8,7 +8,7 @@ USER_AGENT = os.environ.get(
     "BRACKETOLOGY_UA", "bracketology-bot/0.1 (free open bracketology project; set BRACKETOLOGY_UA with contact)")
 CACHE_DIR = Path(os.environ.get("BRACKETOLOGY_CACHE", "data/cache"))
 # Minimum seconds between requests per host (Torvik robots.txt: Crawl-Delay 10; ncaa-api: 5 req/s limit).
-MIN_SPACING = {"barttorvik.com": 10.0, "ncaa-api.henrygd.me": 0.5, "web.archive.org": 2.0}
+MIN_SPACING = {"en.wikipedia.org": 5.0, "barttorvik.com": 10.0, "ncaa-api.henrygd.me": 0.5, "web.archive.org": 2.0}
 _last: dict[str, float] = {}
 
 class FetchError(RuntimeError):
