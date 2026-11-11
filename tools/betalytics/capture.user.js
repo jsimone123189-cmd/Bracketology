@@ -1,6 +1,18 @@
+// ==UserScript==
+// @name         Betalytics pick capture
+// @namespace    bracketology
+// @version      1.1
+// @description  Records the pick data Betalytics pages load; Download saves it as one file.
+// @match        *://betalytics.com/*
+// @match        *://*.betalytics.com/*
+// @run-at       document-start
+// @grant        none
+// ==/UserScript==
 /*
- * Betalytics pick capture — paste into the browser DevTools Console while
- * signed in to Betalytics, on the page that lists the picks.
+ * Betalytics pick capture. Two ways to run it:
+ *   - Tampermonkey (Firefox for Android, or desktop): install this file and it
+ *     starts by itself on every Betalytics page.
+ *   - One-off: paste the whole file into the DevTools Console on the picks page.
  *
  * What it does (all locally, in your own tab):
  *   1. Re-reads the JSON data the page already loaded (same requests, your cookies).
@@ -23,12 +35,14 @@
   panel.style.cssText = 'position:fixed;z-index:2147483647;right:16px;bottom:16px;' +
     'background:#111;color:#fff;font:13px/1.4 system-ui,sans-serif;padding:12px 14px;' +
     'border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.4);min-width:220px';
+  const btn = 'font-size:15px;padding:6px 10px;margin-top:4px';
   panel.innerHTML =
     '<b>Betalytics capture</b><div id="btl-n" style="margin:6px 0">0 data responses</div>' +
-    '<button id="btl-text">Grab page text</button> ' +
-    '<button id="btl-dl">Download</button> ' +
-    '<button id="btl-x" title="hide">×</button>';
-  document.body.appendChild(panel);
+    `<button id="btl-text" style="${btn}">Grab page text</button> ` +
+    `<button id="btl-dl" style="${btn}">Download</button> ` +
+    `<button id="btl-x" title="hide" style="${btn}">×</button>`;
+  const mount = () => document.body.appendChild(panel);
+  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
   const counter = panel.querySelector('#btl-n');
   const refresh = () => {
     const d = items.filter(i => i.kind === 'json').length;
