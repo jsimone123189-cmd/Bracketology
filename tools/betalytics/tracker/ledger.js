@@ -337,7 +337,7 @@
       var b = profit(r.p.price), be = 1 / (1 + b);
       beSum += be; units += r.res.u; nullVar += be * (1 - be) * (1 + b) * (1 + b);
     });
-    var n = w + l, out = { n: n, w: w, l: l, raw: n ? w / n : null };
+    var n = w + l, out = { n: n, w: w, l: l, raw: n ? w / n : null, units: units };
     if (opts.byUnits) {
       var roi = units / (n + PRIOR), sd = Math.sqrt(Math.max(nullVar, 1)) / (n + PRIOR);
       out.est = roi; out.edge = roi; out.pFollow = n ? phi(roi / sd) : 0.5; out.pFade = 0; out.fadeEdge = null;
