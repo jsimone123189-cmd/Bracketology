@@ -20,3 +20,11 @@
 ## Data sources in production (updated)
 Torvik returns HTTP 403 to GitHub Actions. Live runs use NCAA results and arenas (neutral games inferred from the home team's usual arenas), the NCAA NET, and Warren Nolan's table and auto-bids.
 Tested on 2026 only: same score as Torvik's log (356), WAB/SOR/rating Spearman .999 for NET<=90; neutral games found 81% of the time, with 62 of about 9,900 non-neutral team-games wrongly marked neutral. The saved game file lives on the public `snapshots` branch.
+
+## On-time runs (Cloudflare timer)
+GitHub's schedule fired 6-10 hours late in November 2026: set for 10:17 UTC, it ran at 16:40-20:44. That late, a Selection Sunday run could miss the 22:00 UTC cutoff. So:
+- `trigger/` is a separate, free Cloudflare Worker, `jays-bracket-plays-trigger`, with no web address. On the cron schedule it calls GitHub's API to start `daily-update`. It has two cron triggers: daily at 10:17 UTC, and Selection Sunday at 21:10 and 21:40 UTC.
+- GitHub's own schedule stays as a backup. Its `slot` job skips the run when a run for that slot already succeeded or is still going.
+- Setup, once: create a fine-grained GitHub token for this repository only, with Actions read and write, and an expiry after the season (mid-April). Save it as repository secret `DISPATCH_TOKEN`, then run the `deploy-trigger` workflow. Replace the token before it expires, and rerun `deploy-trigger` each time.
+- If the timer fails (expired token, Cloudflare problem), the backup still runs, only late.
+- Change the Selection Sunday date each season in both `trigger/wrangler.jsonc` and `daily-update.yml`, then rerun `deploy-trigger`.

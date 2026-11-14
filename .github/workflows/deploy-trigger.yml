@@ -1,0 +1,21 @@
+name: deploy-trigger
+# Deploys the Cloudflare timer that starts daily-update on time. Run by hand after changing trigger/ or the DISPATCH_TOKEN secret.
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -n "$DISPATCH_TOKEN" || { echo "::error::Add the DISPATCH_TOKEN repository secret first (see docs/07-deployment.md)."; exit 1; }
+        env: {DISPATCH_TOKEN: "${{ secrets.DISPATCH_TOKEN }}"}
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.158.0"
+          workingDirectory: trigger
+          secrets: DISPATCH_TOKEN
+          command: deploy
+        env: {DISPATCH_TOKEN: "${{ secrets.DISPATCH_TOKEN }}"}

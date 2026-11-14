@@ -2,7 +2,9 @@ name: daily-update
 # $0 plan: GitHub Actions runs the update, Cloudflare Workers hosts the static page. See docs/07-deployment.md.
 on:
   # Daily snapshots, November to April. The page stays on Coming Soon until the owner sets the repository variable PUBLISH_BRACKET to true.
-  # The two March 14 runs catch Selection Sunday's late conference finals, 5:10 and 5:40 p.m. ET. Update the date each season.
+  # The two March 14 runs catch Selection Sunday's late conference finals, 5:10 and 5:40 p.m. ET. Update the date each season, here and in trigger/wrangler.jsonc.
+  # On time, these runs are started by the Cloudflare timer in trigger/. GitHub's schedule below often fires hours late, so it is a backup:
+  # the slot job skips it when that slot already has a run.
   schedule:
     - {cron: "17 10 * 11-12,1-4 *"}
     - {cron: "10 21 14 3 *"}
@@ -19,7 +21,33 @@ on:
         default: false
 permissions:
   contents: write
+  actions: read
+concurrency:
+  group: daily-update      # a late backup and a timer run never write the snapshots branch at once
+  cancel-in-progress: false
 jobs:
+  slot:
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        env: {GH_TOKEN: "${{ github.token }}", CRON: "${{ github.event.schedule }}"}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, urllib.parse, urllib.request
+          from datetime import datetime, timezone
+          minute, hour = os.environ["CRON"].split()[:2]
+          now = datetime.now(timezone.utc)
+          slot = min(now.replace(hour=int(hour), minute=int(m), second=0, microsecond=0) for m in minute.split(","))
+          url = "https://api.github.com/repos/${{ github.repository }}/actions/workflows/daily-update.yml/runs?per_page=50&created=" + urllib.parse.quote(f">={slot:%Y-%m-%dT%H:%M:%SZ}")
+          req = urllib.request.Request(url, headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}", "Accept": "application/vnd.github+json"})
+          runs = [r for r in json.load(urllib.request.urlopen(req))["workflow_runs"] if r["id"] != ${{ github.run_id }}]
+          done = [r for r in runs if r["status"] != "completed" or r["conclusion"] == "success"]
+          print("run=" + ("false" if done else "true"))
+          import sys; print(f"slot {slot:%H:%M} UTC, other runs since: {len(runs)}, ok or running: {len(done)}", file=sys.stderr)
+          PY
   placeholder:
     if: ${{ inputs.placeholder_only == true }}
     runs-on: ubuntu-24.04      # pinned: ubuntu-latest is 26.04, which has no Python 3.9 for the saved model
@@ -33,7 +61,8 @@ jobs:
           wranglerVersion: "4.158.0"
           command: deploy
   publish:
-    if: ${{ inputs.placeholder_only != true }}
+    needs: slot
+    if: ${{ !cancelled() && inputs.placeholder_only != true && (needs.slot.result == 'skipped' || needs.slot.outputs.run == 'true') }}
     runs-on: ubuntu-24.04      # pinned: ubuntu-latest is 26.04, which has no Python 3.9 for the saved model
     steps:
       - uses: actions/checkout@v4
