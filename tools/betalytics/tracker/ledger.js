@@ -369,17 +369,32 @@
    * data decides. canFade(r) says whether the other side is a near -110 two-way bet.
    * Returns {groups: {key: realEdge + verdict}, picks: [{r, group, e, action}]} for upcoming picks with an action.
    */
+  var MIN_MOVE_N = 30;    // picks with a closing line before a timing call
+  /** How the line moved from Betalytics' number to the close, in points; positive = Betalytics' side got worse. */
+  function lineMove(list) {
+    var v = list.map(function (r) { return r.clv.pts; });
+    var n = v.length;
+    if (!n) return { n: 0 };
+    var m = v.reduce(function (a, b) { return a + b; }, 0) / n;
+    var sd = Math.sqrt(v.reduce(function (a, b) { return a + (b - m) * (b - m); }, 0) / Math.max(1, n - 1));
+    return { n: n, mean: m, se: sd / Math.sqrt(n), same: v.filter(function (x) { return x === 0; }).length };
+  }
+
   function recommend(all, groupsOf, canFade, isUnits) {
-    var hist = {};
+    var hist = {}, moves = {};
     all.forEach(function (r) {
+      if (r.clv && r.clv.pts != null) groupsOf(r).forEach(function (k) { (moves[k] = moves[k] || []).push(r); });
       if (!r.res) return;
       groupsOf(r).forEach(function (k) { (hist[k] = hist[k] || []).push(r); });
     });
+    var moveOf = {};
+    Object.keys(moves).forEach(function (k) { moveOf[k] = lineMove(moves[k]); });
     var groups = {};
     Object.keys(hist).forEach(function (k) {
       var sample = hist[k][0];
       var e = realEdge(hist[k], { byUnits: isUnits(sample) });
       e.verdict = verdict(e, canFade(sample));
+      e.move = moveOf[k] || { n: 0 };
       groups[k] = e;
     });
     var now = Date.now(), picks = [];
@@ -390,7 +405,11 @@
         if (groups[keys[i]] && groups[keys[i]].n >= MIN_N) { g = groups[keys[i]]; k = keys[i]; break; }
       }
       if (!g || (g.verdict !== 'follow' && g.verdict !== 'fade')) return;
-      picks.push({ r: r, group: k, e: g, action: g.verdict });
+      var mv = null;
+      for (var j = 0; j < keys.length; j++) {
+        if (moveOf[keys[j]] && moveOf[keys[j]].n >= MIN_MOVE_N) { mv = moveOf[keys[j]]; mv.key = keys[j]; break; }
+      }
+      picks.push({ r: r, group: k, e: g, action: g.verdict, move: mv });
     });
     picks.sort(function (x, y) {
       var ex = x.action === 'fade' ? x.e.fadeEdge : x.e.edge, ey = y.action === 'fade' ? y.e.fadeEdge : y.e.edge;
@@ -399,7 +418,36 @@
     return { groups: groups, picks: picks };
   }
 
-  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, MIN_N: MIN_N, PRIOR: PRIOR,
+  /**
+   * When to bet and the worst number to take, for a recommended pick.
+   * move: lineMove of its group (positive = Betalytics' side gets worse by tip). A timing call needs MIN_MOVE_N
+   * picks, a move beyond 2 standard errors, and at least 0.15 points.
+   * Worst line: the estimated edge (percentage points) converted at about 3 points of win chance per point of
+   * spread (2.5 for totals), rounded down to the half point.
+   */
+  function betPlan(it) {
+    var r = it.r, p = r.p, out = { when: 'any', bet: null, worst: null };
+    var mv = it.move;
+    if (mv && mv.n >= MIN_MOVE_N && Math.abs(mv.mean) >= 0.15 && Math.abs(mv.mean) >= 2 * mv.se) {
+      var worseForBetalytics = mv.mean > 0;
+      out.when = (it.action === 'follow') === worseForBetalytics ? 'early' : 'late';
+    }
+    out.move = mv;
+    if ((r.key === 'sp' || r.key === 'tot') && p.line != null) {
+      var edge = (it.action === 'fade' ? it.e.fadeEdge : it.e.edge) * 100;
+      var cushion = Math.floor(edge / (r.key === 'sp' ? 3 : 2.5) * 2) / 2;
+      var side = p.side, line = p.line;
+      if (it.action === 'fade') {
+        if (r.key === 'sp') { side = side === 'home' ? 'away' : 'home'; line = -line; }
+        else side = side === 'over' ? 'under' : 'over';
+      }
+      out.bet = { side: side, line: line };
+      if (cushion >= 0.5) out.worst = r.key === 'sp' ? line - cushion : (side === 'over' ? line + cushion : line - cushion);
+    }
+    return out;
+  }
+
+  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, lineMove: lineMove, betPlan: betPlan, MIN_N: MIN_N, PRIOR: PRIOR,
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
