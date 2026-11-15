@@ -73,7 +73,8 @@ def live(season: int, fitted: model.Model) -> dict:
     """Live season: model bracket, then the owner's overrides. Public JSON carries no third-party metric values (r_* columns)."""
     acc = json.load(open("site/accuracy.json")); table = acc["seed_error"]
     info = {}; rows, warn = project.live_rows(season, info=info); model.prepare(rows); fitted.score(rows)
-    field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); untouched = project.model_bracket(order)
+    field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); project.confidence(order, season)
+    untouched = project.model_bracket(order); review = project.review_list(order)
     fmt = fieldformat.format_for(season); autos = sum(1 for r in field if r["champ"] or r.get("projected_auto"))
     found = info.pop("checks") + checks.autos(autos, fmt.automatic)
     ranked = [{"key": r["key"], "team": r["team"], "lg": r.get("lg"), "net": r["net"], "w": r["w"], "l": r["l"], "p_in": round(r["p_in"], 4), "rank_score": round(r["rank_score"], 4), "champ": bool(r["champ"])}
@@ -92,7 +93,7 @@ def live(season: int, fitted: model.Model) -> dict:
             "teams": [team_record(r, table, season) for r in final], "out": [team_record(r, table, season) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
             "missed": [], "accuracy": acc,
-            "archive": {"model_bracket": untouched, "ranked": ranked, "overrides": overrides, "sources": info, "ledger": ledger.records(overrides, untouched, final, project.key, model.MODEL_VERSION)}}
+            "archive": {"model_bracket": untouched, "review": review, "ranked": ranked, "overrides": overrides, "sources": info, "ledger": ledger.records(overrides, untouched, final, project.key, model.MODEL_VERSION)}}
 
 def snapshot(data: dict, stamp: time.struct_time, model_path: str = "models/v2.joblib") -> dict:
     """Permanent record of one run. Holds official NET and NCAA-derived figures, never third-party metric columns (r_*).

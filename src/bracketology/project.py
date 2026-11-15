@@ -91,10 +91,29 @@ def training_rows(exclude=()) -> list[dict]:
         rows = model.prepare(build_year(y)); model.attach_overall(rows, y); out += rows
     return out
 
+CONF_BANDS = [(1, 16), (17, 32), (33, 48), (49, 999)]
+CONF_SPREAD = [2.22, 5.17, 3.97, 1.71]    # pooled held-out overall-position spread by predicted band, 2019 and 2021-26 (docs/13, research/tests13_output.txt)
+
+def confidence(order: list[dict], season: int) -> None:
+    """Adds each team's chance of being on exactly its projected line, times its chance of being in the field (docs/12-13).
+    It ranks risk. It is not a calibrated percentage, and it never changes a line."""
+    from math import erf, sqrt
+    Phi = lambda x: 0.5 * (1 + erf(x / sqrt(2))); slots = fieldformat.format_for(season).slots
+    for r in order:
+        p = r["overall"]; sig = CONF_SPREAD[next(i for i, (a, b) in enumerate(CONF_BANDS) if a <= p <= b)]
+        pos = [i + 1 for i, l in enumerate(slots) if l == r["line"]]
+        exact = Phi((max(pos) + .5 - p) / sig) - Phi((min(pos) - .5 - p) / sig)
+        r["confidence"] = round(exact * (1.0 if r["champ"] or r.get("projected_auto") else r["p_in"]), 3)
+
+def review_list(order: list[dict], cutoff: float = .5) -> list[dict]:
+    """Teams most worth the owner's review: nearly all 2+ line misses in backtests came from teams under 0.5."""
+    return [{"key": r["key"], "team": r["team"], "line": r["line"], "overall": r["overall"], "confidence": r["confidence"]}
+            for r in sorted(order, key=lambda r: r["confidence"]) if r["confidence"] < cutoff]
+
 def model_bracket(order: list[dict]) -> list[dict]:
     """The untouched model bracket. Take this before apply_overrides, which removes and moves teams."""
     return [{"key": r["key"], "team": r["team"], "line": r["line"], "overall": r["overall"], "p_in": round(r["p_in"], 4),
-             "champ": bool(r["champ"]), "projected_auto": bool(r.get("projected_auto"))} for r in order]
+             "champ": bool(r["champ"]), "projected_auto": bool(r.get("projected_auto")), **({"confidence": r["confidence"]} if "confidence" in r else {})} for r in order]
 
 def apply_overrides(order: list[dict], rest: list[dict], overrides: dict, season: int) -> tuple[list[dict], list[str]]:
     """Returns the final field and warnings. Every team keeps model_line so your edits can be graded separately."""

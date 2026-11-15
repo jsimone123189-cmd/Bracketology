@@ -331,3 +331,14 @@ def test_report_uses_only_snapshots_before_the_bracket():
     from bracketology import report
     s = [{"generated_at": "2027-03-14T21:40:00Z", "n": 1}, {"generated_at": "2027-03-15T10:17:00Z", "n": 2}]
     assert report.final_before(s, "2027-03-14T22:00:00Z")["n"] == 1
+
+def test_confidence_flags_teams_near_line_edges():
+    from bracketology import project
+    order = [{"key": f"T{i}", "team": f"T{i}", "overall": i + 1, "line": project.fieldformat.format_for(2026).slots[i], "p_in": .9, "champ": i % 3 == 0} for i in range(68)]
+    project.confidence(order, 2026)
+    assert all(0 <= r["confidence"] <= 1 for r in order)
+    mid, edge = order[17], order[16]      # overall 18 sits mid-line 5, overall 17 is the first team on line 5
+    assert mid["confidence"] > edge["confidence"]
+    rv = project.review_list(order)
+    assert rv == sorted(rv, key=lambda r: r["confidence"]) and all(r["confidence"] < .5 for r in rv)
+    assert "confidence" in project.model_bracket(order)[0]
