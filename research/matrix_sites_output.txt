@@ -1,0 +1,25 @@
+== the consistent nine
+  Dom      https://x.com/BracketDom
+  Bauer    https://bauertology.com/
+  BKS      https://bracksketblogs.wordpress.com/
+  Sluder   https://sluderbracketology.blogspot.com/
+  DII      https://www.dratings.com/predictor/bracketology/
+  HHD-JT   http://hoopshd.com/
+  801      https://x.com/801bracketology
+  Elam     https://elamending.com/gallery/
+  T3       https://www.t3bracketology.com/
+
+== entries whose link suggests a model or rating site (5+ seasons)
+  DII        n7 mean pct 81 worst 67 [73, 93, 83, 89, 77, 67, 88] https://www.dratings.com/predictor/bracketology/
+  Guru       n7 mean pct 69 worst 31 [79, 90, 52, 80, 31, 59, 88] https://twitter.com/The_StatsGuru
+  WN         n7 mean pct 68 worst 33 [61, 33, 99, 68, 90, 93, 33] https://www.warrennolan.com/
+  Lisk       n7 mean pct 68 worst 34 [43, 58, 91, 34, 83, 77, 88] https://poolgenius.teamrankings.com/ncaa-bracket-picks/articles/march-madness-bracket-predictions-2026/
+  Pi         n7 mean pct 66 worst 34 [34, 75, 65, 91, 38, 93, 69] https://piratings.wordpress.com/
+  HM         n7 mean pct 42 worst 8 [95, 43, 60, 34, 38, 8, 19] http://haslametrics.com/ratings.php
+  T-Rank     n7 mean pct 42 worst 13 [15, 23, 13, 29, 66, 96, 50] http://barttorvik.com/tranketology.php
+  U-State    n5 mean pct 39 worst 24 [24, 42, 50, 34, 47] https://ustatebracketology.wordpress.com/
+  Uprise     n6 mean pct 34 worst 7 [7, 27, 16, 44, 77, 33] https://x.com/ToreyJonesYT/status/2033299124469252480
+  INCC       n7 mean pct 29 worst 5 [13, 9, 39, 6, 5, 59, 69] http://www.inccstats.com/basketball/current/tourney_seeding.html
+  Logan      n7 mean pct 20 worst 4 [4, 29, 36, 18, 18, 21, 14] loganssportsratings.blogspot.com
+  TR         n7 mean pct 3 worst 0 [2, 5, 1, 9, 0, 2, 0] https://www.teamrankings.com/ncaa-tournament/bracketology/
+  RTS        n7 mean pct 3 worst 0 [18, 0, 0, 0, 0, 0, 1] http://www.rtsratings.com/NCAAHOOPSCurrent.aspx

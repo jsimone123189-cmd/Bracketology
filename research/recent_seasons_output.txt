@@ -1,0 +1,10 @@
+2022 {'control': 344, 'R1 recency': 340, 'R2 nonlinear': 339, 'R3 nonlinear+recency': 343}
+2023 {'control': 344, 'R1 recency': 338, 'R2 nonlinear': 341, 'R3 nonlinear+recency': 327}
+2024 {'control': 324, 'R1 recency': 321, 'R2 nonlinear': 323, 'R3 nonlinear+recency': 323}
+2025 {'control': 365, 'R1 recency': 365, 'R2 nonlinear': 374, 'R3 nonlinear+recency': 370}
+2026 {'control': 356, 'R1 recency': 356, 'R2 nonlinear': 366, 'R3 nonlinear+recency': 367}
+control               [344, 344, 324, 365, 356] mean 346.6 diff +0.0 better 0 worse 0 worst +0 PASS=False percentiles [29, 14, 6, 81, 10]
+R1 recency            [340, 338, 321, 365, 356] mean 344.0 diff -2.6 better 0 worse 3 worst -6 PASS=False percentiles [22, 9, 5, 81, 10]
+R2 nonlinear          [339, 341, 323, 374, 366] mean 348.6 diff +2.0 better 2 worse 3 worst -5 PASS=False percentiles [20, 13, 5, 97, 24]
+R3 nonlinear+recency  [343, 327, 323, 370, 367] mean 346.0 diff -0.6 better 2 worse 3 worst -17 PASS=False percentiles [27, 5, 5, 93, 25]
+exit 0

@@ -11,3 +11,11 @@ Committed before running. The 2024-25 team sheets added WAB and T-Rank. docs/16'
 **R3:** R2 with R1's weights.
 
 **Bar for five seasons, fixed now:** +3 mean against the control, better in at least 4 of 5, no season worse than -5. Also reported: percentile against all Matrix entries each season. Settings above are final, with no tuning.
+
+## Results (2026-11-14)
+`research/recent_seasons_output.txt`. Control trained on earlier seasons only: 344 344 324 365 356, mean 346.6. All three failed:
+- **R1, recency weighting:** -2.6.
+- **R2, nonlinear pairs:** +2.0, better in 2 of 5, worst -5. Gains only in 2025 (+9) and 2026 (+10), the third time this model has done well only in those two seasons.
+- **R3:** -0.6, worst -17.
+
+Two seasons can't confirm a committee change. If one happened, 2027 will show it: R2 should be shadow-tracked next to v2.0.
