@@ -1,0 +1,4 @@
+field teams whose Q1 wins or WAB change: {2019: 68, 2021: 68, 2022: 68, 2023: 68, 2024: 68, 2025: 68, 2026: 68}
+control reproduces: True
+control             [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact [40, 33, 45, 42, 37, 49, 45] (41.6) pct [21, 9, 39, 14, 10, 75, 10]
+T25 Saturday cutoff [334, 332, 339, 349, 330, 359, 356] mean 342.7 diff -0.1 better 3 worse 3 worst -8 PASS=False exact [39, 36, 41, 44, 38, 47, 45] (41.4) pct [21, 15, 20, 19, 11, 57, 10]

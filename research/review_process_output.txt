@@ -1,0 +1,76 @@
+  2019 Bauer   low-confidence only +2  high-confidence only +10  everything +12
+  2019 BKS     low-confidence only +8  high-confidence only +12  everything +20
+  2019 Sluder  low-confidence only -2  high-confidence only +10  everything +8
+  2019 DII     low-confidence only +6  high-confidence only +4  everything +10
+  2019 HHD-JT  low-confidence only -5  high-confidence only +12  everything +7
+  2019 RFS     low-confidence only -4  high-confidence only +12  everything +8
+2019 mean gain from low-confidence review +0.8 over 6 reviewers; low list size 31
+  2021 Bauer   low-confidence only +18  high-confidence only +22  everything +40
+  2021 BKS     low-confidence only +13  high-confidence only +16  everything +29
+  2021 Sluder  low-confidence only +3  high-confidence only +22  everything +25
+  2021 DII     low-confidence only +16  high-confidence only +24  everything +40
+  2021 HHD-JT  low-confidence only +7  high-confidence only +22  everything +29
+  2021 801     low-confidence only +12  high-confidence only +24  everything +36
+  2021 Elam    low-confidence only +11  high-confidence only +22  everything +33
+  2021 T3      low-confidence only +7  high-confidence only +22  everything +29
+  2021 RFS     low-confidence only +16  high-confidence only +18  everything +34
+2021 mean gain from low-confidence review +11.4 over 9 reviewers; low list size 32
+  2022 Dom     low-confidence only +9  high-confidence only +4  everything +13
+  2022 Bauer   low-confidence only +19  high-confidence only -6  everything +13
+  2022 BKS     low-confidence only +1  high-confidence only -2  everything -1
+  2022 Sluder  low-confidence only +8  high-confidence only -4  everything +4
+  2022 DII     low-confidence only +13  high-confidence only -12  everything +1
+  2022 HHD-JT  low-confidence only +11  high-confidence only +0  everything +11
+  2022 801     low-confidence only +9  high-confidence only -4  everything +5
+  2022 Elam    low-confidence only +9  high-confidence only +2  everything +11
+  2022 T3      low-confidence only +9  high-confidence only -4  everything +5
+  2022 RFS     low-confidence only +11  high-confidence only -20  everything -9
+2022 mean gain from low-confidence review +9.9 over 10 reviewers; low list size 30
+  2023 Dom     low-confidence only +23  high-confidence only +7  everything +30
+  2023 Bauer   low-confidence only +19  high-confidence only +8  everything +27
+  2023 BKS     low-confidence only +19  high-confidence only +11  everything +30
+  2023 Sluder  low-confidence only +21  high-confidence only +6  everything +27
+  2023 DII     low-confidence only +20  high-confidence only +8  everything +28
+  2023 HHD-JT  low-confidence only +21  high-confidence only +7  everything +28
+  2023 801     low-confidence only +15  high-confidence only +7  everything +22
+  2023 Elam    low-confidence only +15  high-confidence only +8  everything +23
+  2023 T3      low-confidence only +19  high-confidence only +7  everything +26
+  2023 RFS     low-confidence only +11  high-confidence only +8  everything +19
+2023 mean gain from low-confidence review +18.3 over 10 reviewers; low list size 32
+  2024 Dom     low-confidence only +1  high-confidence only +4  everything +5
+  2024 Bauer   low-confidence only +6  high-confidence only +4  everything +10
+  2024 BKS     low-confidence only +4  high-confidence only +4  everything +8
+  2024 Sluder  low-confidence only +4  high-confidence only +8  everything +12
+  2024 DII     low-confidence only +1  high-confidence only +8  everything +9
+  2024 HHD-JT  low-confidence only +4  high-confidence only +4  everything +8
+  2024 801     low-confidence only +5  high-confidence only +4  everything +9
+  2024 Elam    low-confidence only +5  high-confidence only +4  everything +9
+  2024 T3      low-confidence only +4  high-confidence only +4  everything +8
+  2024 RFS     low-confidence only +8  high-confidence only +4  everything +12
+2024 mean gain from low-confidence review +4.2 over 10 reviewers; low list size 30
+  2025 Dom     low-confidence only +3  high-confidence only +12  everything +15
+  2025 Bauer   low-confidence only -5  high-confidence only +12  everything +7
+  2025 BKS     low-confidence only -1  high-confidence only +10  everything +9
+  2025 Sluder  low-confidence only +1  high-confidence only +10  everything +11
+  2025 DII     low-confidence only -5  high-confidence only +10  everything +5
+  2025 HHD-JT  low-confidence only -1  high-confidence only +10  everything +9
+  2025 801     low-confidence only -5  high-confidence only +12  everything +7
+  2025 Elam    low-confidence only -1  high-confidence only +12  everything +11
+  2025 T3      low-confidence only -1  high-confidence only +12  everything +11
+  2025 RFS     low-confidence only +1  high-confidence only +10  everything +11
+2025 mean gain from low-confidence review -1.4 over 10 reviewers; low list size 31
+  2026 Dom     low-confidence only +17  high-confidence only +5  everything +22
+  2026 Bauer   low-confidence only +13  high-confidence only +9  everything +22
+  2026 BKS     low-confidence only +19  high-confidence only +5  everything +24
+  2026 Sluder  low-confidence only +17  high-confidence only +5  everything +22
+  2026 DII     low-confidence only +13  high-confidence only +9  everything +22
+  2026 HHD-JT  low-confidence only +17  high-confidence only +1  everything +18
+  2026 801     low-confidence only +13  high-confidence only +5  everything +18
+  2026 Elam    low-confidence only +13  high-confidence only +5  everything +18
+  2026 T3      low-confidence only +13  high-confidence only +5  everything +18
+  2026 RFS     low-confidence only +15  high-confidence only +3  everything +18
+2026 mean gain from low-confidence review +15.0 over 10 reviewers; low list size 31
+
+Pooled gains: low-only +568, high-only +493, everything +1061. Low-only keeps 54% of the full gain while touching 44% of teams.
+Seasons where low-only review gained on average: 6/7 [np.float64(0.8), np.float64(11.4), np.float64(9.9), np.float64(18.3), np.float64(4.2), np.float64(-1.4), np.float64(15.0)]
+CAPTURES WHERE REVIEW PAYS: False

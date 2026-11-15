@@ -35,3 +35,13 @@ Their agreement is explained by convergence on shared public signals, including 
 **E3. Final-week anchoring (feasibility only).**
 - *Hypothesis:* the committee's batches anchor on information from early in championship week. Features as of about 7 days before would then add signal.
 - *Data needed:* as-of NET about 7 days before Selection Sunday for all 7 seasons, from Wayback captures, whose availability is unverified. It's left for a later round once captures are confirmed. Not run.
+
+## Results (2026-11-15)
+**Test 25, Saturday cutoff: failed.** `research/saturday_cutoff_output.txt`. The control reproduced.
+- 334 332 339 349 330 359 356. Mean -0.1, better in 3, worse in 3, worst -8. Exact seeds 41.4 against 41.6.
+- Every field team's features shift slightly, because the rating is refit without Sunday games. Removing Sunday's games neither helps nor hurts on average. The committee's order isn't measurably closer to Saturday's information than to Sunday's.
+
+**Diagnostic R, review process: narrowly failed its rule, but informative.** `research/review_process_output.txt`. 10 reviewers (the nine plus RFS), 65 reviewer-seasons.
+- **Pooled gain over v2.0 from substituting a reviewer's lines:** low-confidence teams only +568, high-confidence teams only +493, every team +1061.
+- **Low-only review** keeps 54% of the full gain while touching 44% of teams, against the 60% required. It gained on average in 6 of 7 seasons (+0.8, +11.4, +9.9, +18.3, +4.2, -1.4, +15.0), about +8.4 a season.
+- **Interpretation:** informed review pays across the whole bracket, not only on the low-confidence list. The list is about 1.5 times denser in gains per team than the rest, but it isn't a sharp filter. The owner's 2026 result (+10 of +14 from the list) fits this pattern but doesn't establish a personal edge. The honest test of his review is prospective: a 2027 log of his calls on the whole bracket, with the list as the priority order, graded against v2.0.
