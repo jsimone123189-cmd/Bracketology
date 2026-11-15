@@ -106,6 +106,14 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Ledger:** reason codes and confidence on every adjustment, graded per entry after the bracket.
 - **2027 tracking:** frozen v2.0, the shadow candidate (v2.0 plus head-to-head and common opponents), and model plus owner edits, all frozen at 12:00 ET on Selection Sunday.
 
+## Review tool built (docs/42)
+- `src/bracketology/review.py`, `review_page.py`, `shadow_h2h.py`: B1 frozen v2.0, B2 head-to-head/common-opponent shadow, B3 v2.0 plus owner edits.
+- **Edits keep line sizes valid by construction.** Logged with time, line/position before and after, reason code, confidence and phase.
+- **Freeze:** at noon ET on Selection Sunday, with SHA-256 and no overwrite.
+- **Grading:** Matrix scores and percentiles. The owner's contribution is split into exactly additive edit groups (edits sharing teams are credited jointly).
+- **2026 demo** (trained without 2026): B1 356, B2 346, B3 with five replayed owner moves 377.
+- **Pending owner decisions:** page hosting (public repo), public vs local edit log, a 15:30 UTC Selection Sunday run for the freeze.
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.

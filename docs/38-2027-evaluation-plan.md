@@ -33,3 +33,5 @@ Committed before the 2027 season. This plan, not any later choice, decides how 2
 4. A grading report script: B1/B2/B3 scores and ledger outcomes.
 5. 76-team `fieldformat` update and tests.
 6. Freeze step: a workflow job on Selection Sunday that commits the freeze snapshot and hash.
+
+**Status (2026-11-15):** B1/B2/B3 build, freeze (with SHA-256, no overwrite, noon-ET deadline) and grade (edit groups) are implemented in `review.py` (docs/42). Still needed: freeze-time cron, daily workflow step, page hosting decision.

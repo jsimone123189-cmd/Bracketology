@@ -34,3 +34,5 @@ A design only. Nothing here changes production until the owner approves the buil
 - The public bracket shows model and adjusted lines separately, as now.
 - An adjustment counts in the evaluation only if its timestamp is before the freeze (docs/38).
 - No assumption that review helps. It's measured prospectively (docs/38).
+
+**Status (2026-11-15):** built. See docs/42 for the tool, the demo and the remaining approval steps.

@@ -1,0 +1,308 @@
+from __future__ import annotations
+"""Owner-only review tool (docs/37-38). Never published on the public site, and production code doesn't call it.
+Builds, for one moment in the season:
+  B1 frozen v2.0 (the untouched model bracket), B2 the head-to-head/common-opponent shadow, B3 v2.0 plus the owner's logged edits,
+plus per-team evidence, "why the model might be wrong" flags, and a change report against the previous review.
+Edits live in reviews/{season}.json (a list, oldest first). Every edit keeps line sizes valid by construction: the bracket is an
+ordered list and lines come from the format's slots, so moving a team shifts exactly one team across each boundary it passes.
+Run: python -m bracketology.review build [season] | demo 2026 [d7|final] | freeze [season] | grade [season] [official.json]"""
+import hashlib, json, math, os, statistics, sys, time
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+import numpy as np
+from . import fieldformat, model, project
+from .report import team_points
+from .shadow_h2h import PairEvidence, ShadowH2H
+
+REASONS = {"injury_or_availability": "Injury or availability", "recent_form": "Recent form", "committee_precedent": "Committee precedent",
+           "metric_disagreement": "Metrics disagree", "head_to_head": "Head-to-head", "schedule_quality": "Schedule quality",
+           "conference_tournament": "Conference tournament", "bracketing_rule": "Bracketing rule", "other": "Other (explain)"}
+OPS = {"move", "swap", "add", "remove", "undo"}
+
+# ------------------------------------------------------------------ edit engine
+def lines_of(order: list[str], season: int) -> dict[str, int]:
+    slots = fieldformat.format_for(season).slots
+    return {k: slots[i] for i, k in enumerate(order)}
+
+def _line_span(slots: list[int], line: int) -> tuple[int, int]:
+    if line not in slots: raise ValueError(f"line {line} doesn't exist")
+    return slots.index(line), len(slots) - 1 - slots[::-1].index(line)
+
+def check_edit(e: dict) -> list[str]:
+    bad = []
+    if e.get("op") not in OPS: bad.append(f"op must be one of {sorted(OPS)}")
+    if e.get("op") != "undo":
+        if e.get("reason_code") not in REASONS: bad.append("reason_code missing or unknown")
+        if e.get("reason_code") == "other" and not (e.get("explanation") or "").strip(): bad.append("'other' needs an explanation")
+        if e.get("confidence") not in (1, 2, 3): bad.append("confidence must be 1, 2 or 3")
+    if not e.get("id") or not e.get("at"): bad.append("needs id and at")
+    return bad
+
+def apply_edits(order: list[str], rest: list[str], edits: list[dict], season: int, info: dict[str, dict]) -> tuple[list[str], list[dict], list[str]]:
+    """order: field team keys in model order (best first). rest: non-field keys, best at-large candidate first.
+    info: key -> {champ, projected_auto, rank_score, p_in, team}. Returns the new order, one record per edit, and notes."""
+    slots = fieldformat.format_for(season).slots; order, rest = list(order), list(rest); notes, out = [], []
+    undone = {e["id"] for e in edits if e.get("op") == "undo"}
+    auto = lambda k: bool(info[k].get("champ") or info[k].get("projected_auto"))
+    def insert_by_score(k):
+        i = next((j for j, x in enumerate(order) if info[x]["rank_score"] < info[k]["rank_score"]), len(order)); order.insert(i, k)
+    for e in edits:
+        if e.get("op") == "undo" or e["id"] in undone: continue
+        bad = check_edit(e)
+        if bad: notes.append(f"Edit {e.get('id')} skipped: {'; '.join(bad)}"); continue
+        before = lines_of(order, season); before_order = list(order); op = e["op"]; k = e.get("team")
+        try:
+            if k not in info: raise ValueError(f"unknown team {k}")
+            if op == "move":
+                if k not in order: raise ValueError(f"{info[k]['team']} isn't in the field")
+                cur = order.index(k); a, b = _line_span(slots, int(e["to_line"]))
+                if slots[cur] != int(e["to_line"]): order.pop(cur); order.insert(a if int(e["to_line"]) < slots[cur] else b, k)
+            elif op == "swap":
+                o = e.get("with")
+                if k not in order or o not in order: raise ValueError("both teams must be in the field")
+                i, j = order.index(k), order.index(o); order[i], order[j] = o, k
+            elif op == "add":
+                if k in order: raise ValueError(f"{info[k]['team']} is already in the field")
+                x = e.get("remove") or next((t for t in reversed(sorted(order, key=lambda t: info[t]["p_in"], reverse=True)) if not auto(t)), None)
+                if x not in order or auto(x): raise ValueError("the team removed must be an at-large team in the field")
+                order.remove(x); rest.insert(0, x); rest = [t for t in rest if t != k]
+                if e.get("to_line"): a, _ = _line_span(slots, int(e["to_line"])); order.insert(a, k)
+                else: insert_by_score(k)
+            elif op == "remove":
+                if k not in order or auto(k): raise ValueError("only at-large teams in the field can be removed")
+                y = e.get("add") or next((t for t in rest if t not in order), None)
+                if y is None or y in order: raise ValueError("no replacement available")
+                order.remove(k); rest = [t for t in rest if t != y]; rest.insert(0, k); insert_by_score(y)
+        except (ValueError, KeyError, TypeError) as err:
+            notes.append(f"Edit {e['id']} not applied: {err}"); continue
+        after = lines_of(order, season)
+        changed = sorted(t for t in set(before) | set(after) if before.get(t) != after.get(t))
+        pos = lambda o, x: o.index(x) + 1 if x in o else None
+        out.append({**e, "phase": e.get("phase") or phase(season, e["at"]), "line_before": before.get(k), "line_after": after.get(k),
+                    "overall_before": before_order.index(k) + 1 if k in before_order else None, "overall_after": pos(order, k), "teams_changed": changed})
+    return order, out, notes
+
+# ------------------------------------------------------------------ evidence
+RESUME = [("NET", "net", 1), ("WAB rank", "rk_wab", 1), ("SOR rank", "rk_sor", 1), ("Rating rank", "rk_rating", 1)]
+THIRD = [("KPI", "r_kpi"), ("ESPN SOR", "r_sor"), ("BPI", "r_bpi"), ("KenPom", "r_kp"), ("T-Rank", "r_trk"), ("Official WAB", "r_wab")]
+ZFEAT = [("NET", lambda r: -math.log(r["net"])), ("WAB", lambda r: r["wab"]), ("SOR", lambda r: r["sor"]), ("rating", lambda r: r["rating"]),
+         ("Q1 wins", lambda r: r["cq1_w"]), ("Q1A wins", lambda r: r["q1a_w"]), ("few Q1 losses", lambda r: -r["cq1_l"]),
+         ("no Q3/Q4 losses", lambda r: -(r["cq3_l"] + r["cq4_l"])), ("schedule", lambda r: r["sos"]), ("road wins", lambda r: r["road_w"])]
+
+def _ranks(rows, f):
+    return {r["key"]: i + 1 for i, r in enumerate(sorted(rows, key=lambda r: -r[f]))}
+
+def ct_record(games: list[dict], k: str, day: str) -> tuple[int, int]:
+    w = l = 0; seen = set()
+    for g in games:
+        if g["team_key"] != k or g["date_iso"] > day or not (g.get("ct") or g.get("type") == 2): continue
+        sig = (g["date_iso"], g["opp_key"])
+        if sig in seen: continue
+        seen.add(sig); w += bool(g["win"]); l += not g["win"]
+    return w, l
+
+def build(rows: list[dict], season: int, fitted: model.Model, games: list[dict], day: str, shadow: ShadowH2H | None = None,
+          edits: list[dict] | None = None, prev: dict | None = None, sources: dict | None = None) -> dict:
+    """rows: live or historical rows (unprepared). day: games cutoff for evidence. prev: the previous review, for the change report."""
+    model.prepare(rows); fitted.score(rows)
+    field, rest_rows = model.choose_field(rows, season); order_rows = model.assign_lines(field, season); project.confidence(order_rows, season)
+    R = {r["key"]: r for r in rows}
+    for f, n in (("wab", "rk_wab"), ("sor", "rk_sor"), ("rating", "rk_rating")):
+        for k, v in _ranks(rows, f).items(): R[k][n] = v
+    ev = PairEvidence(games, day)
+    m_order = [r["key"] for r in order_rows]; rest = [r["key"] for r in rest_rows]
+    info = {k: {"team": R[k]["team"], "lg": R[k].get("lg"), "champ": bool(R[k]["champ"]), "projected_auto": bool(R[k].get("projected_auto")), "rank_score": R[k]["rank_score"], "p_in": R[k]["p_in"]} for k in R}
+    B1 = lines_of(m_order, season)
+    B2 = None
+    if shadow is not None:
+        sc = shadow.scores(order_rows, ev); B2 = lines_of(sorted(m_order, key=lambda k: -sc[k]), season)
+    edits = edits or []; b3_order, applied, notes = apply_edits(m_order, rest, edits, season, info); B3 = lines_of(b3_order, season)
+    s = [R[k]["rank_score"] for k in m_order]; u = statistics.median(abs(a - b) for a, b in zip(s, s[1:])) or 1e-9
+    Z = np.array([[fn(R[k]) for _, fn in ZFEAT] for k in m_order]); Z = (Z - Z.mean(0)) / (Z.std(0) + 1e-9)
+    logs = {k: [math.log(max(1, R[k][f])) for _, f, _ in RESUME] + [math.log(R[k][f]) for _, f in THIRD if R[k].get(f)] for k in m_order}
+    spread = {k: max(v) - min(v) for k, v in logs.items()}; q75 = float(np.percentile(list(spread.values()), 75))
+    teams = []
+    for i, k in enumerate(m_order):
+        r = R[k]; line = B1[k]; nb = [j for j in range(max(0, i - 4), min(len(m_order), i + 5)) if j != i]
+        up = [R[x]["rank_score"] for x in m_order if B1[x] == line - 1]; dn = [R[x]["rank_score"] for x in m_order if B1[x] == line + 1]
+        d_up = (min(up) - r["rank_score"]) / u if up else None; d_dn = (r["rank_score"] - max(dn)) / u if dn else None
+        diff = Z[i] - Z[nb].mean(0); idx = np.argsort(diff)
+        ctw, ctl = ct_record(games, k, day)
+        neighbours = []
+        for j in nb:
+            o = m_order[j]; w, l = ev.games_between(k, o)
+            neighbours.append({"key": o, "team": R[o]["team"], "line": B1[o], "overall": j + 1, "gap_u": round((R[o]["rank_score"] - r["rank_score"]) / u, 2),
+                               "h2h": [w, l], "common": ev.common_detail(k, o), "net": R[o]["net"], "rk_wab": R[o]["rk_wab"], "q1": f"{R[o]['cq1_w']}-{R[o]['cq1_l']}"})
+        flags = []
+        c = r.get("confidence", 1.0)
+        if c < .5: flags.append(f"Low confidence: about {c:.0%} chance of exactly this line. Nearly all 2+ line misses come from teams under 50% (docs/12).")
+        if d_up is not None and d_up < 1: flags.append(f"Within {d_up:.1f} positions' worth of score of line {line - 1}.")
+        if d_dn is not None and d_dn < 1: flags.append(f"Within {d_dn:.1f} positions' worth of score of line {line + 1}.")
+        if r["champ"] and not r["is_power"]: flags.append("Small-conference champion: v2.0's weakest group, misses go both ways (docs/11).")
+        if not r["champ"] and not r["is_power"]: flags.append("Non-power at-large: v2.0's bias here flips from season to season (docs/11).")
+        if not r["champ"] and r["is_power"] and 33 <= r["net"] <= 56: flags.append("Power team with NET 33-56: the profile v2.0 most often wrongly selects (docs/11).")
+        if spread[k] >= q75: flags.append(f"Metrics disagree: best {min(zip(logs[k], [n for n, _, _ in RESUME] + [n for n, f in THIRD if r.get(f)]))[1]}, worst {max(zip(logs[k], [n for n, _, _ in RESUME] + [n for n, f in THIRD if r.get(f)]))[1]}.")
+        for o in nb:
+            ok_ = m_order[o]; w, l = ev.games_between(k, ok_)
+            if w > l and B1[ok_] < line: flags.append(f"Beat {R[ok_]['team']} (line {B1[ok_]}) head-to-head {w}-{l}.")
+            if l > w and B1[ok_] > line: flags.append(f"Lost to {R[ok_]['team']} (line {B1[ok_]}) head-to-head {w}-{l}.")
+        if ctw >= 2: flags.append(f"Won {ctw} conference-tournament games: the committee moved strong tournament runs less than v2.0 does (docs/39-40).")
+        if ctl and not ctw: flags.append("Lost its first conference-tournament game: the committee moved these teams less than v2.0 does (docs/39-40).")
+        if prev:
+            pt = prev.get("teams_by_key", {}).get(k)
+            if pt:
+                ds = (r["rank_score"] - pt["rank_score"]) / u
+                if abs(ds) >= 2 and pt["model_line"] == line: flags.append(f"Score moved {ds:+.1f} positions' worth since {prev['asof']} but its line didn't change.")
+                if abs(ds) < .5 and pt["model_line"] != line: flags.append(f"Line changed {pt['model_line']}→{line} since {prev['asof']} mostly because other teams moved.")
+        third = {n: r[f] for n, f in THIRD if r.get(f)}
+        teams.append({"key": k, "team": r["team"], "lg": r.get("lg"), "overall": i + 1, "model_line": line, "shadow_line": B2.get(k) if B2 else None, "manual_line": B3.get(k),
+                      "confidence": round(c, 3), "p_in": round(r["p_in"], 3), "rank_score": round(r["rank_score"], 4), "champ": bool(r["champ"]), "projected_auto": bool(r.get("projected_auto")),
+                      "power": bool(r["is_power"]), "boundary_up_u": None if d_up is None else round(d_up, 2), "boundary_down_u": None if d_dn is None else round(d_dn, 2),
+                      "resume": {"Record": f"{r['w']}-{r['l']}", "NET": r["net"], "WAB": round(r["wab"], 2), "WAB rank": r["rk_wab"], "SOR rank": r["rk_sor"], "Rating rank": r["rk_rating"],
+                                 "Q1A": f"{r['q1a_w']}-{r.get('q1a_l', 0)}", "Q1": f"{r['cq1_w']}-{r['cq1_l']}", "Q2": f"{r['cq2_w']}-{r.get('cq2_l', 0)}", "Q3 losses": r["cq3_l"], "Q4 losses": r["cq4_l"],
+                                 "Road wins": r["road_w"], "Neutral wins": r["neutral_w"], "Last 10": round(r["last10"] * 10), "Conf. tourney": f"{ctw}-{ctl}", **third},
+                      "advantages": [ZFEAT[j][0] for j in idx[::-1][:2] if diff[j] > .25], "disadvantages": [ZFEAT[j][0] for j in idx[:2] if diff[j] < -.25],
+                      "metric_spread": round(spread[k], 2), "neighbours": neighbours, "flags": flags})
+    outside = [{"key": r["key"], "team": r["team"], "p_in": round(r["p_in"], 3), "net": r["net"], "lg": r.get("lg"), "rank_score": round(r["rank_score"], 4)} for r in rest_rows[:16]]
+    atl = sorted((t for t in teams if not t["champ"] and not t["projected_auto"]), key=lambda t: t["p_in"])
+    asof = sources.get("games_through", day) if sources else day
+    out = {"season": season, "asof": asof, "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "model_version": model.MODEL_VERSION,
+           "lines": fieldformat.line_sizes(season), "u": u, "sources": sources or {}, "phase": phase(season, asof),
+           "teams": teams, "outside": outside, "bubble": {"last_in": [t["key"] for t in atl[:6]], "first_out": [t["key"] for t in outside[:6]]},
+           "brackets": {"B1_model": B1, "B2_shadow": B2, "B3_manual": B3}, "edits": applied, "edit_notes": notes, "all_info": {k: {"team": v["team"], "lg": v["lg"], "champ": v["champ"], "projected_auto": v["projected_auto"], "rank_score": round(v["rank_score"], 4), "p_in": round(v["p_in"], 4)} for k, v in info.items() if k in set(m_order) | set(rest[:40])},
+           "model_order": m_order, "rest_order": rest[:40]}
+    out["teams_by_key"] = {t["key"]: {"rank_score": t["rank_score"], "model_line": t["model_line"], "confidence": t["confidence"], "champ": t["champ"]} for t in teams}
+    out["changes"] = change_report(out, prev) if prev else None
+    return out
+
+def selection_sunday(season: int) -> date | None:
+    from .history import SELECTION_SUNDAY
+    return project.SELECTION_SUNDAY_LIVE.get(season) or (date.fromisoformat(SELECTION_SUNDAY[season]) if season in SELECTION_SUNDAY else None)
+
+def phase(season: int, asof: str) -> str:
+    ss = selection_sunday(season)
+    if not ss: return "unknown"
+    return "championship_week" if date.fromisoformat(asof[:10]) >= ss - timedelta(days=7) else "pre_championship_week"
+
+def change_report(cur: dict, prev: dict) -> dict:
+    P, C = prev["teams_by_key"], cur["teams_by_key"]; names = {t["key"]: t["team"] for t in cur["teams"]}
+    names.update({k: v["team"] for k, v in prev.get("all_info", {}).items() if k not in names})
+    moved = [{"team": names[k], "from": P[k]["model_line"], "to": C[k]["model_line"]} for k in C if k in P and P[k]["model_line"] != C[k]["model_line"]]
+    conf = [{"team": names[k], "from": P[k]["confidence"], "to": C[k]["confidence"]} for k in C if k in P and abs(P[k]["confidence"] - C[k]["confidence"]) >= .15]
+    new_champs = sorted(k for k in C if C[k]["champ"] and not (P.get(k) or {}).get("champ"))
+    pin = {k: v["p_in"] for k, v in cur["all_info"].items()}; lg = {k: v.get("lg") for k, v in cur["all_info"].items()}
+    # bid thief: an unlikely champion (would not be an at-large) from a league that also has at-large teams in the field
+    thief = lambda k: pin.get(k, 1) < .5 and any(o != k and lg.get(o) == lg.get(k) and not C[o]["champ"] for o in C)
+    return {"since": prev["asof"], "line_changes": sorted(moved, key=lambda m: m["to"]), "entered_field": sorted(names[k] for k in C if k not in P), "left_field": sorted(names.get(k, k) for k in P if k not in C),
+            "new_champions": [names[k] for k in new_champs], "bid_thieves": [names[k] for k in new_champs if thief(k)],
+            "near_boundary": sorted(t["team"] for t in cur["teams"] if min(x for x in (t["boundary_up_u"], t["boundary_down_u"], 99) if x is not None) < .5),
+            "confidence_changes": conf}
+
+# ------------------------------------------------------------------ freeze and grade
+def freeze_deadline(season: int) -> datetime:
+    ss = selection_sunday(season)
+    return datetime(ss.year, ss.month, ss.day, 12, 0, tzinfo=ZoneInfo("America/New_York")).astimezone(timezone.utc)
+
+def freeze(review: dict, outdir: str = "data/freeze", now: datetime | None = None, deadline: datetime | None = None) -> str:
+    """Writes the three brackets, edits and input timestamps once, with a SHA-256 of the exact bytes. Refuses to overwrite,
+    and refuses a review generated after the deadline."""
+    deadline = deadline or freeze_deadline(review["season"]); gen = datetime.strptime(review["generated_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    if gen > deadline: raise SystemExit(f"Review generated {gen:%Y-%m-%d %H:%M}Z is after the freeze deadline {deadline:%Y-%m-%d %H:%M}Z.")
+    path = f"{outdir}/{review['season']}_freeze.json"
+    if os.path.exists(path): raise SystemExit(f"{path} already exists; frozen brackets are never overwritten.")
+    body = {"season": review["season"], "frozen_at": (now or datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ"), "deadline": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "review_generated_at": review["generated_at"], "inputs_asof": review["asof"], "sources": review["sources"], "model_version": review["model_version"],
+            "brackets": review["brackets"], "edits": review["edits"], "edit_notes": review["edit_notes"], "model_order": review["model_order"]}
+    raw = json.dumps(body, sort_keys=True, indent=1).encode()
+    os.makedirs(outdir, exist_ok=True); open(path, "wb").write(raw); open(path + ".sha256", "w").write(hashlib.sha256(raw).hexdigest() + "\n")
+    return path
+
+def grade(frozen: dict, official: dict[str, int], matrix_scores: list[int] | None = None) -> dict:
+    """Bracket Matrix scores for B1-B3 and the owner's contribution. Scoring is a sum over teams, so edits are grouped by the teams
+    they changed (union-find): each group's points are exact and groups add up to the total. Edits in one group interact and are credited jointly."""
+    from .sources.bracketmatrix import score
+    res = {}
+    for name, L in frozen["brackets"].items():
+        if L is None: continue
+        s = score(L, official); res[name] = {**s, "percentile": None if not matrix_scores else round(100 * sum(x < s["score"] for x in matrix_scores) / len(matrix_scores))}
+    B1, B3 = frozen["brackets"]["B1_model"], frozen["brackets"]["B3_manual"]
+    parent = {}
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x: parent[x] = parent[parent[x]]; x = parent[x]
+        return x
+    def union(a, b): parent[find(a)] = find(b)
+    edits = frozen["edits"]
+    for e in edits:
+        for t in e["teams_changed"]: union(t, ("edit", e["id"]))
+    groups = {}
+    for e in edits:
+        g = groups.setdefault(find(("edit", e["id"])), {"edits": [], "teams": set()}); g["edits"].append(e["id"]); g["teams"].update(e["teams_changed"])
+    out = []
+    for g in groups.values():
+        pts = sum(team_points(B3.get(t), official.get(t)) - team_points(B1.get(t), official.get(t)) for t in g["teams"])
+        out.append({"edits": g["edits"], "teams": sorted(g["teams"]), "points": pts, "joint": len(g["edits"]) > 1})
+    total = res["B3_manual"]["score"] - res["B1_model"]["score"]
+    return {"scores": res, "manual_minus_model": total, "edit_groups": out, "groups_sum": sum(g["points"] for g in out)}
+
+# ------------------------------------------------------------------ CLI
+def load_edits(season: int) -> list[dict]:
+    p = f"reviews/{season}.json"
+    return json.load(open(p)) if os.path.exists(p) else []
+
+def _games_live(season: int) -> list[dict]:
+    from .dataset import _d
+    from .teams import key
+    gs = json.load(open(f"data/output/gamecache/{season}.json"))["rows"]
+    for g in gs: g["team_key"], g["opp_key"], g["date_iso"] = key(g["team"]), key(g["opp"]), _d(g["date"])
+    return gs
+
+def _shadow(exclude: set[int]) -> ShadowH2H | None:
+    import joblib
+    p = "models/shadow_h2h.joblib"
+    if os.path.exists(p): return joblib.load(p)
+    try:
+        from .shadow_h2h import history_evidence
+        from .history import SELECTION_SUNDAY
+        years = [y for y in SELECTION_SUNDAY if y not in exclude]
+        return ShadowH2H().fit(project.training_rows(exclude=exclude), history_evidence(years, SELECTION_SUNDAY.get))
+    except Exception as e:
+        print("Shadow unavailable:", e); return None
+
+def write(review: dict, outdir: str = "data/output/review") -> tuple[str, str]:
+    from .review_page import render
+    os.makedirs(outdir, exist_ok=True); stamp = review["asof"][:10]
+    jp = f"{outdir}/{review['season']}_{stamp}.json"; json.dump(review, open(jp, "w"), indent=1)
+    hp = f"{outdir}/{review['season']}_{stamp}.html"; open(hp, "w").write(render(review))
+    return jp, hp
+
+def previous(season: int, asof: str, outdir: str = "data/output/review") -> dict | None:
+    import glob
+    ps = sorted(p for p in glob.glob(f"{outdir}/{season}_*.json") if os.path.basename(p)[5:15] < asof[:10])
+    return json.load(open(ps[-1])) if ps else None
+
+def main(argv: list[str]) -> None:
+    cmd = argv[0] if argv else "build"
+    if cmd == "build":
+        from .sitebuild import load_or_fit
+        season = int(argv[1]) if len(argv) > 1 else 2027; info = {}; rows, warn = project.live_rows(season, info=info)
+        day = info.get("games_through"); prev = previous(season, day)
+        rv = build(rows, season, load_or_fit(season=season), _games_live(season), day, _shadow({season}), load_edits(season), prev, info)
+        rv["warnings"] = warn; print(*write(rv))
+    elif cmd == "freeze":
+        season = int(argv[1]) if len(argv) > 1 else 2027; import glob
+        p = sorted(glob.glob(f"data/output/review/{season}_*.json"))[-1]; print(freeze(json.load(open(p))))
+    elif cmd == "grade":
+        season = int(argv[1]) if len(argv) > 1 else 2027
+        from .sources import bracketmatrix as bm
+        from .teams import key
+        fz = json.load(open(f"data/freeze/{season}_freeze.json")); m = bm.collect(season)
+        off = json.load(open(argv[2])) if len(argv) > 2 else m["official"]; off = {key(t): int(s) for t, s in off.items()}
+        ms = [int(v) for k, v in m["reported"]["SCORE"].items() if v.isdigit() and k != "MATRIX"]
+        print(json.dumps(grade(fz, off, ms), indent=1, default=list))
+    elif cmd == "demo":
+        from .review_demo import demo
+        print(*demo(int(argv[1]) if len(argv) > 1 else 2026, argv[2] if len(argv) > 2 else "final"))
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
