@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 81 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 83 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -51,7 +51,17 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Residual correction** learned from own held-out misses: -0.6. Ensemble of v2.0, head-to-head plus common opponents, and nonlinear pairs: +0.3, worst -7 (28).
 - **Separate seed formulas** for positions 1-16, 17-40 and 41-68: -3.6 (30). Bottom positions 49-68 ordered by NET: -0.9 (31).
 - **Learning RFS's order:** -2.0; committee plus RFS: -1.3 (32).
+- **Expected-score line assignment** (each team's line probabilities from nested held-out errors, then the bracket with the most expected points under real line capacities, solved with the Hungarian algorithm): moved 0 teams in all 7 seasons. Straight S-curve fill is already optimal, so the whole gap is in the team order, not in turning it into lines (33).
 - **Recurring pattern:** what helps 2019/2021 hurts 2022/2025, and the reverse.
+
+## Data audit (docs/33): our inputs match the committee's
+- Rebuilt quadrant records match the official NET-sheet records for 93-100% of field teams (mean absolute difference 0.07 games or less).
+- Rebuilt SOR, WAB and rating correlate .95-.99 with the real ESPN SOR, WAB, KenPom and BPI.
+- NET is the Saturday-night version, which is what the committee sees.
+
+## Owner's 2026 bracket (370 against v2.0's held-out 356), docs/33
+- He differed on 23 teams, net +14. **13 of those were on v2.0's low-confidence list (31 teams), worth +10.** The other +4 came from picking Miami (OH) over Auburn.
+- He moved non-power at-large teams up and power-conference mid-seeds down. That was v2.0's 2026 bias, but the bias flips direction season to season (right in 4 of 7), so a fixed rule fails.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
@@ -64,6 +74,15 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - A free source of past injury or availability news.
 - The owner's own adjustments on the model's daily low-confidence list. The owner's own 2026 Matrix bracket scored 370, against v2.0's held-out 356.
 - 2027 shadow tracking of head-to-head plus common opponents and nonlinear pairs.
+
+## What I need back from you
+You may not be able to run the code. If not, give me **one to three specific, untested experiments**, ranked. For each one:
+- the hypothesis, and why it should beat the documented limits (in-sample linear ceiling 43 exact; the top bracketologists only 55-73% reproducible from free stats; misses not consistent in direction),
+- the exact data, with a free, legal, automatic source that has seasons back to 2019 as of Selection Sunday,
+- the exact algorithm, with settings fixed in advance,
+- the pass/fail rule.
+
+Don't propose anything in the "tried and failed" list or a reweighting of the same features. If you think the gap can't be closed with free data, say so and point to the specific evidence above.
 
 ## How to work
 - Write each test's rules into a new `docs/NN-*.md`, commit it, then run.
