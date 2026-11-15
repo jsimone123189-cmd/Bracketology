@@ -1,0 +1,24 @@
+{
+  // Owner-only review Worker (docs/44). NOT DEPLOYED. Deploying needs the owner's approval (docs/44 approvals A-E).
+  // Never run `wrangler deploy` by hand. Local testing: `npm test` (wrangler dev with a local D1 copy; nothing leaves this machine).
+  "name": "jbp-review",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-04",
+  // No public address except the Access-protected route added at deploy time. workers.dev and preview URLs would skip Access.
+  "workers_dev": false,
+  "preview_urls": false,
+  "rules": [{ "type": "Text", "globs": ["**/*.html"], "fallthrough": false }],
+  "d1_databases": [
+    // database_id is a placeholder: the database has not been created (approval A).
+    { "binding": "DB", "database_name": "jbp_private", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  "vars": {
+    "SEASON": "2027",
+    // Left empty on purpose: with any of these empty, every request is refused. Filled in only at deploy (approval A),
+    // from the Access application created by the owner (step 1). None of them is a secret.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": "",
+    "OWNER_EMAIL": "",
+    "MACHINE_CLIENT_ID": ""
+  }
+}

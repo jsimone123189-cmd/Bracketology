@@ -9,3 +9,7 @@ data/features/
 data/output/
 private/
 reviews/*.json
+
+# review Worker local test files
+review-worker/.dev.vars
+review-worker/.wrangler/

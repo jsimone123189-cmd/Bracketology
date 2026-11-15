@@ -43,7 +43,7 @@ def apply_edits(order: list[str], rest: list[str], edits: list[dict], season: in
     """order: field team keys in model order (best first). rest: non-field keys, best at-large candidate first.
     info: key -> {champ, projected_auto, rank_score, p_in, team}. Returns the new order, one record per edit, and notes."""
     slots = fieldformat.format_for(season).slots; order, rest = list(order), list(rest); notes, out = [], []
-    undone = {e["id"] for e in edits if e.get("op") == "undo"}
+    undone = {e.get("undo_of") or e["id"] for e in edits if e.get("op") == "undo"}     # undo_of names the retracted edit (older logs reuse its id)
     auto = lambda k: bool(info[k].get("champ") or info[k].get("projected_auto"))
     def insert_by_score(k):
         i = next((j for j, x in enumerate(order) if info[x]["rank_score"] < info[k]["rank_score"]), len(order)); order.insert(i, k)
@@ -66,8 +66,9 @@ def apply_edits(order: list[str], rest: list[str], edits: list[dict], season: in
                 if k in order: raise ValueError(f"{info[k]['team']} is already in the field")
                 x = e.get("remove") or next((t for t in reversed(sorted(order, key=lambda t: info[t]["p_in"], reverse=True)) if not auto(t)), None)
                 if x not in order or auto(x): raise ValueError("the team removed must be an at-large team in the field")
+                a = _line_span(slots, int(e["to_line"]))[0] if e.get("to_line") else None      # validated before anything changes
                 order.remove(x); rest.insert(0, x); rest = [t for t in rest if t != k]
-                if e.get("to_line"): a, _ = _line_span(slots, int(e["to_line"])); order.insert(a, k)
+                if a is not None: order.insert(a, k)
                 else: insert_by_score(k)
             elif op == "remove":
                 if k not in order or auto(k): raise ValueError("only at-large teams in the field can be removed")
@@ -376,6 +377,24 @@ def freeze(season: int, folder: str | None = None, outdir: str | None = None, no
     os.remove(tmp); open(path + ".sha256", "w").write(_sha(raw) + "\n"); os.chmod(path, 0o444)
     return {"status": "frozen", "path": path, "sha256": _sha(raw), "review": os.path.basename(p), "skipped": skipped}
 
+def model_files() -> dict:
+    """Fingerprints of the model files on disk at build time. The Worker's freeze can't read files, so the build records them."""
+    v2 = "models/v2.joblib"
+    return {"v2_file_sha256": _file_sha(v2), "v2_expected_file_sha256": model.MODEL_SHA256, "v2_saved_fingerprint": _saved_fp(v2),
+            "code_commit": os.environ.get("GITHUB_SHA") or _git_head()}
+
+def upload(rv: dict, url: str | None = None) -> dict:
+    """Send a review (public data only: B1, B2, evidence; never edits) to the private review Worker. Authenticates with a
+    Cloudflare Access service token from the environment (REVIEW_URL, CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET); prints nothing private."""
+    import urllib.request
+    url = url or os.environ["REVIEW_URL"]
+    if rv.get("edits"): raise SystemExit("refusing to upload a review that carries edits")
+    body = json.dumps({k: v for k, v in rv.items() if k != "teams_by_key"}).encode()
+    req = urllib.request.Request(url.rstrip("/") + "/api/machine/review", data=body, method="POST", headers={
+        "Content-Type": "application/json", "User-Agent": "bracketology-review-upload",
+        "CF-Access-Client-Id": os.environ["CF_ACCESS_CLIENT_ID"], "CF-Access-Client-Secret": os.environ["CF_ACCESS_CLIENT_SECRET"]})
+    with urllib.request.urlopen(req, timeout=60) as r: return json.loads(r.read())
+
 def _saved_fp(p: str) -> str | None:
     try:
         import joblib; return fingerprint(joblib.load(p)) if os.path.exists(p) else None
@@ -480,7 +499,11 @@ def main(argv: list[str]) -> None:
         day = info.get("games_through"); prev = previous(season, info["collected_at"])
         if pend is not False: info["conference_games_pending"] = results_complete(pend, games, ss.isoformat())
         rv = build(rows, season, load_or_fit(season=season), games, day, _shadow({season}), load_edits(season), prev, info)
+        rv["model_files"] = model_files()
         rv["warnings"] = warn; print(*write(rv))
+    elif cmd == "upload":     # prepared for the daily workflow (docs/44); needs approval and credentials, not wired anywhere yet
+        p = argv[2] if len(argv) > 2 else all_reviews(season)[-1][0]
+        print(json.dumps(upload(json.load(open(p))), indent=1))
     elif cmd == "freeze": print(json.dumps(freeze(season, kind=argv[2] if len(argv) > 2 else "research"), indent=1))
     elif cmd == "verify":
         v = verify(season, kind=argv[2] if len(argv) > 2 else "research"); print(json.dumps(v, indent=1)); sys.exit(0 if v["ok"] else 1)

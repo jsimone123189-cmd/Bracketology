@@ -170,3 +170,14 @@ def test_results_complete_cross_checks_games_used():
     assert review.results_complete(([], 2), games, "2027-03-14") is None                               # scoreboard says over, data lacks one
     assert review.results_complete(([{"conf": "x"}], 2), games, "2027-03-14") == [{"conf": "x"}]
     assert review.results_complete(None, games, "2027-03-14") is None
+
+# ---------------- engine fixes found while porting to the Worker (docs/44)
+def test_failed_add_with_bad_line_leaves_the_field_intact():
+    order, rest, info = setup()
+    new, rec, notes = review.apply_edits(order, rest, [E(1, op="add", team="x1", to_line=17)], 2026, info)
+    assert new == order and rec == [] and "not applied" in notes[0]
+
+def test_undo_of_names_the_retracted_edit():
+    order, rest, info = setup()
+    new, rec, _ = review.apply_edits(order, rest, [E(1, op="move", team="t30", to_line=6), {"id": "u1", "at": "2026-03-10T13:00:00Z", "op": "undo", "undo_of": "e1"}], 2026, info)
+    assert new == order and rec == []

@@ -1,0 +1,10 @@
+{
+  "name": "jbp-review",
+  "private": true,
+  "type": "module",
+  "description": "Owner-only review Worker (docs/44). Local tests only; not deployed.",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/auth.test.mjs test/parity.test.mjs test/e2e.test.mjs",
+    "screens": "node test/screens.mjs"
+  }
+}

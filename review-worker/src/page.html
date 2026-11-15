@@ -1,0 +1,172 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><title>Bracket Review</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1b1b19;--muted:#6a6963;--line:#e3e1da;--acc:#2a5bd7;--accInk:#fff;--warn:#a85d12;--good:#27744a;--bad:#ad3434;--chip:#eef0f6;--sheet:#fff;--shadow:0 -8px 30px rgba(0,0,0,.18)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121211;--card:#1c1c1a;--ink:#edece7;--muted:#9c9b92;--line:#33322e;--acc:#7ea4ff;--accInk:#0d1630;--warn:#e3a35f;--good:#71c491;--bad:#e58080;--chip:#262a38;--sheet:#1c1c1a;--shadow:0 -8px 30px rgba(0,0,0,.6)}}
+:root[data-theme="dark"]{--bg:#121211;--card:#1c1c1a;--ink:#edece7;--muted:#9c9b92;--line:#33322e;--acc:#7ea4ff;--accInk:#0d1630;--warn:#e3a35f;--good:#71c491;--bad:#e58080;--chip:#262a38;--sheet:#1c1c1a;--shadow:0 -8px 30px rgba(0,0,0,.6)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) 16px 8px}
+h1{font-size:17px;margin:0;display:flex;gap:8px;align-items:center}h2{font-size:16px;margin:16px 0 8px}h3{font-size:12px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}.muted{color:var(--muted)}
+main{padding:10px 16px calc(84px + env(safe-area-inset-bottom));max-width:760px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.ln{display:flex;gap:10px;align-items:flex-start}.ln>b{flex:0 0 26px;font-size:13px;color:var(--muted);padding-top:7px;text-align:right}
+.chips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.t{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 10px;border-radius:10px;background:var(--chip);border:1.5px solid transparent;font-size:14px;cursor:pointer;color:var(--ink)}
+.t.ed{border-color:var(--warn);border-style:dashed}.t .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
+.aq{font-size:10.5px;padding:0 5px;border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+.mv{font-size:11px;color:var(--warn);font-weight:600}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;padding:10px 2px 12px;min-height:54px;cursor:pointer}
+nav.tabs button.on{color:var(--acc);font-weight:650}
+.badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--acc);color:var(--accInk);font-size:11px;line-height:18px}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin:2px 4px 2px 0}
+.flag{margin:6px 0;padding:8px 10px;border-left:3px solid var(--warn);background:var(--chip);border-radius:6px;font-size:14px}
+.good{color:var(--good)}.bad{color:var(--bad)}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9;display:none}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:10;max-height:92vh;overflow:auto;background:var(--sheet);border-radius:18px 18px 0 0;box-shadow:var(--shadow);padding:6px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .2s ease;max-width:760px;margin:auto}
+#sheet.open{transform:none}#scrim.open{display:block}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:6px auto 4px}
+.sheethead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.x{border:0;background:var(--chip);color:var(--ink);border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button,.grid button{font:inherit;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;min-height:44px;padding:8px 12px;cursor:pointer}
+.seg button.on,.grid button.on{border-color:var(--acc);background:var(--acc);color:var(--accInk)}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.grid button{padding:8px 0}.grid button.cur{border-color:var(--warn)}
+select,textarea{font:inherit;width:100%;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px;min-height:44px}
+textarea{min-height:64px;resize:vertical}
+.btn{font:inherit;font-weight:650;width:100%;min-height:50px;border-radius:12px;border:0;background:var(--acc);color:var(--accInk);cursor:pointer;margin-top:10px}
+.btn.sec{background:var(--chip);color:var(--ink)}.btn:disabled{opacity:.5}
+.prev{border:1.5px solid var(--acc);border-radius:12px;padding:10px 12px;margin-top:10px}
+details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;font-weight:600;min-height:32px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+.nb{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.nb:last-child{border:0}
+#toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;display:none;max-width:90vw}
+.logrow{padding:10px 0;border-bottom:1px solid var(--line)}.logrow:last-child{border:0}.logrow .top{display:flex;justify-content:space-between;gap:8px}
+.undone{opacity:.5;text-decoration:line-through}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+</style></head><body>
+<header><h1 id="title">Bracket Review</h1><div class="sub" id="meta">Loading…</div></header>
+<main id="main"></main>
+<nav class="tabs" id="tabs"></nav>
+<div id="scrim"></div><div id="sheet" role="dialog" aria-modal="true"></div><div id="toast"></div>
+<script>
+"use strict";
+const qs=new URLSearchParams(location.search), SEASON=qs.get("season")||"2027";
+let S=null, tab="board", sel=null, form=null, preview=null, busy=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const et=s=>s?new Date(s).toLocaleString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET":"—";
+const nm=k=>((S.review.all_info||{})[k]||{}).team||((S.review.teams||[]).find(t=>t.key===k)||{}).team||k;
+const T=k=>(S.review.teams||[]).find(t=>t.key===k);
+const O=k=>(S.review.outside||[]).find(t=>t.key===k);
+const isAuto=k=>{const i=(S.review.all_info||{})[k]||{};return !!(i.champ||i.projected_auto)};
+const dotC=c=>c>=.7?"var(--good)":c>=.5?"var(--acc)":c>=.3?"var(--warn)":"var(--bad)";
+function toast(m,ms=2600){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display="none",ms)}
+async function api(path,body){
+  const r=await fetch(path+(path.includes("?")?"&":"?")+"season="+SEASON,body?{method:"POST",headers:{"Content-Type":"application/json","X-Review":"1"},body:JSON.stringify(body),credentials:"same-origin"}:{credentials:"same-origin"});
+  if(r.status===403)throw new Error("Signed out. Reload the page to sign in again.");
+  const j=await r.json().catch(()=>({error:"Bad response ("+r.status+")"}));if(!r.ok)throw new Error(j.error||("Error "+r.status));return j}
+async function load(){try{S=await api("/api/state");draw()}catch(e){$("main").innerHTML=`<div class="empty">${esc(e.message)}</div>`;$("meta").textContent=""}}
+
+function header(){const rv=S.review;$("title").innerHTML=`Review ${esc(S.season)} <span class="pill">private</span>`;
+  const fz=S.freezes.map(f=>`${f.kind==="research"?"Research":"Final"}: ${f.frozen?"frozen":f.cutoff?"until "+et(f.cutoff):"deadline not set"}`).join(" · ");
+  $("meta").innerHTML=rv?`Inputs through ${esc(rv.asof)} · ${esc((rv.phase||"").replace(/_/g," "))}<br>${esc(fz)}${S.window.open?"":` · <b class="bad">editing closed</b>`}`:esc(fz)}
+
+function board(){const rv=S.review;if(!rv)return`<div class="empty">No review uploaded yet.</div>`;
+  const B1=rv.brackets.B1_model,L=S.b3,lines=rv.lines;let h="";
+  if(S.window.note)h+=`<div class="flag">${esc(S.window.note)}</div>`;if(!S.window.open)h+=`<div class="flag">${esc(S.window.why)}</div>`;
+  if(S.notes&&S.notes.length)h+=`<div class="flag">${S.notes.map(esc).join("<br>")}</div>`;
+  h+=`<div class="sub" style="margin:2px 0 6px">Dot = model confidence: <span class="good">●</span> high <span style="color:var(--acc)">●</span> <span style="color:var(--warn)">●</span> <span class="bad">●</span> low · dashed = moved by your edits (↑7 = up from model line 7) · tap a team</div>`;
+  for(let l=1;l<=lines.length;l++){const ks=S.b3_order.filter(k=>L[k]===l);
+    h+=`<div class="card ln"><b>${l}</b><div class="chips">`+ks.map(k=>{const t=T(k),m=B1[k],d=m===undefined?"in":m!==l?(m>l?"↑":"↓")+m:"";
+      return`<button class="t ${d?"ed":""}" data-team="${esc(k)}"><span class="dot" style="background:${t?dotC(t.confidence):"var(--muted)"}"></span>${esc(nm(k))}${isAuto(k)?'<span class="aq">AQ</span>':""}${d?`<span class="mv">${esc(d)}</span>`:""}</button>`}).join("")+`</div></div>`}
+  const outs=(rv.outside||[]).filter(t=>!(t.key in L)).slice(0,10);
+  h+=`<h3>First teams out</h3><div class="card chips">`+outs.map(t=>`<button class="t" data-team="${esc(t.key)}">${esc(t.team)} <span class="muted">${Math.round(t.p_in*100)}%</span></button>`).join("")+`</div>`;
+  return h}
+
+function teamSheet(k){const rv=S.review,t=T(k),o=O(k),L=S.b3,inField=k in L;
+  let h=`<div class="grab"></div><div class="sheethead"><h2 style="margin:6px 0">${esc(nm(k))} <span class="muted" style="font-weight:400;font-size:13px">${esc((t||o||{}).lg||"")}</span></h2><button class="x" data-close aria-label="Close">×</button></div>`;
+  h+=`<div><span class="pill">Your line: <b>${inField?L[k]:"out"}</b></span>`+(t?`<span class="pill">Model ${t.model_line} · #${t.overall}</span>${t.shadow_line?`<span class="pill">Shadow ${t.shadow_line}</span>`:""}<span class="pill" style="color:${dotC(t.confidence)}">Confidence ${Math.round(t.confidence*100)}%</span><span class="pill">P(in) ${Math.round(t.p_in*100)}%</span>`:o?`<span class="pill">Model: out</span><span class="pill">P(in) ${Math.round(o.p_in*100)}%</span><span class="pill">NET ${esc(o.net)}</span>`:"")+(isAuto(k)?`<span class="pill">Automatic bid</span>`:"")+`</div>`;
+  h+=editForm(k,inField);
+  if(t){h+=`<h3>Why the model might be wrong</h3>`+(t.flags.length?t.flags.map(f=>`<div class="flag">${esc(f)}</div>`).join(""):`<div class="muted">No flags.</div>`);
+    h+=`<details><summary>Résumé</summary><table>`+Object.entries(t.resume).map(([a,b])=>`<tr><th>${esc(a)}</th><td>${esc(b)}</td></tr>`).join("")+`</table>
+      <p>Stronger than neighbours: <span class="good">${esc(t.advantages.join(", ")||"—")}</span><br>Weaker: <span class="bad">${esc(t.disadvantages.join(", ")||"—")}</span></p></details>`;
+    h+=`<details><summary>Neighbours (4 above, 4 below)</summary>`+t.neighbours.map(n=>`<div class="nb"><span><b>#${n.overall}</b> <a href="#" data-team="${esc(n.key)}">${esc(n.team)}</a> <span class="muted">line ${n.line}</span></span><span class="muted" style="text-align:right">gap ${n.gap_u>0?"+":""}${n.gap_u}${n.h2h[0]+n.h2h[1]?` · H2H ${n.h2h.join("-")}`:""}${n.common.n?` · common ${n.common.a_wins}-${n.common.a_losses} v ${n.common.b_wins}-${n.common.b_losses}`:""}</span></div>`).join("")+`<p class="sub">Gap: positive = neighbour's model score is higher. H2H and common opponents from ${esc(nm(k))}'s side.</p></details>`}
+  const mine=S.edits.filter(e=>e.team===k||e.with===k);if(mine.length)h+=`<h3>Your edits on this team</h3>`+mine.map(logRow).join("");
+  return h}
+
+function editForm(k,inField){if(!S.window.open)return`<div class="flag">${esc(S.window.why)}</div>`;
+  const f=form;const ops=inField?[["move","Move"],["swap","Swap"]].concat(isAuto(k)?[]:[["remove","Remove"]]):[["add","Add to field"]];
+  if(!ops.some(x=>x[0]===f.op))f.op=ops[0][0];
+  let h=`<h3>Adjust</h3><div class="seg">`+ops.map(([a,b])=>`<button data-op="${a}" class="${f.op===a?"on":""}">${b}</button>`).join("")+`</div>`;
+  const n=S.review.lines.length,cur=S.b3[k];
+  if(f.op==="move"||f.op==="add"){h+=`<h3>${f.op==="add"?"Line (optional)":"To line"}</h3><div class="grid">`+Array.from({length:n},(_,i)=>i+1).map(l=>`<button data-line="${l}" class="${f.to_line===l?"on":""} ${cur===l?"cur":""}">${l}</button>`).join("")+`</div>`}
+  const field=S.b3_order.filter(x=>x!==k);
+  if(f.op==="swap")h+=`<h3>Swap with</h3><select id="other"><option value="">Choose a team</option>${field.map(x=>`<option value="${esc(x)}" ${f.other===x?"selected":""}>${S.b3[x]} · ${esc(nm(x))}</option>`).join("")}</select>`;
+  if(f.op==="add")h+=`<h3>Team that goes out</h3><select id="other"><option value="">Lowest at-large (automatic)</option>${field.filter(x=>!isAuto(x)).map(x=>`<option value="${esc(x)}" ${f.other===x?"selected":""}>${S.b3[x]} · ${esc(nm(x))}</option>`).join("")}</select>`;
+  if(f.op==="remove"){const rest=(S.review.outside||[]).filter(t=>!(t.key in S.b3));h+=`<h3>Team that comes in</h3><select id="other"><option value="">Best team outside (automatic)</option>${rest.map(t=>`<option value="${esc(t.key)}" ${f.other===t.key?"selected":""}>${esc(t.team)}</option>`).join("")}</select>`}
+  h+=`<h3>Reason</h3><div class="seg">`+Object.entries(S.reasons).map(([a,b])=>`<button data-reason="${a}" class="${f.reason===a?"on":""}">${esc(b)}</button>`).join("")+`</div>`;
+  h+=`<h3>Confidence</h3><div class="seg">`+[[1,"1 · lean"],[2,"2"],[3,"3 · strong"]].map(([a,b])=>`<button data-conf="${a}" class="${f.conf===a?"on":""}">${b}</button>`).join("")+`</div>`;
+  h+=`<h3>Note${f.reason==="other"?" (required)":" (optional)"}</h3><textarea id="why" maxlength="500" placeholder="Why?">${esc(f.why)}</textarea>`;
+  if(preview)h+=`<div class="prev"><b>This will change ${preview.changes.length} team${preview.changes.length===1?"":"s"}:</b>`+preview.changes.map(c=>`<div class="nb"><span>${esc(c.team)}</span><span>${c.from??"out"} → <b>${c.to??"out"}</b></span></div>`).join("")+`</div><button class="btn" id="save" ${busy?"disabled":""}>Save</button><button class="btn sec" id="cancel">Change something</button>`;
+  else h+=`<button class="btn" id="preview" ${busy?"disabled":""}>Preview</button>`;
+  return h}
+
+function payload(){const f=form,e={op:f.op,team:sel,reason_code:f.reason,confidence:f.conf,explanation:f.why.trim(),client_at:new Date().toISOString()};
+  if(f.op==="move")e.to_line=f.to_line;if(f.op==="add"){if(f.to_line)e.to_line=f.to_line;if(f.other)e.remove=f.other}
+  if(f.op==="swap")e.with=f.other;if(f.op==="remove"&&f.other)e.add=f.other;return e}
+function check(){const f=form;if(f.op==="move"&&!f.to_line)return"Pick a line.";if(f.op==="swap"&&!f.other)return"Pick a team to swap with.";
+  if(!f.reason)return"Pick a reason.";if(!f.conf)return"Pick a confidence.";if(f.reason==="other"&&!f.why.trim())return"'Other' needs a note.";return null}
+
+function logRow(e){const undone=S.edits.some(u=>u.op==="undo"&&u.undo_of===e.id);if(e.op==="undo")return"";
+  const a=(S.applied||[]).find(x=>x.id===e.id);
+  const verb={move:"Move",swap:"Swap",add:"Add",remove:"Remove"}[e.op]||e.op;
+  return`<div class="logrow ${undone?"undone":""}"><div class="top"><b>${esc(verb)} ${esc(nm(e.team))}${e.to_line?" → line "+e.to_line:""}${e.with?" ⇄ "+esc(nm(e.with)):""}${e.remove?" (out: "+esc(nm(e.remove))+")":""}${e.add?" (in: "+esc(nm(e.add))+")":""}</b><span class="muted">${et(e.at)}</span></div>
+   <div class="muted">${esc(S.reasons[e.reason_code]||e.reason_code)} · confidence ${e.confidence}${a?` · line ${a.line_before??"out"} → ${a.line_after??"out"} · ${a.teams_changed.length} teams moved`:" · not applied now"}</div>
+   ${e.explanation?`<div>${esc(e.explanation)}</div>`:""}${!undone&&S.window.open?`<button class="btn sec" style="min-height:40px;width:auto;padding:0 14px" data-undo="${esc(e.id)}">Undo</button>`:""}${undone?`<div class="muted">Undone</div>`:""}</div>`}
+function log(){const rows=S.edits.filter(e=>e.op!=="undo").slice().reverse();
+  return`<h2>Edit history</h2><div class="sub">Times are set by the server when you save. Undo adds a new entry; nothing is ever deleted.</div><div class="card">${rows.length?rows.map(logRow).join(""):`<div class="empty">No edits yet.</div>`}</div>`}
+function brackets(){const rv=S.review;if(!rv)return"";const B1=rv.brackets.B1_model,B2=rv.brackets.B2_shadow||{},B3=S.b3;
+  const ks=[...new Set([...Object.keys(B1),...Object.keys(B3)])].sort((a,b)=>(B3[a]??99)-(B3[b]??99)||(B1[a]??99)-(B1[b]??99));
+  const d=ks.filter(k=>B1[k]!==B3[k]||B1[k]!==B2[k]);
+  return`<h2>Three brackets</h2><div class="sub">B1 frozen v2.0 · B2 head-to-head/common-opponent shadow · B3 yours. Only teams where they differ (${d.length}).</div><div class="card"><table><tr><th>Team</th><th>B1</th><th>B2</th><th>B3</th></tr>`+d.map(k=>`<tr><td><a href="#" data-team="${esc(k)}">${esc(nm(k))}</a></td><td>${B1[k]??"out"}</td><td>${B2[k]??"out"}</td><td><b>${B3[k]??"out"}</b></td></tr>`).join("")+`</table></div>`}
+function changes(){const c=S.review&&S.review.changes;if(!c)return`<div class="empty">No earlier review to compare with.</div>`;
+  const li=(a,f)=>a.length?a.map(f).join("<br>"):`<span class="muted">None.</span>`;
+  return`<h2>Since ${esc(c.since)}</h2><div class="card"><h3>Line changes</h3>${li(c.line_changes,m=>`${esc(m.team)}: ${m.from} → ${m.to}`)}<h3>Entered field</h3>${li(c.entered_field,esc)}<h3>Left field</h3>${li(c.left_field,esc)}
+   <h3>New champions</h3>${li(c.new_champions,x=>esc(x)+(c.bid_thieves.includes(x)?' <b class="bad">bid thief</b>':""))}<h3>Near a boundary</h3>${li(c.near_boundary,esc)}<h3>Confidence changes</h3>${li(c.confidence_changes,m=>`${esc(m.team)}: ${Math.round(m.from*100)}% → ${Math.round(m.to*100)}%`)}</div>`}
+function snaps(){return`<h2>Snapshots</h2><div class="sub">Each is written once and can't be changed. The fingerprint (SHA-256) proves it later.</div>`+S.freezes.map(f=>`<div class="card"><b>${f.kind==="research"?"Research (noon ET)":"Final competitive"}</b><div class="muted">Cutoff: ${f.cutoff?et(f.cutoff):"not set yet"}</div>
+  ${f.frozen?`<div>Frozen ${et(f.frozen_at)}</div><div class="muted" style="word-break:break-all;font-size:12px">${esc(f.sha256)}</div><button class="btn sec" data-verify="${f.kind}">Verify now</button><a class="btn sec" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="/api/export?kind=${f.kind}&season=${SEASON}">Download</a>`:`<div class="muted">Not frozen yet.</div>${f.cutoff&&(f.kind==="final"||new Date(S.server_time)>=new Date(f.earliest))?`<button class="btn sec" data-freeze="${f.kind}">Freeze now (backup if the timer fails)</button><div class="sub">Uses only data and edits before the cutoff. Refused before ${et(f.earliest)}${f.kind==="final"?" unless every conference final is in":""}.</div>`:f.cutoff?`<div class="sub">Freezes automatically. Manual backup opens ${et(f.earliest)}.</div>`:`<div class="sub">The deadline is set once the show time and the Matrix's collection time are confirmed.</div>`}`}</div>`).join("")}
+
+function draw(){header();const n=S.edits.filter(e=>e.op!=="undo"&&!S.edits.some(u=>u.op==="undo"&&u.undo_of===e.id)).length;
+  const tabs=[["board","Board"],["changes","Changes"],["brackets","Brackets"],["log","History"+(n?` <span class="badge">${n}</span>`:"")],["snaps","Snapshots"]];
+  $("tabs").innerHTML=tabs.map(([a,b])=>`<button class="${tab===a?"on":""}" data-tab="${a}">${b}</button>`).join("");
+  $("main").innerHTML=tab==="board"?board():tab==="changes"?changes():tab==="brackets"?brackets():tab==="log"?log():snaps();
+  if(sel){$("sheet").innerHTML=teamSheet(sel);$("sheet").classList.add("open");$("scrim").classList.add("open")}else{$("sheet").classList.remove("open");$("scrim").classList.remove("open")}}
+function open(k){sel=k;preview=null;form={op:"",to_line:null,other:"",reason:"",conf:2,why:""};draw();$("sheet").scrollTop=0}
+function close(){sel=null;preview=null;draw()}
+function syncInputs(){const w=$("why"),o=$("other");if(w)form.why=w.value;if(o)form.other=o.value}
+
+document.addEventListener("click",async ev=>{const el=ev.target.closest("button,a,#scrim");if(!el)return;
+  if(el.id==="scrim"||el.dataset.close!==undefined){close();return}
+  if(el.tagName==="A"&&!el.dataset.team)return;ev.preventDefault();
+  if(el.dataset.tab){tab=el.dataset.tab;sel=null;draw();window.scrollTo(0,0);return}
+  if(el.dataset.team){open(el.dataset.team);return}
+  syncInputs();
+  if(el.dataset.op){form.op=el.dataset.op;form.other="";form.to_line=null;preview=null}
+  else if(el.dataset.line){form.to_line=+el.dataset.line;preview=null}
+  else if(el.dataset.reason){form.reason=el.dataset.reason;preview=null}
+  else if(el.dataset.conf){form.conf=+el.dataset.conf;preview=null}
+  else if(el.id==="cancel"){preview=null}
+  else if(el.id==="preview"){const m=check();if(m){toast(m);return}busy=true;draw();try{preview=await api("/api/edits",{...payload(),dry_run:true})}catch(e){toast(e.message,4000)}busy=false}
+  else if(el.id==="save"){busy=true;draw();try{const r=await api("/api/edits",payload());S=await api("/api/state");toast(`Saved · ${et(r.edit.at)}`);if(r.note)setTimeout(()=>toast(r.note,4000),2700);sel=null;preview=null}catch(e){toast(e.message,4000)}busy=false}
+  else if(el.dataset.undo){if(!confirm("Undo this edit? It stays in the history as undone."))return;try{await api("/api/edits",{op:"undo",undo_of:el.dataset.undo,client_at:new Date().toISOString()});S=await api("/api/state");toast("Undone")}catch(e){toast(e.message,4000)}}
+  else if(el.dataset.freeze){if(!confirm("Freeze the "+el.dataset.freeze+" snapshot now? This can't be undone."))return;try{const r=await api("/api/freeze",{kind:el.dataset.freeze});toast(r.status==="error"?r.error:"Frozen",4000);S=await api("/api/state")}catch(e){toast(e.message,4000)}}
+  else if(el.dataset.verify){try{const r=await api("/api/verify",{kind:el.dataset.verify});toast(r.ok?"Verified: unchanged and within the cutoff":"Problem: "+r.problems.join("; "),5000)}catch(e){toast(e.message,4000)}}
+  draw()});
+document.addEventListener("input",ev=>{if(ev.target.id==="why"){form.why=ev.target.value}});
+document.addEventListener("change",ev=>{if(ev.target.id==="other"){form.other=ev.target.value;preview=null;draw()}});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&sel)close()});
+load();
+</script></body></html>
