@@ -42,3 +42,9 @@ Output: `research/tests13_output.txt`. The control reproduced.
 - **Conclusion:** random variation lowers both the average and the chance of a top finish. What could gain points is moving low-confidence teams in the right direction, which needs real information about each team. That's the job of the owner's reviewed adjustments, graded after each Selection Sunday.
 
 **Daily review list:** live from commit 12d4f31. Snapshot field `review` lists teams under 0.5, lowest first, and `model_bracket` carries each team's `confidence`. Spreads are [2.22, 5.17, 3.97, 1.71] positions for predicted bands 1-16, 17-32, 33-48, 49-68. The first live run (November 15) listed 39 teams.
+
+## Follow-up: other shift sizes and the lowest-confidence teams (2026-11-14)
+`research/random_sweep.py`, 500 draws per season and setting. Output: `research/random_sweep_output.txt`.
+- **Size:** the loss grows steadily with the share moved. Moving 1% of the field cost about 1 point a season. Moving 2% two lines plus 5% one line cost 3.6-5. Moving 20% plus 50% cost 22-62. No size had a positive average in any pool. The chance of any one season gaining 3 or more never passed 4.1%.
+- **Lowest confidence:** in the held-out seasons, under 0.2 averaged 0.6 teams a season and under 0.1 had none. The 0.2-0.3 band, 111 team-seasons, was still exact 50% of the time and off by 2+ only 14%.
+- **Expected points from one random 1-line move,** by confidence band: -0.75 (0.1-0.2), -0.79 (0.2-0.3), -0.72 (0.3-0.5), -1.35 (0.5 and up). A random move only pays off in expectation when a team is exact less than about 20% of the time. No group of teams gets anywhere near that low.
