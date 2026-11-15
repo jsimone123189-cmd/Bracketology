@@ -1,0 +1,20 @@
+2019 RFS teams 68 found in our rows 68
+2021 RFS teams 68 found in our rows 68
+2022 RFS teams 68 found in our rows 68
+2023 RFS teams 68 found in our rows 68
+2024 RFS teams 68 found in our rows 68
+2025 RFS teams 68 found in our rows 68
+2026 RFS teams 68 found in our rows 68
+2019 reproduce RFS exact: linear 62% nonlinear 53% ceiling 62% {'control': 335, 'T22a RFS order': 327, 'T22b committee+RFS': 331}
+2021 reproduce RFS exact: linear 68% nonlinear 65% ceiling 69% {'control': 326, 'T22a RFS order': 331, 'T22b committee+RFS': 329}
+2022 reproduce RFS exact: linear 66% nonlinear 66% ceiling 69% {'control': 347, 'T22a RFS order': 343, 'T22b committee+RFS': 347}
+2023 reproduce RFS exact: linear 56% nonlinear 59% ceiling 63% {'control': 344, 'T22a RFS order': 337, 'T22b committee+RFS': 344}
+2024 reproduce RFS exact: linear 75% nonlinear 74% ceiling 74% {'control': 329, 'T22a RFS order': 328, 'T22b committee+RFS': 329}
+2025 reproduce RFS exact: linear 81% nonlinear 72% ceiling 85% {'control': 363, 'T22a RFS order': 368, 'T22b committee+RFS': 359}
+2026 reproduce RFS exact: linear 66% nonlinear 74% ceiling 68% {'control': 356, 'T22a RFS order': 352, 'T22b committee+RFS': 352}
+Part 1: linear mean 68% min 56%; nonlinear mean 66% min 53%; ceiling mean 70%
+CRACKED: False
+control reproduces: True
+control               [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10]
+T22a RFS order        [327, 331, 343, 337, 328, 368, 352] mean 340.9 diff -2.0 better 2 worse 5 worst -8 PASS=False pct [12, 14, 27, 8, 10, 87, 8]
+T22b committee+RFS    [331, 329, 347, 344, 329, 359, 352] mean 341.6 diff -1.3 better 1 worse 3 worst -4 PASS=False pct [18, 11, 39, 14, 10, 57, 8]
