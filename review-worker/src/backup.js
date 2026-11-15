@@ -8,7 +8,7 @@
 import { iso, sha256hex } from "./freeze.js";
 
 const TABLES = ["edits", "freezes", "verifications", "publications"];
-const REVIEWS_PER_RUN = 8;          // keeps one run small (each review is ~220 KB); a backlog catches up over the next runs
+const REVIEWS_PER_RUN = 3;          // keeps one run small (each review is ~220 KB; one new review a day); a backlog catches up over the next runs
 
 async function editDigest(db) {
   const { results } = await db.prepare("SELECT seq, id, at, client_at, body FROM edits ORDER BY seq").all();

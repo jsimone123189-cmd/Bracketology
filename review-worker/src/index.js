@@ -50,8 +50,8 @@ async function editWindow(env, season, cfg, now) {
   if (await freezeRow(env, season, "final")) return { open: false, why: "The final snapshot is frozen." };
   const fd = cutoffOf(cfg, "final");
   if (fd !== null && now > fd) return { open: false, why: `Past the final deadline (${iso(fd)}).` };
-  const rc = cutoffOf(cfg, "research");
-  return { open: true, note: now > rc ? "After the noon research cutoff: new edits count only for the final snapshot." : null };
+  const rc = cutoffOf(cfg, "research"), rf = await freezeRow(env, season, "research");
+  return { open: true, note: rf ? "The research snapshot is frozen: new edits count only for the final snapshot." : now > rc ? "After the noon research cutoff: new edits count only for the final snapshot." : null };
 }
 
 const slim = ({ teams_by_key, ...rest }) => rest;
