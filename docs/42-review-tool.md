@@ -143,3 +143,5 @@ B1, B2 and B3 come from **one** `build()` call. They share the same rows, the sa
 4. **Trade-off of the noon freeze, for the owner to confirm.** Selection Sunday conference finals are usually played in the afternoon, and 7-9 field teams play that day (docs/35). An 11:30 freeze uses projected champions for those leagues and can't see a Sunday bid thief. The Matrix deadline is later in the day.
 5. **Daily review build and grading job** wiring, after item 1.
 6. **2027 official bracket parsing:** `bracketmatrix.collect` is verified on 68-team pages only. The rubric and formats handle 76, but the 2027 page parser can only be checked once the page exists. Fallback: `review grade 2027 official.json`.
+
+**Update (2026-11-15):** docs/43 supersedes the private-repo plan above. It adds a second (final) snapshot, the Access/Worker/D1 recommendation with its threat model, and the approval list.

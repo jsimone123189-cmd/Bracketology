@@ -36,6 +36,7 @@ def check_edit(e: dict) -> list[str]:
         if e.get("reason_code") == "other" and not (e.get("explanation") or "").strip(): bad.append("'other' needs an explanation")
         if e.get("confidence") not in (1, 2, 3): bad.append("confidence must be 1, 2 or 3")
     if not e.get("id") or not e.get("at"): bad.append("needs id and at")
+    elif _when(e["at"]) is None: bad.append("at must be an ISO timestamp")
     return bad
 
 def apply_edits(order: list[str], rest: list[str], edits: list[dict], season: int, info: dict[str, dict]) -> tuple[list[str], list[dict], list[str]]:
@@ -169,7 +170,8 @@ def build(rows: list[dict], season: int, fitted: model.Model, games: list[dict],
     sources = sources or {}
     inputs = {"collected_at": sources.get("collected_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "games_through": day,
               "latest_game_used": max((g["date_iso"] for g in games if g["date_iso"] <= day), default=None), "net_source": sources.get("net_source"),
-              "net_asof": sources.get("net_asof"), "game_rows": sources.get("game_rows", len(games))}
+              "net_asof": sources.get("net_asof"), "game_rows": sources.get("game_rows", len(games)),
+              "conference_games_pending": sources.get("conference_games_pending")}     # None = not checked (only checked on Selection Sunday)
     consistency = {"one_cutoff_for_all_brackets": day, "B2_same_field_as_B1": None if B2 is None else set(B2) == set(B1),
                    "B3_is_B1_plus_logged_edits": True, "field_size": len(B1), "expected_field_size": fieldformat.format_for(season).size}
     out = {"season": season, "asof": asof, "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "model_version": model.MODEL_VERSION,
@@ -225,6 +227,10 @@ def freeze_dir() -> str: return f"{PRIVATE}/freeze"
 _FORBIDDEN = ("data/output/site", "site", "data/output/snapshots")
 
 def _ts(s: str) -> datetime: return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+def _when(s) -> datetime | None:
+    """Edit timestamps (browser ISO strings may carry milliseconds). None if missing or unreadable."""
+    try: return datetime.fromisoformat(str(s).replace("Z", "+00:00")).astimezone(timezone.utc)
+    except ValueError: return None
 def _sha(b: bytes) -> str: return hashlib.sha256(b).hexdigest()
 def _file_sha(p: str) -> str | None: return _sha(open(p, "rb").read()) if os.path.exists(p) else None
 
@@ -255,9 +261,51 @@ def previous(season: int, collected_at: str, folder: str | None = None) -> dict 
     return ps[-1] if ps else None
 
 # ------------------------------------------------------------------ freeze, verify, grade
-def freeze_deadline(season: int) -> datetime:
+# Two Selection Sunday snapshots (docs/43):
+#   research - noon America/New_York, fixed in advance (docs/38). B1, B2, B3 for the 2027 evaluation.
+#   final    - the competitive bracket: newest review taken after every Selection Sunday conference final is over, and before
+#              the submission deadline. The deadline is not guessed: it stays None until the 2027 selection-show time and the
+#              Matrix's final collection time are confirmed, and freezing "final" refuses until it is set (local time, New York).
+FINAL_DEADLINE_ET = {2027: None}          # e.g. {2027: "2027-03-14 17:45"}; set and commit once confirmed
+KINDS = ("research", "final")
+
+def freeze_deadline(season: int, kind: str = "research") -> datetime:
+    ny = ZoneInfo("America/New_York")
+    if kind == "final":
+        s = FINAL_DEADLINE_ET.get(season)
+        if not s: raise SystemExit(f"No confirmed final-snapshot deadline for {season}. Set FINAL_DEADLINE_ET once the selection show and Matrix collection times are known.")
+        return datetime.strptime(s, "%Y-%m-%d %H:%M").replace(tzinfo=ny).astimezone(timezone.utc)
     ss = selection_sunday(season)
-    return datetime(ss.year, ss.month, ss.day, 12, 0, tzinfo=ZoneInfo("America/New_York")).astimezone(timezone.utc)
+    return datetime(ss.year, ss.month, ss.day, 12, 0, tzinfo=ny).astimezone(timezone.utc)
+
+def freeze_path(season: int, outdir: str, kind: str = "research") -> str:
+    return f"{outdir}/{season}_freeze.json" if kind == "research" else f"{outdir}/{season}_final_freeze.json"
+
+def pending_conference_games(d: date, ttl: int = 60) -> tuple[list[dict], int] | None:
+    """Conference-tournament games scheduled on day d that are not final yet, and how many are scheduled in all
+    (scoreboard feed already used by production). None when the feed can't be read: the final freeze treats that as not complete."""
+    try:
+        from .http import fetch
+        from .sources.ncaa_games import url
+        out, n = [], 0
+        for g in json.loads(fetch(url(d), ttl=ttl, retries=2))["games"]:
+            g = g["game"]; h, a = g["home"], g["away"]
+            hc = (h.get("conferences") or [{}])[0].get("conferenceSeo", ""); ac = (a.get("conferences") or [{}])[0].get("conferenceSeo", "")
+            if h.get("seed") and a.get("seed") and hc and hc == ac:
+                n += 1
+                if g.get("gameState") != "final": out.append({"conf": hc, "game": f"{a['names']['short']} vs {h['names']['short']}", "state": g.get("gameState"), "start": g.get("startTime")})
+        return out, n
+    except Exception:
+        return None
+
+def results_complete(pending: tuple[list[dict], int] | None, games: list[dict], day: str) -> list[dict] | None:
+    """[] only if the scoreboard showed every conference final of the day over before collection AND all of them are in the
+    games the model used. None = unknown (treated as not complete)."""
+    if pending is None: return None
+    left, n = pending
+    used = len({g.get("id") or (min(g["team_key"], g["opp_key"]), max(g["team_key"], g["opp_key"])) for g in games if g["date_iso"] == day and g.get("ct")})
+    if left: return left
+    return [] if used >= n else None
 
 def problems(review: dict, deadline: datetime) -> list[str]:
     """Why a review can't be frozen. Empty list = freezable."""
@@ -265,6 +313,8 @@ def problems(review: dict, deadline: datetime) -> list[str]:
     if not inp.get("collected_at"): return ["no collection time recorded"]
     if _ts(inp["collected_at"]) > deadline: bad.append(f"data collected {inp['collected_at']} after the {deadline:%H:%M}Z cutoff")
     if _ts(review["generated_at"]) > deadline: bad.append(f"generated {review['generated_at']} after the cutoff")
+    late = [e.get("id") for e in review.get("edits", []) if (_when(e.get("at")) or deadline) > deadline]
+    if late: bad.append(f"edits logged after the cutoff: {late}")
     if inp.get("latest_game_used") and inp["latest_game_used"] > deadline.date().isoformat(): bad.append("uses games dated after Selection Sunday")
     for name, L in review["brackets"].items():
         if L is None: bad.append(f"{name} missing"); continue
@@ -283,25 +333,31 @@ def full_bracket(review: dict, name: str) -> list[dict]:
                    for k, v in L.items()), key=lambda r: (r["line"], -info.get(r["key"], {}).get("rank_score", 0)))
 
 def freeze(season: int, folder: str | None = None, outdir: str | None = None, now: datetime | None = None, deadline: datetime | None = None,
-           edits_file: str | None = None) -> dict:
+           edits_file: str | None = None, kind: str = "research") -> dict:
     """Freezes the newest review whose data were collected before the cutoff and that passes every check.
+    kind="final" also prefers the newest review taken after every Selection Sunday conference final was over; if none qualifies
+    before the deadline it falls back to the newest valid review and records final_results_complete = false with what was pending.
     Idempotent: if a valid freeze exists it is verified and returned, never overwritten. A late run (missed schedule) may still freeze,
     but only a review collected before the cutoff; frozen_at records when it happened."""
-    deadline = deadline or freeze_deadline(season); now = now or datetime.now(timezone.utc); outdir = outdir or freeze_dir()
-    path = f"{outdir}/{season}_freeze.json"
+    assert kind in KINDS
+    deadline = deadline or freeze_deadline(season, kind); now = now or datetime.now(timezone.utc); outdir = outdir or freeze_dir()
+    path = freeze_path(season, outdir, kind)
     if os.path.exists(path):
-        v = verify(season, outdir, deadline, write_record=False)
+        v = verify(season, outdir, deadline, write_record=False, kind=kind)
         if not v["ok"]: raise SystemExit(f"{path} exists but fails verification: {v['problems']}. Not overwriting; investigate.")
         return {"status": "already_frozen", "path": path, "sha256": v["sha256"]}
-    skipped, chosen = [], None
+    skipped, valid = [], []
     for p, rv in reversed(all_reviews(season, folder)):
         bad = problems(rv, deadline)
-        if not bad: chosen = (p, rv); break
-        skipped.append({"review": os.path.basename(p), "problems": bad})
-    if chosen is None: raise SystemExit(f"No freezable review for {season}. Skipped: {skipped}")
+        if bad: skipped.append({"review": os.path.basename(p), "problems": bad})
+        else: valid.append((p, rv))
+    if not valid: raise SystemExit(f"No freezable review for {season}. Skipped: {skipped}")
+    complete = lambda rv: rv["inputs"].get("conference_games_pending") == []
+    chosen = next((x for x in valid if complete(x[1])), valid[0]) if kind == "final" else valid[0]
     p, rv = chosen; ep = edits_file or edits_path(season)
-    v2 = "models/v2.joblib"; sh = "models/shadow_h2h.joblib"
-    body = {"schema": 1, "season": season, "frozen_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "cutoff": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    v2 = "models/v2.joblib"
+    body = {"schema": 2, "kind": kind, "season": season, "frozen_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "cutoff": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "final_results_complete": complete(rv), "conference_games_pending": rv["inputs"].get("conference_games_pending"),
             "frozen_after_cutoff": now > deadline, "review_file": os.path.basename(p), "review_sha256": _file_sha(p), "review_generated_at": rv["generated_at"],
             "inputs": rv["inputs"], "sources": {k: v for k, v in rv["sources"].items() if k != "checks"}, "data_checks": rv["sources"].get("checks", []),
             "model": {"version": rv["model_version"], "v2_fingerprint_used": rv.get("v2_fingerprint"), "v2_saved_fingerprint": _saved_fp(v2),
@@ -316,7 +372,7 @@ def freeze(season: int, folder: str | None = None, outdir: str | None = None, no
     with open(tmp, "wb") as f: f.write(raw)
     try: os.link(tmp, path)                                  # atomic create-only: fails if another run froze first
     except FileExistsError:
-        os.remove(tmp); return freeze(season, folder, outdir, now, deadline, edits_file)
+        os.remove(tmp); return freeze(season, folder, outdir, now, deadline, edits_file, kind)
     os.remove(tmp); open(path + ".sha256", "w").write(_sha(raw) + "\n"); os.chmod(path, 0o444)
     return {"status": "frozen", "path": path, "sha256": _sha(raw), "review": os.path.basename(p), "skipped": skipped}
 
@@ -330,11 +386,12 @@ def _git_head() -> str | None:
         import subprocess; return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
     except Exception: return None
 
-def verify(season: int, outdir: str | None = None, deadline: datetime | None = None, write_record: bool = True, now: datetime | None = None) -> dict:
-    """Independent check (run after noon). Recomputes the hash, re-checks the cutoff and contents, and writes a separate dated
+def verify(season: int, outdir: str | None = None, deadline: datetime | None = None, write_record: bool = True, now: datetime | None = None,
+           kind: str = "research") -> dict:
+    """Independent check (run after the cutoff). Recomputes the hash, re-checks the cutoff and contents, and writes a separate dated
     verification record. Never modifies the freeze."""
-    outdir = outdir or freeze_dir(); deadline = deadline or freeze_deadline(season); path = f"{outdir}/{season}_freeze.json"; now = now or datetime.now(timezone.utc)
-    res = {"season": season, "checked_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "path": path, "problems": []}
+    outdir = outdir or freeze_dir(); deadline = deadline or freeze_deadline(season, kind); path = freeze_path(season, outdir, kind); now = now or datetime.now(timezone.utc)
+    res = {"season": season, "kind": kind, "checked_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "path": path, "problems": []}
     if not os.path.exists(path): res["problems"].append("no freeze file"); res["ok"] = False
     else:
         raw = open(path, "rb").read(); res["sha256"] = _sha(raw)
@@ -343,6 +400,10 @@ def verify(season: int, outdir: str | None = None, deadline: datetime | None = N
         b = json.loads(raw); fmt = fieldformat.format_for(season)
         if _ts(b["inputs"]["collected_at"]) > deadline: res["problems"].append("frozen data collected after the cutoff")
         if _ts(b["review_generated_at"]) > deadline: res["problems"].append("frozen review generated after the cutoff")
+        if b.get("kind", "research") != kind: res["problems"].append(f"file is a {b.get('kind')} freeze, expected {kind}")
+        if b.get("cutoff") != deadline.strftime("%Y-%m-%dT%H:%M:%SZ"): res["problems"].append(f"recorded cutoff {b.get('cutoff')} differs from {deadline:%Y-%m-%dT%H:%M:%SZ}")
+        late = [e.get("id") for e in b.get("edit_history", {}).get("applied", []) if (_when(e.get("at")) or deadline) > deadline]
+        if late: res["problems"].append(f"edits after the cutoff: {late}")
         for n, rows in b["brackets"].items():
             sizes = [sum(1 for r in rows if r["line"] == l) for l in range(1, 17)]
             if len(rows) != fmt.size or sizes != list(fmt.lines): res["problems"].append(f"{n} incomplete")
@@ -353,7 +414,7 @@ def verify(season: int, outdir: str | None = None, deadline: datetime | None = N
         res["ok"] = not res["problems"]; res["frozen_after_cutoff"] = b["frozen_after_cutoff"]
     if write_record:
         os.makedirs(outdir, exist_ok=True)
-        json.dump(res, open(f"{outdir}/{season}_verify_{res['checked_at'].replace(':', '').replace('-', '')}.json", "w"), indent=1)
+        json.dump(res, open(f"{outdir}/{season}_{kind}_verify_{res['checked_at'].replace(':', '').replace('-', '')}.json", "w"), indent=1)
     return res
 
 def grade(frozen: dict, official: dict[str, int], matrix_scores: list[int] | None = None) -> dict:
@@ -412,18 +473,23 @@ def main(argv: list[str]) -> None:
     cmd = argv[0] if argv else "build"; season = int(argv[1]) if len(argv) > 1 else 2027
     if cmd == "build":
         from .sitebuild import load_or_fit
-        info = {"collected_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}; rows, warn = project.live_rows(season, info=info)
+        info = {"collected_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+        ss, today_ny = selection_sunday(season), datetime.now(ZoneInfo("America/New_York")).date()
+        pend = pending_conference_games(ss) if ss and today_ny == ss else False     # read BEFORE the data, so completeness is never overstated
+        rows, warn = project.live_rows(season, info=info); games = _games_live(season)
         day = info.get("games_through"); prev = previous(season, info["collected_at"])
-        rv = build(rows, season, load_or_fit(season=season), _games_live(season), day, _shadow({season}), load_edits(season), prev, info)
+        if pend is not False: info["conference_games_pending"] = results_complete(pend, games, ss.isoformat())
+        rv = build(rows, season, load_or_fit(season=season), games, day, _shadow({season}), load_edits(season), prev, info)
         rv["warnings"] = warn; print(*write(rv))
-    elif cmd == "freeze": print(json.dumps(freeze(season), indent=1))
+    elif cmd == "freeze": print(json.dumps(freeze(season, kind=argv[2] if len(argv) > 2 else "research"), indent=1))
     elif cmd == "verify":
-        v = verify(season); print(json.dumps(v, indent=1)); sys.exit(0 if v["ok"] else 1)
+        v = verify(season, kind=argv[2] if len(argv) > 2 else "research"); print(json.dumps(v, indent=1)); sys.exit(0 if v["ok"] else 1)
     elif cmd == "grade":
         from .sources import bracketmatrix as bm
         from .teams import key
-        fz = json.load(open(f"{freeze_dir()}/{season}_freeze.json")); m = bm.collect(season)
-        off = json.load(open(argv[2])) if len(argv) > 2 else m["official"]; off = {key(t): int(s) for t, s in off.items()}
+        kind = argv[2] if len(argv) > 2 and argv[2] in KINDS else "research"; rest = [a for a in argv[2:] if a not in KINDS]
+        fz = json.load(open(freeze_path(season, freeze_dir(), kind))); m = bm.collect(season)
+        off = json.load(open(rest[0])) if rest else m["official"]; off = {key(t): int(s) for t, s in off.items()}
         ms = [int(v) for k, v in m["reported"]["SCORE"].items() if v.isdigit() and k != "MATRIX"]
         print(json.dumps(grade(fz, off, ms), indent=1, default=list))
     elif cmd == "demo":

@@ -123,6 +123,18 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Proposed automation (not built):** a free private GitHub repo that runs build, freeze and verify. Token A (private repo Actions) is stored as a Cloudflare Worker secret; token B (public repo Contents) is used only to push a lines-only public bracket. Exposure risks: making the repo public later, or the public site's "Edited (model N)" tags plus the public model bracket revealing edits. That needs a site change.
 - **Owner approval needed for:** the private repo, both tokens, the Cloudflare crons and dispatch, the public site/snapshot change, and whether to keep the noon freeze (most Sunday conference finals are played after noon).
 
+## 2027 workflow finalized (2026-11-15, docs/43)
+- **2026 baseline:** the owner's genuine 2026 submission scored 370 vs v2.0's 356. The 377 demo replay is not evidence.
+- **Two immutable Selection Sunday snapshots (built, tested, 53 tests pass):**
+  - **research:** noon America/New_York, B1/B2/B3, graded under docs/38;
+  - **final competitive:** newest review taken after every Sunday conference final is over (scoreboard read before collection and cross-checked against the games used), before `FINAL_DEADLINE_ET`.
+  - The final deadline stays empty, and the freeze refuses, until the 2027 show time and the Matrix's final collection time are confirmed.
+- **2025 and 2026 Sunday finals:** five each, the last tipping at 3:30 p.m. ET (ending about 5:30 p.m.), against a 6 p.m. reveal. The 2027 schedules aren't published.
+- **Recommended private editing:** a Cloudflare Access (one-time PIN, owner's email only) + Worker + D1 page with a Save button and server timestamps, preferred over a private GitHub repo.
+  - **Checked:** Zero Trust Free is $0 for up to 50 users, but signup asks for payment details. Workers Free allows 5 crons per account and 10 ms CPU. D1 Free allows 100k writes a day. Private GitHub Pages needs an organization.
+- **Public site leaks to remove (approval needed):** `model_line`, `override_reason` and `p_in` per team, the review list, and `model_bracket`/ledger on the public snapshots branch.
+- **Status:** awaiting owner approvals A-E in docs/43. No tokens, deploys or cron changes made.
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.

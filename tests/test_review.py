@@ -56,15 +56,15 @@ def test_grade_groups_interacting_edits_and_sums_exactly():
 # ---------------- freeze, verify, recovery
 CUT = datetime(2027, 3, 14, 16, 0, tzinfo=timezone.utc)          # noon EDT
 V2FP = review._saved_fp("models/v2.joblib")
-def fake_review(collected, generated=None, b2=True, broken=False, alert=False, shadow_years=(2019, 2026), v2fp=None):
+def fake_review(collected, generated=None, b2=True, broken=False, alert=False, shadow_years=(2019, 2026), v2fp=None, pending=None, edits=()):
     order = [f"t{i}" for i in range(76)]; L = review.lines_of(order, 2027)
     if broken: L = dict(list(L.items())[:70])
     return {"season": 2027, "generated_at": generated or collected, "model_version": "v2.0", "asof": "2027-03-14",
-            "inputs": {"collected_at": collected, "games_through": "2027-03-14", "latest_game_used": "2027-03-14", "net_source": "ncaa", "net_asof": "Mar. 13 2027"},
+            "inputs": {"collected_at": collected, "games_through": "2027-03-14", "latest_game_used": "2027-03-14", "net_source": "ncaa", "net_asof": "Mar. 13 2027", "conference_games_pending": pending},
             "sources": {"checks": [{"level": "alert", "message": "x"}] if alert else []}, "consistency": {"B2_same_field_as_B1": True},
             "shadow": {"train_years": list(shadow_years)}, "brackets": {"B1_model": L, "B2_shadow": dict(L) if b2 else None, "B3_manual": dict(L)},
             "all_info": {k: {"team": k.upper(), "champ": False, "projected_auto": False, "rank_score": -i} for i, k in enumerate(order)},
-            "edits": [], "edit_notes": [], "v2_fingerprint": v2fp or V2FP}
+            "edits": list(edits), "edit_notes": [], "v2_fingerprint": v2fp or V2FP}
 
 def put(folder, rv):
     os.makedirs(folder, exist_ok=True); json.dump(rv, open(f"{folder}/2027_{rv['inputs']['collected_at'].replace(':', '')}.json", "w"))
@@ -103,7 +103,7 @@ def test_duplicate_freeze_is_idempotent_and_tampering_is_caught(tmp_path):
     r2 = review.freeze(2027, f, fz, now=now, edits_file="nope")
     assert r2["status"] == "already_frozen" and open(r1["path"], "rb").read() == raw              # never overwritten
     v = review.verify(2027, fz, now=datetime(2027, 3, 14, 16, 5, tzinfo=timezone.utc)); assert v["ok"]
-    assert any(n.startswith("2027_verify_") for n in os.listdir(fz)) and open(r1["path"], "rb").read() == raw
+    assert any(n.startswith("2027_research_verify_") for n in os.listdir(fz)) and open(r1["path"], "rb").read() == raw
     os.chmod(r1["path"], 0o644); open(r1["path"], "ab").write(b" ")
     assert not review.verify(2027, fz, write_record=False)["ok"]
     with pytest.raises(SystemExit): review.freeze(2027, f, fz, now=now, edits_file="nope")
@@ -119,3 +119,54 @@ def test_verify_rejects_a_substituted_model_for_a_live_season(tmp_path):
     f = str(tmp_path / "rv"); fz = str(tmp_path / "fz"); put(f, fake_review("2027-03-14T15:30:00Z", v2fp="0" * 64))
     review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc), edits_file="nope")
     v = review.verify(2027, fz, write_record=False); assert not v["ok"] and any("saved v2.0" in p for p in v["problems"])
+
+# ---------------- final competitive snapshot (docs/43)
+FINAL = datetime(2027, 3, 14, 21, 45, tzinfo=timezone.utc)        # example deadline 5:45 p.m. EDT; the real one is set once confirmed
+
+def test_final_deadline_refuses_until_confirmed_and_converts_new_york_time(monkeypatch):
+    monkeypatch.setitem(review.FINAL_DEADLINE_ET, 2027, None)
+    with pytest.raises(SystemExit): review.freeze_deadline(2027, "final")
+    monkeypatch.setitem(review.FINAL_DEADLINE_ET, 2027, "2027-03-14 17:45")
+    assert review.freeze_deadline(2027, "final") == FINAL
+
+def test_final_freeze_waits_for_finals_and_never_uses_post_deadline_data(tmp_path):
+    f = str(tmp_path / "rv"); fz = str(tmp_path / "fz"); now = datetime(2027, 3, 14, 21, 40, tzinfo=timezone.utc)
+    put(f, fake_review("2027-03-14T15:30:00Z", pending=None))                                       # research-time review
+    put(f, fake_review("2027-03-14T20:50:00Z", pending=[{"conf": "big-ten"}]))                      # Big Ten final still on
+    put(f, fake_review("2027-03-14T21:35:00Z", pending=[], edits=[{"id": "a", "at": "2027-03-14T21:20:00.123Z", "teams_changed": []}]))
+    put(f, fake_review("2027-03-14T21:50:00Z", pending=[]))                                         # after the deadline: refused
+    r = review.freeze(2027, f, fz, now=now, deadline=FINAL, edits_file="nope", kind="final"); b = json.load(open(r["path"]))
+    assert r["path"].endswith("2027_final_freeze.json") and b["kind"] == "final" and b["final_results_complete"]
+    assert b["inputs"]["collected_at"] == "2027-03-14T21:35:00Z" and len(b["brackets"]["B3_manual"]) == 76
+    assert review.verify(2027, fz, FINAL, write_record=False, kind="final")["ok"]
+    assert not review.verify(2027, fz, CUT, write_record=False, kind="final")["ok"]                  # wrong cutoff is caught
+
+def test_final_freeze_falls_back_and_flags_incomplete_results(tmp_path):
+    f = str(tmp_path / "rv"); fz = str(tmp_path / "fz")
+    put(f, fake_review("2027-03-14T20:50:00Z", pending=[])); put(f, fake_review("2027-03-14T21:30:00Z", pending=[{"conf": "big-ten"}]))
+    put(f, fake_review("2027-03-14T21:40:00Z", pending=None))                                       # feed unreadable = not complete
+    b = json.load(open(review.freeze(2027, f, fz, now=FINAL, deadline=FINAL, edits_file="nope", kind="final")["path"]))
+    assert b["inputs"]["collected_at"] == "2027-03-14T20:50:00Z"                                    # newest with every final in
+    g = str(tmp_path / "rv2"); put(g, fake_review("2027-03-14T21:30:00Z", pending=[{"conf": "big-ten"}]))
+    b2 = json.load(open(review.freeze(2027, g, str(tmp_path / "fz2"), now=FINAL, deadline=FINAL, edits_file="nope", kind="final")["path"]))
+    assert not b2["final_results_complete"] and b2["conference_games_pending"] == [{"conf": "big-ten"}]
+
+def test_research_and_final_are_separate_immutable_files(tmp_path):
+    f = str(tmp_path / "rv"); fz = str(tmp_path / "fz")
+    put(f, fake_review("2027-03-14T15:30:00Z")); put(f, fake_review("2027-03-14T21:35:00Z", pending=[]))
+    r1 = review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc), edits_file="nope")
+    r2 = review.freeze(2027, f, fz, now=FINAL, deadline=FINAL, edits_file="nope", kind="final")
+    assert r1["path"] != r2["path"] and json.load(open(r1["path"]))["inputs"]["collected_at"] == "2027-03-14T15:30:00Z"
+    assert review.verify(2027, fz, write_record=False)["ok"] and review.verify(2027, fz, FINAL, write_record=False, kind="final")["ok"]
+    assert oct(os.stat(r1["path"]).st_mode)[-3:] == "444" and oct(os.stat(r2["path"]).st_mode)[-3:] == "444"
+
+def test_edit_logged_after_cutoff_blocks_that_review():
+    rv = fake_review("2027-03-14T15:30:00Z", edits=[{"id": "late", "at": "2027-03-14T16:00:01Z", "teams_changed": []}])
+    assert any("after the cutoff" in p for p in review.problems(rv, CUT))
+
+def test_results_complete_cross_checks_games_used():
+    games = [{"date_iso": "2027-03-14", "ct": True, "id": "g1", "team_key": "a", "opp_key": "b"}, {"date_iso": "2027-03-14", "ct": True, "id": "g1", "team_key": "b", "opp_key": "a"}]
+    assert review.results_complete(([], 1), games, "2027-03-14") == []
+    assert review.results_complete(([], 2), games, "2027-03-14") is None                               # scoreboard says over, data lacks one
+    assert review.results_complete(([{"conf": "x"}], 2), games, "2027-03-14") == [{"conf": "x"}]
+    assert review.results_complete(None, games, "2027-03-14") is None
