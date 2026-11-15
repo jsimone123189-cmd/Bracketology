@@ -355,6 +355,8 @@ def freeze(season: int, folder: str | None = None, outdir: str | None = None, no
     if not valid: raise SystemExit(f"No freezable review for {season}. Skipped: {skipped}")
     complete = lambda rv: rv["inputs"].get("conference_games_pending") == []
     chosen = next((x for x in valid if complete(x[1])), valid[0]) if kind == "final" else valid[0]
+    if kind == "final" and not complete(chosen[1]) and now < deadline - timedelta(minutes=10):     # same rule as the Worker (docs/45)
+        raise SystemExit(f"Waiting for conference finals ({chosen[1]['inputs'].get('conference_games_pending')}); an incomplete final is frozen only in the last 10 minutes before {deadline:%H:%M}Z.")
     p, rv = chosen; ep = edits_file or edits_path(season)
     v2 = "models/v2.joblib"
     body = {"schema": 2, "kind": kind, "season": season, "frozen_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "cutoff": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),

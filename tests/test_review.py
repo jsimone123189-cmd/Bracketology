@@ -148,6 +148,8 @@ def test_final_freeze_falls_back_and_flags_incomplete_results(tmp_path):
     b = json.load(open(review.freeze(2027, f, fz, now=FINAL, deadline=FINAL, edits_file="nope", kind="final")["path"]))
     assert b["inputs"]["collected_at"] == "2027-03-14T20:50:00Z"                                    # newest with every final in
     g = str(tmp_path / "rv2"); put(g, fake_review("2027-03-14T21:30:00Z", pending=[{"conf": "big-ten"}]))
+    with pytest.raises(SystemExit, match="Waiting for conference finals"):                          # never frozen incomplete while there's time
+        review.freeze(2027, g, str(tmp_path / "fz2"), now=datetime(2027, 3, 14, 21, 30, tzinfo=timezone.utc), deadline=FINAL, edits_file="nope", kind="final")
     b2 = json.load(open(review.freeze(2027, g, str(tmp_path / "fz2"), now=FINAL, deadline=FINAL, edits_file="nope", kind="final")["path"]))
     assert not b2["final_results_complete"] and b2["conference_games_pending"] == [{"conf": "big-ten"}]
 

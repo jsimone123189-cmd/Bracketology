@@ -148,6 +148,18 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Bug fixed:** a failed "add" with a bad line removed a team without restoring it.
 - **Awaiting owner approvals 1, A-G in docs/44.** No model experiments.
 
+## Pre-deployment hardening (2026-11-15, docs/45)
+- **Backups:**
+  - an append-only second D1 database, filled daily by cron, after each freeze and when the page opens with a stale backup; each run cross-checks counts, an edit-log hash and snapshot hashes;
+  - an off-site bundle download with a staleness reminder;
+  - D1 Time Travel, 7 days.
+- **Restore** (`scripts/restore.mjs`, handles D1's 100 KB statement limit): tested from the backup database and from the bundle into fresh databases. Edits, timestamps, undo, B3, publications and both snapshot hashes are identical, and the snapshots verify.
+- **CPU:** engine about 3× faster (parity kept), freeze replayed in chunks of 150 edits. At 500 edits every request measures 7 ms or less in Node. Fallback ladder: smaller chunks → B3 checkpoint → manual Python freeze. No paid plan.
+- **Incomplete final:** a freeze waits while any conference final is in progress and is taken incomplete only in the last 10 minutes. The review page shows a red banner, the public page a label, and the stage-3 workflow sends an email alert.
+- **Access:** route matrix tested. The service token reaches only upload and published lines. New Publish step: drafts never leave the Worker.
+- **Staged plan:** 1 Access+Worker+D1, 2 phone acceptance, 3 daily upload + merge branch, 4 Selection Sunday timer + rehearsal. Inactive drafts are in `review-worker/deploy/`. The stage-4 timer is simulated in tests.
+- **Tests:** Worker 29. Python 55 on master, 60 on the branch. Nothing deployed.
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.
