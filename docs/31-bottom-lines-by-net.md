@@ -13,3 +13,9 @@ v2.0's seed formula is trained on the whole field. At the bottom, where teams ha
 - Nothing is trained, so there's nothing to overfit.
 
 Bar: +3 mean, better in at least 5 of 7, no season worse than -5. The control must reproduce 335 326 347 344 329 363 356. Also reported (not judged): the same with the cutoff at 45 and at 53, and exact seeds and percentiles.
+
+## Results (2026-11-14)
+`research/bottom_net_output.txt`. The control reproduced.
+- **Test 21 (cut 49):** 339 331 339 344 326 359 356. Mean -0.9, better in 2, worse in 3, worst -8. Failed.
+- Cut 45: -3.0. Cut 53: -0.6.
+- NET ordering fixed the 2019 and 2021 low lines (+4, +5) and broke 2022 and 2025 (-8, -4). RFS's edge at the bottom isn't plain NET order.

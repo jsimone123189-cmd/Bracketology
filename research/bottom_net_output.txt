@@ -1,0 +1,12 @@
+2019 {'control': 335, 'T21 cut 49': 339, 'cut 45 (reported)': 335, 'cut 53 (reported)': 339}
+2021 {'control': 326, 'T21 cut 49': 331, 'cut 45 (reported)': 328, 'cut 53 (reported)': 330}
+2022 {'control': 347, 'T21 cut 49': 339, 'cut 45 (reported)': 339, 'cut 53 (reported)': 343}
+2023 {'control': 344, 'T21 cut 49': 344, 'cut 45 (reported)': 340, 'cut 53 (reported)': 340}
+2024 {'control': 329, 'T21 cut 49': 326, 'cut 45 (reported)': 322, 'cut 53 (reported)': 329}
+2025 {'control': 363, 'T21 cut 49': 359, 'cut 45 (reported)': 359, 'cut 53 (reported)': 359}
+2026 {'control': 356, 'T21 cut 49': 356, 'cut 45 (reported)': 356, 'cut 53 (reported)': 356}
+control reproduces: True
+control             [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]
+T21 cut 49          [339, 331, 339, 344, 326, 359, 356] mean 342.0 diff -0.9 better 2 worse 3 worst -8 PASS=False exact 41.3 pct [30, 14, 20, 14, 8, 57, 10]
+cut 45 (reported)   [335, 328, 339, 340, 322, 359, 356] mean 339.9 diff -3.0 better 1 worse 4 worst -8 PASS=False exact 40.3 pct [21, 9, 20, 10, 5, 57, 10]
+cut 53 (reported)   [339, 330, 343, 340, 329, 359, 356] mean 342.3 diff -0.6 better 2 worse 3 worst -4 PASS=False exact 41.3 pct [30, 12, 27, 10, 10, 57, 10]
