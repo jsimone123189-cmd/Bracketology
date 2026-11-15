@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 90 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 91 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -78,8 +78,15 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Method:** Internet Archive snapshots of bracketmatrix.com one week before Selection Sunday (D-7), for 2021, 2022, 2023, 2025 and 2026 (no usable capture for 2019 or 2024). Elite brackets counted only if updated within 3 days. v2.0 was rebuilt as of D-7 with timestamp-correct NET (Wayback ncaa.com), games through D-7, and only the conference champions decided by then. Retrospective only; never a model input.
 - **Exact seed lines against the final committee bracket:** v2.0 went from 28.0 a week out to 42.8 at the end (mean), the elite from 28.5 to 50.7.
 - **The gap a week out is +0.5 (tied). On Selection Sunday it's +7.9.** It grew in 5 of 5 seasons.
-- **Game-information share:** v2.0 gets 67% of the elite's final-week improvement from the new games alone. The other third (about 7 exact seeds, about 21 points) is how the elite process championship week: conference-tournament results, Sunday-final contingencies, the bubble, and convergence on each other.
-- **Implication for Path A:** the target is how the committee weighs championship-week results compared with the regular season, and nothing held all season. Experiments 01-35 used season-long features.
+- (The earlier "67% game-information share" was descriptive only; corrected in docs/39.)
+
+## Championship-week deep dive (docs/39)
+- **Audit:** the finding holds on common teams (gap +1.3 at D-7, +7.8 at the final, growing in 5 of 5) and with v2.0 trained on D-7 data (D-7 gap +0.2). No expert used games v2.0 lacked.
+- **Decomposition of v2.0's D-7 → final change** (2021-26, exact seeds): champions and bid thieves **+9.3**, final-NET quadrant reclassification -1.0, new games' résumé **+5.0**. The elite gain about 22 over the week, so they extract roughly 13 exact seeds from the week's games and news against v2.0's 5.
+- **Conference-tournament surprise** (wins minus expected wins, using pre-tournament ratings): its correlation with v2.0's held-out residual is **positive in 7 of 7 seasons** (mean +0.17). Teams that beat tournament expectations get placed worse by the committee than v2.0 predicts. **v2.0 over-reacts to championship-week results.** The elite lean the same way.
+- **Test 26** (CT surprise as a learned feature): -5.0, better in 2, worse in 4. Failed. The signal is too weak for a linear weight.
+- **Line moves D-7 → final** (exploratory): elite moves go toward the committee's seed **77%** of the time (554/716). v2.0's game-driven moves go toward it 58% (82/141), close to a coin flip.
+- **Open:** what tells the elite which teams to move, and how far? A "pre-tournament résumé plus champion status" model (discounting conference-tournament games) was suggested by these same seasons, so it can only be validated prospectively.
 
 ## Path B and 2027 plan (docs/37, docs/38)
 - **Review page design:** neighbours panel, résumé comparison, head-to-head, metric disagreement, "why this could be wrong" flags, and an edit form that preserves line sizes.
