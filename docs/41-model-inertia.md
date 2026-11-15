@@ -61,7 +61,7 @@ Final-gap teams are those where most elite brackets are exact and v2.0 isn't: **
 | Missed the team (selection) | | 3 |
 
 - The elite's week gain is a mix: they fix errors that v2.0 keeps (34), and they correct their own D-7 errors (many toward v2.0's line).
-- **16 harmful v2.0 moves** match docs/40's harmful-move count. Freezing them isn't selectively possible (docs/40: freezing all moves costs points).
+- **16 are v2.0 moving away from exact.** docs/40 showed freezing moves can't recover these selectively; freezing all résumé moves costs points.
 - **13 errors predate the week entirely.**
 
 ## Decision
@@ -72,6 +72,6 @@ Final-gap teams are those where most elite brackets are exact and v2.0 isn't: **
 - It handles the mechanical automatic-bid updates, the largest single week effect (+9.3 exact, docs/39).
 - It flags candidates for review.
 
-**The human role:** the roughly 34 team-seasons a year where the elite fix a model error during the week (about 7 a season). The review page (docs/37) should show, for each team, the model's score change over the week and its distance to the next line boundary. A team whose inputs barely moved but whose situation changed (injury, the eye test, bracketing) is exactly where review can add what the model lacks.
+**The human role:** the 34 teams over five seasons (about 7 a season) where the elite fixed a model error during the week. The review page (docs/37) should show, for each team, the model's score change over the week and its distance to the next line boundary. A team whose inputs barely moved but whose situation changed (injury, the eye test, bracketing) is exactly where review can add what the model lacks.
 
 **Automated development continues only through 2027 shadow tracking** (docs/38), not more retrospective variants on these seasons.
