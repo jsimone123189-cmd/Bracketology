@@ -1,0 +1,92 @@
+2019 RFS exact where v2 wasn't: 15, v2 exact where RFS wasn't: 10
+    gonzaga                seed  1 v2 2 NET 2 champ 0
+    michiganstate          seed  2 v2 1 NET 8 champ 1
+    kansasstate            seed  4 v2 5 NET 24 champ 0
+    auburn                 seed  5 v2 4 NET 18 champ 1
+    buffalo                seed  6 v2 7 NET 15 champ 1
+    louisville             seed  7 v2 6 NET 22 champ 0
+    nevada                 seed  7 v2 8 NET 23 champ 0
+    temple                 seed 11 v2 None NET 56 champ 0
+    arizonastate           seed 11 v2 None NET 63 champ 0
+    vermont                seed 13 v2 14 NET 71 champ 1
+    northeastern           seed 13 v2 14 NET 78 champ 1
+    olddominion            seed 14 v2 13 NET 100 champ 1
+    georgiastate           seed 14 v2 13 NET 121 champ 1
+    bradley                seed 15 v2 16 NET 176 champ 1
+    gardnerwebb            seed 16 v2 15 NET 173 champ 1
+2021 RFS exact where v2 wasn't: 18, v2 exact where RFS wasn't: 2
+    texas                  seed  3 v2 4 NET 21 champ 1
+    virginia               seed  4 v2 3 NET 12 champ 0
+    creighton              seed  5 v2 4 NET 26 champ 0
+    texastech              seed  6 v2 8 NET 16 champ 0
+    oregon                 seed  7 v2 8 NET 33 champ 0
+    loyolachicago          seed  8 v2 6 NET 10 champ 1
+    oklahoma               seed  8 v2 10 NET 36 champ 0
+    stbonaventure          seed  9 v2 8 NET 23 champ 1
+    vcu                    seed 10 v2 11 NET 37 champ 0
+    rutgers                seed 10 v2 9 NET 38 champ 0
+    utahstate              seed 11 v2 None NET 39 champ 0
+    ucsantabarbara         seed 12 v2 13 NET 54 champ 1
+    uncgreensboro          seed 13 v2 14 NET 84 champ 1
+    abilenechristian       seed 14 v2 13 NET 74 champ 1
+    easternwashington      seed 14 v2 15 NET 114 champ 1
+    grandcanyon            seed 15 v2 14 NET 107 champ 1
+    iona                   seed 15 v2 16 NET 138 champ 1
+    hartford               seed 16 v2 15 NET 162 champ 1
+2022 RFS exact where v2 wasn't: 8, v2 exact where RFS wasn't: 14
+    arkansas               seed  4 v2 5 NET 20 champ 0
+    saintmarysca           seed  5 v2 6 NET 19 champ 0
+    alabama                seed  6 v2 5 NET 30 champ 0
+    marquette              seed  9 v2 8 NET 43 champ 0
+    tcu                    seed  9 v2 8 NET 45 champ 0
+    sanfrancisco           seed 10 v2 11 NET 22 champ 0
+    loyolachicago          seed 10 v2 9 NET 23 champ 1
+    longwood               seed 14 v2 15 NET 126 champ 1
+2023 RFS exact where v2 wasn't: 13, v2 exact where RFS wasn't: 7
+    marquette              seed  2 v2 3 NET 12 champ 1
+    gonzaga                seed  3 v2 2 NET 6 champ 1
+    kansasstate            seed  3 v2 4 NET 24 champ 0
+    tennessee              seed  4 v2 3 NET 4 champ 0
+    tcu                    seed  6 v2 7 NET 28 champ 0
+    michiganstate          seed  7 v2 8 NET 33 champ 0
+    northwestern           seed  7 v2 8 NET 41 champ 0
+    arkansas               seed  8 v2 9 NET 21 champ 0
+    memphis                seed  8 v2 5 NET 23 champ 1
+    auburn                 seed  9 v2 10 NET 32 champ 0
+    utahstate              seed 10 v2 8 NET 18 champ 0
+    furman                 seed 13 v2 14 NET 88 champ 1
+    ucsantabarbara         seed 14 v2 13 NET 100 champ 1
+2024 RFS exact where v2 wasn't: 9, v2 exact where RFS wasn't: 3
+    northcarolina          seed  1 v2 2 NET 8 champ 0
+    iowastate              seed  2 v2 1 NET 6 champ 1
+    sandiegostate          seed  5 v2 7 NET 21 champ 0
+    texastech              seed  6 v2 5 NET 28 champ 0
+    southcarolina          seed  6 v2 5 NET 51 champ 0
+    dayton                 seed  7 v2 8 NET 23 champ 0
+    nebraska               seed  8 v2 7 NET 33 champ 0
+    northwestern           seed  9 v2 10 NET 53 champ 0
+    colorado               seed 10 v2 9 NET 25 champ 0
+2025 RFS exact where v2 wasn't: 9, v2 exact where RFS wasn't: 5
+    kentucky               seed  3 v2 4 NET 15 champ 0
+    maryland               seed  4 v2 3 NET 10 champ 0
+    byu                    seed  6 v2 5 NET 24 champ 0
+    kansas                 seed  7 v2 6 NET 20 champ 0
+    mississippistate       seed  8 v2 9 NET 34 champ 0
+    drake                  seed 11 v2 12 NET 56 champ 1
+    coloradostate          seed 12 v2 11 NET 47 champ 1
+    omaha                  seed 15 v2 16 NET 160 champ 1
+    norfolkstate           seed 16 v2 15 NET 183 champ 1
+2026 RFS exact where v2 wasn't: 12, v2 exact where RFS wasn't: 3
+    gonzaga                seed  3 v2 4 NET 6 champ 1
+    byu                    seed  6 v2 7 NET 23 champ 0
+    saintmarysca           seed  7 v2 8 NET 22 champ 0
+    miamifl                seed  7 v2 6 NET 32 champ 0
+    ohiostate              seed  8 v2 9 NET 29 champ 0
+    saintlouis             seed  9 v2 11 NET 30 champ 0
+    tcu                    seed  9 v2 8 NET 39 champ 0
+    santaclara             seed 10 v2 11 NET 40 champ 0
+    texasaandm             seed 10 v2 9 NET 44 champ 0
+    smu                    seed 11 v2 10 NET 37 champ 0
+    miamioh                seed 11 v2 None NET 64 champ 0
+    kennesawstate          seed 14 v2 15 NET 155 champ 1
+{'rfs_only': 84, 'v2_only': 44}
