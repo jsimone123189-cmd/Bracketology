@@ -1,0 +1,13 @@
+   h2h coefficient (trained without 2019): 0.407
+2019 {'control': 335, 'reference: mean-chance, no h2h': 335, 'Test 9 h2h': 335} exact {'control': 40, 'reference: mean-chance, no h2h': 40, 'Test 9 h2h': 40} field pairs that met: 220
+2021 {'control': 326, 'reference: mean-chance, no h2h': 326, 'Test 9 h2h': 326} exact {'control': 33, 'reference: mean-chance, no h2h': 33, 'Test 9 h2h': 33} field pairs that met: 181
+2022 {'control': 347, 'reference: mean-chance, no h2h': 347, 'Test 9 h2h': 347} exact {'control': 45, 'reference: mean-chance, no h2h': 45, 'Test 9 h2h': 45} field pairs that met: 185
+2023 {'control': 344, 'reference: mean-chance, no h2h': 344, 'Test 9 h2h': 348} exact {'control': 42, 'reference: mean-chance, no h2h': 42, 'Test 9 h2h': 44} field pairs that met: 214
+2024 {'control': 329, 'reference: mean-chance, no h2h': 329, 'Test 9 h2h': 329} exact {'control': 37, 'reference: mean-chance, no h2h': 37, 'Test 9 h2h': 37} field pairs that met: 201
+2025 {'control': 363, 'reference: mean-chance, no h2h': 363, 'Test 9 h2h': 363} exact {'control': 49, 'reference: mean-chance, no h2h': 49, 'Test 9 h2h': 49} field pairs that met: 283
+2026 {'control': 356, 'reference: mean-chance, no h2h': 356, 'Test 9 h2h': 359} exact {'control': 45, 'reference: mean-chance, no h2h': 45, 'Test 9 h2h': 46} field pairs that met: 260
+control reproduces: True
+control                         [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact 41.6
+reference: mean-chance, no h2h  [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact 41.6
+Test 9 h2h                      [335, 326, 347, 348, 329, 363, 359] mean 343.9 diff +1.0 better 2 worse 0 worst +0 PASS=False pct [21, 9, 39, 18, 10, 75, 13] all>=75 False exact 42.0
+exit 0
