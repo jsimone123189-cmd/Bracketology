@@ -93,7 +93,13 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Actual v2.0 line moves D-7 → final (2021-26):** auto-bid-driven 63 beneficial / 41 harmful (net +71 exact). **Résumé-driven only about 6 a season: 22 beneficial / 13 harmful (net +9 exact).**
 - **Maximum opportunity from limiting v2.0's movement:** freezing all résumé moves = -1.5 exact a season. A perfect selective freeze is at most +1.8 exact a season (about 5 points). **Anchoring can't close the roughly 8-exact gap.**
 - **Anchor-CT rule** (seed on each team's pre-conference-tournament résumé; final NET, champions and selection kept current; no parameters): 337 327 334 342 316 350 358 = -5.1, better in 3, worse in 4, exact -3.0. Not shadowed.
-- **Corrected interpretation:** the elite gain isn't model restraint. It's moves v2.0 never makes: about 24 line changes per elite bracket over championship week, 77% correct, against about 6 résumé moves a season for v2.0. That's information or judgment outside the free stats.
+- **Corrected interpretation:** the elite gain isn't model restraint. It's moves v2.0 never makes: elite championship-week moves are 77% correct (v2.0's own moves 58-61%), but see docs/41: v2.0 moves about as many teams. That's information or judgment outside the free stats.
+
+## Model-inertia diagnosis (docs/41, exploratory)
+- **v2.0 isn't inert:** over championship week it changes 42% of field teams' lines, against 48% for the elite consensus. (The earlier "6 vs 24" compared unlike counts; corrected.)
+- **63 elite moves v2.0 missed** (elite moved at least 0.5 lines, v2.0 unchanged): A (model inputs changed by 2+ positions' worth, ranking didn't respond) 7, worth **0** exact. **B (inputs barely changed) 42 (67%)**. C (other teams) 8. D (champion status) 6. **Copying the elite's moves on those teams would cost v2.0 17 exact seeds.** Many elite moves fix the elite's own week-out errors toward v2.0's line.
+- **Final-gap teams** (elite majority exact, v2.0 not): 69 against 30 reverse. 34 the elite fixed during the week while v2.0 stayed wrong. 13 errors predate the week. 16 are v2.0 moving away from exact.
+- **Decision:** no recoverable information for automation shown. Prioritize structured human review. The model remains the base and handles the auto-bid mechanics (+9.3 exact in the week).
 
 ## Path B and 2027 plan (docs/37, docs/38)
 - **Review page design:** neighbours panel, résumé comparison, head-to-head, metric disagreement, "why this could be wrong" flags, and an edit form that preserves line sizes.

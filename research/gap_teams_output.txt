@@ -1,0 +1,15 @@
+2021: teams elite-majority exact & v2 not: 18; v2 exact & elite-majority not: 3
+2022: teams elite-majority exact & v2 not: 9; v2 exact & elite-majority not: 7
+2023: teams elite-majority exact & v2 not: 18; v2 exact & elite-majority not: 5
+2025: teams elite-majority exact & v2 not: 8; v2 exact & elite-majority not: 7
+2026: teams elite-majority exact & v2 not: 16; v2 exact & elite-majority not: 8
+
+Final-gap teams by when each side was right/wrong (5 seasons):
+   18  v2 wrong at D-7 too, unchanged           | elite fixed it in the week
+   16  v2 wrong at D-7, moved but still wrong   | elite fixed it in the week
+   13  v2 wrong at D-7 too, unchanged           | elite right at D-7
+    8  v2 moved away                            | elite fixed it in the week
+    8  v2 moved away                            | elite right at D-7
+    3  v2 wrong at D-7, moved but still wrong   | elite right at D-7
+    2  v2 missed the team (selection)           | elite fixed it in the week
+    1  v2 missed the team (selection)           | elite right at D-7

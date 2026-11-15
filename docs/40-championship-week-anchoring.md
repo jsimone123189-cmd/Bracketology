@@ -69,3 +69,5 @@ docs/39 said the elite edge looked like "restraint plus accuracy." Part 2 contra
 
 ### Part 5: shadow decision
 By the rule fixed above (worse than -5 mean → not recommended), **Anchor-CT is not recommended as a 2027 shadow.** `src/bracketology/shadow_anchor.py` stays as documented, unused research code, and docs/38 is unchanged. B2 stays v2.0 plus head-to-head and common opponents.
+
+**Correction (docs/41):** "about 24 line changes per elite bracket against about 6 résumé moves a season for v2.0" compared unlike counts. Counting all moves, v2.0 changes 42% of field lines over the week and the elite consensus 48%. v2.0 isn't inert. See docs/41.

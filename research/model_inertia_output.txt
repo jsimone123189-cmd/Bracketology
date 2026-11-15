@@ -1,0 +1,82 @@
+
+2021: u=0.4251, fresh elite brackets 6, missed elite moves 9
+   A LSU                  v2 line 9 elite -2.50 seed 8 own +2.69u others -3 boundary 0.77u CT y paired y adopt-elite exact +0
+   B West Virginia        v2 line 5 elite +1.33 seed 3 own +0.32u others +0 boundary 1.29u CT y paired y adopt-elite exact +0
+   B BYU                  v2 line 6 elite -0.50 seed 6 own +0.43u others +0 boundary 2.56u CT y paired y adopt-elite exact +0
+   B VCU                  v2 line 11 elite -0.67 seed 10 own +0.07u others +1 boundary 1.00u CT y paired n adopt-elite exact +1
+   B UCLA                 v2 line 11 elite +1.33 seed 11 own +0.61u others +0 boundary 1.62u CT y paired n adopt-elite exact -1
+   C Texas Tech           v2 line 8 elite +0.67 seed 6 own -0.84u others +2 boundary 0.77u CT y paired y adopt-elite exact +0
+   C UC Santa Barbara     v2 line 13 elite -1.00 seed 12 own -0.69u others +2 boundary 1.05u CT y paired n adopt-elite exact +1
+   D Texas                v2 line 4 elite -0.83 seed 3 own +1.67u others -1 boundary 0.25u CT y paired n adopt-elite exact +1
+   D Southern California  v2 line 5 elite +0.50 seed 6 own +1.24u others +0 boundary 1.67u CT y paired y adopt-elite exact +0
+
+2022: u=0.2746, fresh elite brackets 7, missed elite moves 11
+   A Auburn               v2 line 2 elite +0.71 seed 2 own +7.56u others +2 boundary 4.05u CT y paired n adopt-elite exact -1
+   A Iowa St.             v2 line 9 elite +2.00 seed 11 own +2.30u others +0 boundary 0.33u CT y paired y adopt-elite exact +1
+   B Texas                v2 line 6 elite +1.00 seed 6 own +1.16u others +0 boundary 4.66u CT y paired n adopt-elite exact -1
+   B Southern California  v2 line 7 elite +0.57 seed 7 own +1.24u others -4 boundary 0.20u CT y paired y adopt-elite exact -1
+   B Loyola Chicago       v2 line 9 elite -1.50 seed 10 own +0.81u others +0 boundary 0.56u CT n paired n adopt-elite exact +0
+   B Memphis              v2 line 9 elite -2.14 seed 9 own +0.79u others +1 boundary 0.11u CT y paired n adopt-elite exact -1
+   B San Diego St.        v2 line 10 elite -1.29 seed 8 own +1.42u others -1 boundary 1.13u CT y paired y adopt-elite exact +0
+   B New Mexico St.       v2 line 12 elite -1.00 seed 12 own +1.25u others +1 boundary 16.79u CT y paired y adopt-elite exact -1
+   C North Carolina       v2 line 8 elite -1.43 seed 8 own -0.21u others +3 boundary 0.20u CT y paired y adopt-elite exact -1
+   D Tennessee            v2 line 2 elite -0.71 seed 3 own +8.37u others +2 boundary 5.23u CT y paired n adopt-elite exact +0
+   D Davidson             v2 line 11 elite +1.14 seed 10 own -1.67u others +2 boundary 2.51u CT y paired y adopt-elite exact +0
+
+2023: u=0.3778, fresh elite brackets 6, missed elite moves 13
+   A Tennessee            v2 line 3 elite +0.83 seed 4 own +3.33u others +0 boundary 3.20u CT y paired n adopt-elite exact +1
+   A Baylor               v2 line 3 elite +0.83 seed 3 own +3.04u others -1 boundary 3.75u CT y paired n adopt-elite exact -1
+   B TCU                  v2 line 7 elite +0.50 seed 6 own -0.83u others +1 boundary 2.16u CT y paired n adopt-elite exact +0
+   B Illinois             v2 line 9 elite +1.50 seed 9 own +0.82u others -1 boundary 0.88u CT y paired y adopt-elite exact -1
+   B Maryland             v2 line 10 elite +0.83 seed 8 own +1.45u others +0 boundary 1.33u CT y paired n adopt-elite exact +0
+   B Auburn               v2 line 10 elite -0.83 seed 9 own -0.84u others -1 boundary 1.66u CT y paired y adopt-elite exact +1
+   B NC State             v2 line 11 elite +0.67 seed 11 own +0.16u others -1 boundary 4.10u CT y paired n adopt-elite exact -1
+   B Providence           v2 line 11 elite +1.83 seed 11 own +0.87u others -2 boundary 6.26u CT y paired n adopt-elite exact -1
+   B Colgate              v2 line 15 elite +0.67 seed 15 own -0.01u others +0 boundary 10.02u CT y paired n adopt-elite exact -1
+   B UNC Asheville        v2 line 15 elite -0.67 seed 15 own +0.16u others +0 boundary 2.16u CT n paired n adopt-elite exact -1
+   C Furman               v2 line 14 elite -0.67 seed 13 own -0.31u others +2 boundary 2.43u CT y paired n adopt-elite exact +1
+   C Kennesaw St.         v2 line 14 elite -1.00 seed 14 own +0.12u others +2 boundary 1.07u CT n paired n adopt-elite exact -1
+   D Marquette            v2 line 3 elite -0.83 seed 2 own +4.03u others -2 boundary 0.07u CT y paired n adopt-elite exact +1
+
+2025: u=0.2649, fresh elite brackets 6, missed elite moves 16
+   A BYU                  v2 line 5 elite -1.67 seed 6 own +2.56u others +0 boundary 3.01u CT y paired n adopt-elite exact +0
+   A Memphis              v2 line 8 elite +0.50 seed 5 own +2.47u others +0 boundary 0.44u CT y paired y adopt-elite exact +0
+   B Iowa St.             v2 line 3 elite -0.67 seed 3 own -0.25u others +0 boundary 8.43u CT y paired n adopt-elite exact -1
+   B Oregon               v2 line 5 elite -0.50 seed 5 own -1.45u others -2 boundary 4.04u CT y paired n adopt-elite exact +0
+   B Missouri             v2 line 7 elite +2.00 seed 6 own -1.90u others -1 boundary 1.67u CT y paired y adopt-elite exact +0
+   B Marquette            v2 line 7 elite +2.17 seed 7 own +0.60u others +1 boundary 0.01u CT y paired y adopt-elite exact -1
+   B Georgia              v2 line 9 elite -1.00 seed 9 own -0.66u others +1 boundary 2.69u CT y paired y adopt-elite exact -1
+   B Mississippi St.      v2 line 9 elite +0.67 seed 8 own -0.15u others +0 boundary 5.65u CT y paired n adopt-elite exact +0
+   B VCU                  v2 line 11 elite +0.50 seed 11 own -0.36u others +0 boundary 0.40u CT y paired y adopt-elite exact +0
+   B San Diego St.        v2 line 11 elite +0.83 seed 11 own +0.79u others -1 boundary 3.85u CT y paired y adopt-elite exact -1
+   B Drake                v2 line 12 elite -0.83 seed 11 own +0.31u others +0 boundary 4.15u CT n paired y adopt-elite exact +1
+   B Yale                 v2 line 13 elite +0.50 seed 13 own +0.54u others +0 boundary 3.92u CT y paired n adopt-elite exact +0
+   B Omaha                v2 line 16 elite -1.00 seed 15 own -1.30u others +1 boundary 1.05u CT n paired n adopt-elite exact +1
+   C Illinois             v2 line 6 elite -0.83 seed 6 own -1.13u others +3 boundary 2.84u CT y paired n adopt-elite exact -1
+   C Ole Miss             v2 line 6 elite -0.50 seed 6 own -0.03u others +2 boundary 2.55u CT y paired n adopt-elite exact +0
+   D Gonzaga              v2 line 8 elite -0.83 seed 8 own +2.38u others -1 boundary 0.01u CT y paired y adopt-elite exact -1
+
+2026: u=0.3006, fresh elite brackets 4, missed elite moves 14
+   B Gonzaga              v2 line 4 elite -0.75 seed 3 own +0.55u others +1 boundary 3.40u CT y paired n adopt-elite exact +1
+   B Wisconsin            v2 line 5 elite -0.75 seed 5 own +0.29u others -1 boundary 3.94u CT y paired n adopt-elite exact -1
+   B Tennessee            v2 line 6 elite +0.75 seed 6 own +0.89u others -1 boundary 5.00u CT y paired y adopt-elite exact -1
+   B North Carolina       v2 line 6 elite +0.50 seed 6 own +1.81u others +0 boundary 4.18u CT y paired y adopt-elite exact +0
+   B UCLA                 v2 line 7 elite -0.75 seed 7 own +1.42u others +1 boundary 2.99u CT y paired y adopt-elite exact -1
+   B Georgia              v2 line 7 elite +0.50 seed 8 own +1.52u others +1 boundary 0.32u CT y paired n adopt-elite exact +0
+   B Villanova            v2 line 8 elite +1.25 seed 8 own +0.53u others -1 boundary 0.16u CT y paired y adopt-elite exact -1
+   B Utah St.             v2 line 9 elite -0.75 seed 9 own +1.68u others +1 boundary 0.16u CT y paired y adopt-elite exact -1
+   B Iowa                 v2 line 9 elite +0.75 seed 9 own +1.46u others +1 boundary 0.89u CT y paired n adopt-elite exact -1
+   B NC State             v2 line 10 elite +0.75 seed 11 own +0.67u others -1 boundary 3.53u CT y paired y adopt-elite exact +1
+   B Missouri             v2 line 10 elite +0.75 seed 10 own +0.83u others +0 boundary 3.00u CT y paired y adopt-elite exact -1
+   B South Fla.           v2 line 11 elite -0.75 seed 11 own +0.71u others +0 boundary 5.53u CT y paired y adopt-elite exact -1
+   B Tennessee St.        v2 line 15 elite -1.00 seed 15 own -0.20u others +0 boundary 1.42u CT n paired n adopt-elite exact -1
+   C Ohio St.             v2 line 9 elite -1.75 seed 8 own +1.38u others +2 boundary 1.99u CT y paired y adopt-elite exact +0
+
+== Summary
+Category A: 7 (11%) | adopt-elite exact gain +0 (+0.0/season) by season {2021: 0, 2022: 0, 2023: 0, 2025: 0, 2026: 0} | paired 3 | median own +2.69u, median boundary 3.01u
+Category B: 42 (67%) | adopt-elite exact gain -17 (-3.4/season) by season {2021: 0, 2022: -4, 2023: -4, 2025: -2, 2026: -7} | paired 21 | median own +0.57u, median boundary 2.36u
+Category C: 8 (13%) | adopt-elite exact gain -1 (-0.2/season) by season {2021: 1, 2022: -1, 2023: 0, 2025: -1, 2026: 0} | paired 3 | median own -0.26u, median boundary 1.53u
+Category D: 6 (10%) | adopt-elite exact gain +1 (+0.2/season) by season {2021: 1, 2022: 0, 2023: 1, 2025: -1, 2026: 0} | paired 3 | median own +2.02u, median boundary 0.96u
+with CT     teams 240: elite moved 115 (48%), v2.0 moved 101 (42%)
+without CT  teams 20: elite moved 11 (55%), v2.0 moved 9 (45%)
+EXPERIMENT TRIGGER (A gain >= +1.5/season and positive in >= 4/5): False
