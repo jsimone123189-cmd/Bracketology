@@ -1,0 +1,11 @@
+in-sample exact, band formulas (true band membership): [47, 41, 47, 48, 39, 52, 50] 46.285714285714285
+2019 {'control': 335, 'T20 band formulas': 341} exact {'control': 40, 'T20 band formulas': 43}
+2021 {'control': 326, 'T20 band formulas': 330} exact {'control': 33, 'T20 band formulas': 35}
+2022 {'control': 347, 'T20 band formulas': 335} exact {'control': 45, 'T20 band formulas': 39}
+2023 {'control': 344, 'T20 band formulas': 340} exact {'control': 42, 'T20 band formulas': 40}
+2024 {'control': 329, 'T20 band formulas': 325} exact {'control': 37, 'T20 band formulas': 36}
+2025 {'control': 363, 'T20 band formulas': 356} exact {'control': 49, 'T20 band formulas': 45}
+2026 {'control': 356, 'T20 band formulas': 348} exact {'control': 45, 'T20 band formulas': 41}
+control reproduces: True
+control             [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]
+T20 band formulas   [341, 330, 335, 340, 325, 356, 348] mean 339.3 diff -3.6 better 2 worse 5 worst -12 PASS=False exact 39.9 pct [36, 12, 17, 10, 6, 42, 7]

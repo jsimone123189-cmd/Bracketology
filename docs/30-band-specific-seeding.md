@@ -13,3 +13,8 @@ The committee works through the seed list in batches. The ESPN mock-selection no
 - **Band model training:** same features, C and pair rule as v2.0, but only pairs where both teams' actual positions fall in the band widened by 4 on each side (1-20, 13-44, 37-68). It's trained on the six other seasons.
 
 Bar: +3 mean, better in at least 5 of 7, no season worse than -5. The control must reproduce 335 326 347 344 329 363 356. Also reported: exact seeds, Matrix percentile, and the band models' in-sample exact seeds (fit on all seasons), to check whether the formula is more expressive than v2.0's 43.3.
+
+## Results (2026-11-14)
+`research/band_seeding_output.txt`. The control reproduced.
+- Band formulas are more expressive: 46.3 exact in-sample, against 43.3 for one formula.
+- Held out they failed: 341 330 335 340 325 356 348. Mean -3.6, better in 2, worse in 5, worst -12. The extra flexibility fit noise.
