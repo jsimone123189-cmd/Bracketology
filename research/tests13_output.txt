@@ -1,0 +1,46 @@
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+
+== Test 4: champ in the seed model
+Test 4 [334, 326, 353, 340, 323, 357, 368] mean 343.0 diff +0.1 better 2 worse 4 worst -6 PASS=False
+
+== Pooled held-out spreads for production (all seven seasons)
+SPREAD = [2.22, 5.17, 3.97, 1.71] n [112, 111, 100, 140]
+
+== Confidence per season (nested spreads, as docs/12)
+  2019: 31 teams under 0.5
+  2021: 32 teams under 0.5
+  2022: 30 teams under 0.5
+  2023: 32 teams under 0.5
+  2024: 30 teams under 0.5
+  2025: 32 teams under 0.5
+  2026: 32 teams under 0.5
+
+== Random shifts, 2,000 draws per season
+-- A all teams
+   2019 base 335 mean -22.0  better 0%  +3 or more 0%  5th/95th -31/-12  exact 5-8 -1.22  reach 90th pct (355) 0.0% vs no without
+   2021 base 326 mean -16.3  better 1%  +3 or more 0%  5th/95th -26/-6  exact 5-8 -0.26  reach 90th pct (363) 0.0% vs no without
+   2022 base 347 mean -26.4  better 0%  +3 or more 0%  5th/95th -35/-17  exact 5-8 -2.39  reach 90th pct (364) 0.0% vs no without
+   2023 base 344 mean -23.8  better 0%  +3 or more 0%  5th/95th -33/-14  exact 5-8 -0.57  reach 90th pct (372) 0.0% vs no without
+   2024 base 329 mean -19.5  better 0%  +3 or more 0%  5th/95th -29/-9  exact 5-8 +0.10  reach 90th pct (349) 0.0% vs no without
+   2025 base 363 mean -28.7  better 0%  +3 or more 0%  5th/95th -37/-19  exact 5-8 -2.05  reach 90th pct (368) 0.0% vs no without
+   2026 base 356 mean -25.5  better 0%  +3 or more 0%  5th/95th -35/-16  exact 5-8 -1.89  reach 90th pct (384) 0.0% vs no without
+   overall mean change -23.18
+-- B low confidence
+   2019 base 335 mean -8.2  better 2%  +3 or more 1%  5th/95th -15/-1  exact 5-8 -1.39  reach 90th pct (355) 0.0% vs no without
+   2021 base 326 mean -6.0  better 8%  +3 or more 3%  5th/95th -13/+2  exact 5-8 -0.52  reach 90th pct (363) 0.0% vs no without
+   2022 base 347 mean -10.3  better 1%  +3 or more 0%  5th/95th -17/-3  exact 5-8 -2.84  reach 90th pct (364) 0.0% vs no without
+   2023 base 344 mean -9.1  better 2%  +3 or more 1%  5th/95th -16/-2  exact 5-8 -0.76  reach 90th pct (372) 0.0% vs no without
+   2024 base 329 mean -3.5  better 17%  +3 or more 9%  5th/95th -10/+4  exact 5-8 +0.06  reach 90th pct (349) 0.0% vs no without
+   2025 base 363 mean -11.0  better 0%  +3 or more 0%  5th/95th -17/-4  exact 5-8 -2.29  reach 90th pct (368) 0.0% vs no without
+   2026 base 356 mean -11.0  better 1%  +3 or more 0%  5th/95th -17/-4  exact 5-8 -2.13  reach 90th pct (384) 0.0% vs no without
+   overall mean change -8.43
+-- C legal swaps, low confidence
+   2019 base 335 mean -14.9  better 0%  +3 or more 0%  5th/95th -24/-6  exact 5-8 -1.96  reach 90th pct (355) 0.0% vs no without
+   2021 base 326 mean -10.0  better 3%  +3 or more 2%  5th/95th -19/+0  exact 5-8 -0.45  reach 90th pct (363) 0.0% vs no without
+   2022 base 347 mean -17.4  better 0%  +3 or more 0%  5th/95th -27/-8  exact 5-8 -4.04  reach 90th pct (364) 0.0% vs no without
+   2023 base 344 mean -15.1  better 0%  +3 or more 0%  5th/95th -24/-6  exact 5-8 -0.86  reach 90th pct (372) 0.0% vs no without
+   2024 base 329 mean -7.7  better 8%  +3 or more 4%  5th/95th -17/+2  exact 5-8 +0.13  reach 90th pct (349) 0.0% vs no without
+   2025 base 363 mean -19.2  better 0%  +3 or more 0%  5th/95th -28/-10  exact 5-8 -3.26  reach 90th pct (368) 0.0% vs no without
+   2026 base 356 mean -19.4  better 0%  +3 or more 0%  5th/95th -28/-10  exact 5-8 -3.08  reach 90th pct (384) 0.0% vs no without
+   overall mean change -14.81
+exit 0
