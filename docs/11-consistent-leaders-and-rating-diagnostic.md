@@ -50,7 +50,7 @@ Output: `research/leaders_and_magnitude_output.txt`. The control reproduced 335 
 They outscore v2.0 by about 20 points a season. Season by season, v2.0 then the group average: 335/356, 326/360, 347/363, 344/371, 329/345, 363/366, 356/382. Nearly all of the gap is seeding, not selection.
 - **Exact seeds:** v2.0 averaged 41.6 a season, the group about 49. That's roughly 7 more teams on the exact line, worth about 21 points. Teams picked differs by about 1 a season, worth about 3 points.
 - **Middle lines are the weakest spot.** Exact rate on lines 5-8 was 0.43 for v2.0 against 0.57 for the group. Lines 1-4 were 0.72 against 0.85.
-- **Selection:** v2.0 had 14 wrong teams over seven seasons, and **all 9 of the group left out every one of them.** Most were power-conference teams with NET 33-56: Clemson, NC State, TCU, Louisville, Oklahoma twice, SMU, Texas A&M, Seton Hall, West Virginia, Auburn. Two were mid-majors: Indiana State and North Texas.
+- **Selection (corrected 2026-11-14, see below):** v2.0 had 14 wrong teams over seven seasons. The group shared 5 of them, mostly: TCU 2019, Louisville 2021, Texas A&M 2022, Oklahoma 2024, West Virginia 2025. It mostly avoided the other 9: Clemson, NC State, Oklahoma 2022, SMU, North Texas, Indiana State, Seton Hall, Auburn. The group averaged about 1.1 wrong teams a season, against 1.86 for v2.0.
 - **Non-power at-large teams:** v2.0 put them too low (higher line numbers) by more than a line in 2019 (+1.14) and 2026 (+1.33), and by +0.56 in 2022. The group was within about 0.3 of zero in each. 2023 went the other way (-0.50).
 - **Small-conference champions are v2.0's biggest single misses, in both directions:** Colgate 2021 (seed 14, v2.0 line 7, NET 9), Loyola Chicago 2021 (8 vs 6), Memphis 2023 (8 vs 5), Florida Atlantic 2023 (9 vs 6), Murray State 2022 (7 vs 10). The group got all of these within a line.
 - 30 team-seasons fit the list rule (75%+ of the group within one line, v2.0 off by 2+ or missing). v2.0's line was too high for 9, too low for 13, and the team was missing for 8.
@@ -62,5 +62,8 @@ Torvik's rating gaps don't explain v2.0's misses. The correlation was negative i
 
 ### What could come next (not yet run)
 At most two hypotheses, each needing its own committed test:
-1. **Selection:** why the committee and every consistent bracketologist rejected v2.0's 14 wrong teams, mostly power-conference teams with NET 33-56. The test would be one free-data feature for that profile.
+1. **Selection:** why v2.0 picks power-conference teams with NET 33-56 that the committee leaves out. The test would be one free-data feature for that profile.
 2. **Seeding small-conference champions and non-power at-large teams.** These are the largest misses, and they go both ways.
+
+### Correction (2026-11-14)
+The first version of this section said all 9 left out every one of v2.0's wrong teams. That was wrong. `bracketmatrix.parse` only reads the rows for teams in the actual field, so a bracket's wrong teams were never visible, and every "group had it in 0/n" count was 0 by construction. `research/matrix_full.py` also reads the "other at-large" rows. Its pick counts match the Matrix's own reported numbers for every entry in every season. The corrected selection numbers are above. Everything else in this section used only teams in the actual field, so it isn't affected.

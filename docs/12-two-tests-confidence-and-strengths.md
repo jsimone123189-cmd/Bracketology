@@ -40,3 +40,33 @@ For each of the nine (docs/11), per season entered:
 **What they weight:** pooled over seasons, a regression of each bracketologist's line on standardized team-sheet numbers: log NET, WAB, SOR, our rating, Q1 wins, Q1 losses, conference record, non-conference schedule, power conference, automatic bid. The same regression is run for the committee and for v2.0. The output shows where a strong bracketologist weights things more like the committee than v2.0 does, and where the group is weak and v2.0 is not.
 
 This part is descriptive. The group's brackets are never a model input or weight. Any idea it suggests needs its own committed test.
+
+## Results (2026-11-14)
+Output: `research/tests12_output.txt`. The control reproduced. Coverage: conference and non-conference games were found for every team in the field (one 2021 team had no non-conference games).
+
+**Test 1, conference record, failed:** 334 326 347 344 329 363 356. Mean -0.1, better in 0 seasons. It changed one wrong team in seven seasons. Note: this test was motivated by the docs/11 selection claim, which turned out to be wrong (see the correction there). The test itself is valid, and it failed.
+
+**Test 2, non-conference schedule for non-power teams, failed:** 331 330 336 340 329 359 360. Mean -2.1, better in 2, worst -11.
+
+**Confidence: it separates the risky teams, but its direction of error is not predictable.**
+
+| Confidence | Teams | Exact line | Wrong team | Mean seed error | Off by 2+ |
+|---|---|---|---|---|---|
+| Under 0.3 | 117 | 49% | 3% | 0.69 | 14% |
+| 0.3-0.5 | 102 | 44% | 8% | 0.78 | 17% |
+| 0.5-0.7 | 180 | 71% | 1% | 0.30 | 1% |
+| 0.7 and up | 77 | 79% | 0% | 0.21 | 0% |
+
+- Nearly every miss of two or more lines, and most wrong teams, come from teams under 0.5. That is about 31 teams a season.
+- The probabilities themselves are not well calibrated. The low bins were right more often than stated, and the Brier score is no better than a constant. Use it as a ranking of risk, not as a percentage.
+- No group's signed error had a consistent direction: 4, 4, 2 and 3 of 7 seasons, against the 6 needed. So there's no fixed adjustment to make, and Test 3 wasn't run. Low-confidence misses go both ways at about equal rates.
+
+**Group strengths:**
+- **Non-power automatic bids:** every one of the nine beats v2.0 in most seasons. Bauer and HHD-JT did it in 7 of 7. They average 0.19-0.26 lines of error, against 0.40 for v2.0.
+- **Lines 5-8 exact rate:** all nine beat v2.0, 0.54-0.62 against 0.43. Dom was best, Bauer and Sluder the most consistent (6 of 7).
+- **Non-power at-large:** the group averaged 0.35-0.54 lines of error, against 0.79. That's less consistent: 3-5 seasons of 5-7.
+- The output's "wrong" rows are invalid, because they used the parser that can't see wrong teams. The corrected figures are in docs/11.
+
+**What they weight:** in the pooled regression, the clearest difference is automatic bids. Holding the numbers equal, the committee places an automatic bid about 0.20 lines worse, and the nine do the same (0.11-0.23). v2.0 does not (-0.01), because automatic-bid status isn't in its seed model. The nine also put less weight than the committee on Q1 losses (0.25-0.36, against 0.47) and on power conference (-0.44 to -0.52, against -0.62). Their regressions are nearly identical to each other's, so they behave as one style, not nine.
+
+**Candidate next test (not run):** add automatic-bid status to the seed model. This is the one thing the nine and the committee do that v2.0 can't, and it lines up with v2.0's weakest area. It would be the fourth feature test on these seven seasons, so the chance of a lucky pass is higher, and shadow tracking would be essential.
