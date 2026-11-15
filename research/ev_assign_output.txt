@@ -1,0 +1,11 @@
+2019 {'control': 335, 'T23 empirical EV': 335, 'normal EV (reported)': 335} exact {'control': 40, 'T23 empirical EV': 40, 'normal EV (reported)': 40} | teams moved 0 model-predicted EV gain -0.00 (normal 0.00) | band residual mean [0.35, 0.6, -0.86, -0.14]
+2021 {'control': 326, 'T23 empirical EV': 326, 'normal EV (reported)': 326} exact {'control': 33, 'T23 empirical EV': 33, 'normal EV (reported)': 33} | teams moved 0 model-predicted EV gain 0.00 (normal 0.00) | band residual mean [0.18, 0.59, -0.86, -0.07]
+2022 {'control': 347, 'T23 empirical EV': 347, 'normal EV (reported)': 347} exact {'control': 45, 'T23 empirical EV': 45, 'normal EV (reported)': 45} | teams moved 0 model-predicted EV gain -0.00 (normal 0.00) | band residual mean [0.33, 0.89, -1.13, -0.17]
+2023 {'control': 344, 'T23 empirical EV': 344, 'normal EV (reported)': 344} exact {'control': 42, 'T23 empirical EV': 42, 'normal EV (reported)': 42} | teams moved 0 model-predicted EV gain 0.00 (normal -0.00) | band residual mean [0.25, 0.97, -1.14, -0.14]
+2024 {'control': 329, 'T23 empirical EV': 329, 'normal EV (reported)': 329} exact {'control': 37, 'T23 empirical EV': 37, 'normal EV (reported)': 37} | teams moved 0 model-predicted EV gain -0.00 (normal 0.00) | band residual mean [0.41, 0.6, -1.15, -0.14]
+2025 {'control': 363, 'T23 empirical EV': 363, 'normal EV (reported)': 363} exact {'control': 49, 'T23 empirical EV': 49, 'normal EV (reported)': 49} | teams moved 0 model-predicted EV gain 0.00 (normal 0.00) | band residual mean [0.29, 0.86, -1.09, -0.17]
+2026 {'control': 356, 'T23 empirical EV': 356, 'normal EV (reported)': 356} exact {'control': 45, 'T23 empirical EV': 45, 'normal EV (reported)': 45} | teams moved 0 model-predicted EV gain -0.00 (normal 0.00) | band residual mean [0.32, 0.86, -1.35, -0.17]
+control reproduces: True
+control               [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]
+T23 empirical EV      [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]
+normal EV (reported)  [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]

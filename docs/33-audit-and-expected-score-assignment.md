@@ -31,3 +31,16 @@ v2.0's field and predicted order are unchanged. Only the mapping of order to lin
 **Judged:** Test 23 against v2.0's straight fill. Also reported, not judged: the same with a normal distribution using the band spreads (as docs/12), and the expected-score gain the model itself predicted against the realized gain.
 
 Bar: +3 mean, better in at least 5 of 7, no season worse than -5. The control must reproduce 335 326 347 344 329 363 356. Also reported: exact seeds and Matrix percentiles. This is variant 83 or so on these seasons, so anything that passes goes to 2027 shadow tracking first.
+
+## Results (2026-11-15)
+`research/ev_assign_output.txt`. The control reproduced.
+- **Test 23 failed with exactly zero effect.** The expected-score assignment moved 0 teams in all seven seasons, with both the empirical and the normal distributions. The model's own predicted gain was 0.00 every season.
+- **Why:** each team's line probabilities are unimodal and centered near its predicted position, and line capacities are fixed. Under those conditions, filling straight down the order already maximizes expected points. No better line mapping exists for v2.0's order.
+- **Consequence for the research problem:** all of the roughly 20-point gap is in the order itself (which team is ahead of which), none in turning an order into lines. Direction A is closed. Scoring-aware decoding can't help unless the order improves.
+
+## Hypothesis 2 diagnostic: where the owner's 2026 gain came from
+`research/jay_2026_review_output.txt`. The owner's 2026 Matrix bracket (370) against v2.0 held-out (356), team by team, split by v2.0's confidence (docs/12).
+- He differed from v2.0 on 23 teams, for a net of +14 points.
+- **13 of those were on v2.0's low-confidence list (31 teams), worth +10.** The other 10 were worth +4, all from Miami (OH): v2.0 had Auburn, he had Miami (OH), who got in.
+- **The direction of his gains:** he moved non-power at-large teams up (Saint Louis 11→9, Saint Mary's 8→7, Santa Clara 11→10) and power-conference teams in the middle lines down (Texas A&M 9→10, SMU 10→11, TCU 8→9, Georgia 7→8). That matches v2.0's known 2026 bias (docs/11: non-power at-large placed +1.33 lines too low in 2026). But that bias isn't consistent across seasons (docs/11: 2023 went the other way; docs/12: 4 of 7 seasons), so no fixed rule can capture it. A human reading the current season can.
+- One season can't establish a lasting edge. It does show the review list is where his judgment pays: 71% of his net gain came from about 40% of his changes, and all of those were on the list.

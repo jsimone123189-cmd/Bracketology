@@ -1,0 +1,28 @@
+field: v2 wrong teams ['auburn'] | Jay wrong teams []
+teams where Jay differed from v2.0: 23; net points Jay minus v2.0: +14
+  among v2.0 confidence < 0.5: 13 teams, net +10
+  among v2.0 confidence >= 0.5 or not in v2 field: 10 teams, net +4
+v2.0 low-confidence list size: 31
+   miamioh              actual 11 v2 None Jay 10 conf None gain +4
+   saintlouis           actual 9 v2 11 Jay 9 conf 0.41 gain +3
+   byu                  actual 6 v2 7 Jay 6 conf 0.29 gain +2
+   texasaandm           actual 10 v2 9 Jay 10 conf 0.35 gain +2
+   saintmarysca         actual 7 v2 8 Jay 7 conf 0.29 gain +2
+   smu                  actual 11 v2 10 Jay 11 conf 0.25 gain +2
+   georgia              actual 8 v2 7 Jay 8 conf 0.28 gain +2
+   gonzaga              actual 3 v2 4 Jay 3 conf 0.62 gain +2
+   umbc                 actual 16 v2 15 Jay 16 conf 0.59 gain +2
+   furman               actual 15 v2 16 Jay 15 conf 0.91 gain +2
+   tcu                  actual 9 v2 8 Jay 9 conf 0.29 gain +2
+   kennesawstate        actual 14 v2 15 Jay 14 conf 0.74 gain +2
+   santaclara           actual 10 v2 11 Jay 10 conf 0.45 gain +2
+   miamifl              actual 7 v2 6 Jay 8 conf 0.29 gain +0
+   queensnc             actual 15 v2 14 Jay 16 conf 0.59 gain +0
+   auburn               actual None v2 11 Jay None conf 0.29 gain +0
+   missouri             actual 10 v2 10 Jay 11 conf 0.29 gain -2
+   siena                actual 16 v2 16 Jay 15 conf 0.81 gain -2
+   michiganstate        actual 3 v2 3 Jay 2 conf 0.53 gain -2
+   purdue               actual 2 v2 2 Jay 3 conf 0.62 gain -2
+   ucf                  actual 10 v2 10 Jay 11 conf 0.32 gain -2
+   virginia             actual 3 v2 3 Jay 4 conf 0.62 gain -2
+   utahstate            actual 9 v2 9 Jay 7 conf 0.36 gain -3
