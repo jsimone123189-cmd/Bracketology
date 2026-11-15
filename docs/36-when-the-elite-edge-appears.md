@@ -44,3 +44,20 @@ Per season:
 - **Already there before:** the D-7 gap is at least 70% of the final gap on average. Timing isn't the source; the edge is judgment or crowd information held all season.
 - Otherwise: mixed, reported as such.
 - **Game-information share** = v2.0's improvement ÷ the group's improvement over the final week. It estimates how much of the elite's late improvement a statistical model also gets from the new games alone.
+
+## Results (2026-11-15)
+`research/edge_timing_output.txt`, `research/edge_timing_fetch_output.txt`. Snapshots were found for 2021, 2022, 2023, 2025 and 2026. 2019 and 2024 had no Matrix capture inside the pre-set window and are excluded. 4-7 elite brackets per season were fresh at D-7.
+
+| Season | v2.0 exact D-7 → final | Elite exact D-7 → final | Gap D-7 | Gap final |
+|---|---|---|---|---|
+| 2021 | 16 → 33 | 24.7 → 48.8 | +8.7 | +15.8 |
+| 2022 | 27 → 45 | 26.9 → 46.0 | -0.1 | +1.0 |
+| 2023 | 28 → 42 | 33.8 → 52.0 | +5.8 | +10.0 |
+| 2025 | 37 → 49 | 29.0 → 51.7 | -8.0 | +2.7 |
+| 2026 | 32 → 45 | 28.0 → 55.0 | -4.0 | +10.0 |
+| **Mean** | **+14.8** | **+22.2** | **+0.5** | **+7.9** |
+
+- **Verdict, by the fixed rule: the edge is built in the final week.** The gap grows by +7.4 exact seeds on average, positive in 5 of 5 seasons. A week out, v2.0 and the elite are essentially tied (+0.5). By Selection Sunday they lead by 7.9.
+- **Game-information share is 67%.** From the new games alone, v2.0 gets about two-thirds of the improvement the elite make in the final week. The remaining third, about 7 exact seeds or 21 points, comes from how they process the final week, not from the games' raw statistics.
+- **Bias check:** at D-7 the elite brackets can be up to 3 days old, while v2.0 uses NET from D-9 to D-7 and every game through D-7. In 2025 the Matrix snapshot is from D-9 but v2.0 used NET through D-7. Both lean toward v2.0 at D-7, so the true D-7 gap may be somewhat larger than +0.5. The growth is still positive in every season.
+- **What this rules in:** whatever separates the elite isn't held all season. It's what they do with championship week: conference tournament results, Sunday-final contingencies, the bubble shake-out, and converging on each other's brackets. That narrows Path A to one question: **how the committee weighs championship-week results compared with the regular season.**
