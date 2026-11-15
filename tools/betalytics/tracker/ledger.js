@@ -369,6 +369,34 @@
    * data decides. canFade(r) says whether the other side is a near -110 two-way bet.
    * Returns {groups: {key: realEdge + verdict}, picks: [{r, group, e, action}]} for upcoming picks with an action.
    */
+  var MIN_TREND_N = 30;   // decided picks needed in each half of a trend comparison
+  /**
+   * Recent form vs earlier for a group: the latest third of its decided picks (at least 30) against everything
+   * before. flag 'up' / 'down' only when the two hit rates differ by more than 2 standard errors (a two-proportion
+   * z-test); 'none' when they don't; 'few' when either side has under 30 picks. versions = Betalytics model
+   * versions in the group, oldest first, with when each first appeared, so a trend can be lined up with a model update.
+   */
+  function trendOf(list) {
+    var d = list.filter(function (r) { return r.res && r.res.r !== 'P'; })
+      .sort(function (a, b) { return Date.parse(a.g.t) - Date.parse(b.g.t); });
+    var vers = [], seen = {};
+    d.forEach(function (r) {
+      var v = r.g.ver || r.p.ver || '';
+      if (v && !seen[v]) { seen[v] = true; vers.push({ ver: v, from: r.g.t }); }
+    });
+    var n = d.length, k = Math.max(MIN_TREND_N, Math.floor(n / 3));
+    if (n - k < MIN_TREND_N) return { flag: 'few', n: n, versions: vers };
+    var early = d.slice(0, n - k), late = d.slice(n - k);
+    var we = early.filter(function (r) { return r.res.r === 'W'; }).length;
+    var wl = late.filter(function (r) { return r.res.r === 'W'; }).length;
+    var pe = we / early.length, pl = wl / late.length, pp = (we + wl) / n;
+    var se = Math.sqrt(pp * (1 - pp) * (1 / early.length + 1 / late.length)) || 1;
+    var z = (pl - pe) / se;
+    return { flag: Math.abs(z) >= 2 ? (z > 0 ? 'up' : 'down') : 'none', z: z, n: n,
+             earlyN: early.length, earlyHit: pe, lateN: late.length, lateHit: pl,
+             lateFrom: late[0].g.t, versions: vers };
+  }
+
   var MIN_MOVE_N = 30;    // picks with a closing line before a timing call
   /** How the line moved from Betalytics' number to the close, in points; positive = Betalytics' side got worse. */
   function lineMove(list) {
@@ -395,6 +423,7 @@
       var e = realEdge(hist[k], { byUnits: isUnits(sample) });
       e.verdict = verdict(e, canFade(sample));
       e.move = moveOf[k] || { n: 0 };
+      e.trend = trendOf(hist[k]);
       groups[k] = e;
     });
     var now = Date.now(), picks = [];
@@ -447,7 +476,7 @@
     return out;
   }
 
-  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, lineMove: lineMove, betPlan: betPlan, MIN_N: MIN_N, PRIOR: PRIOR,
+  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, lineMove: lineMove, betPlan: betPlan, trendOf: trendOf, MIN_N: MIN_N, PRIOR: PRIOR,
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,

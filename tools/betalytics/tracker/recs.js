@@ -17,6 +17,35 @@
     return (side === 'over' ? 'Over ' : 'Under ') + line;
   }
 
+  function day(t) { return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+
+  /** Did the group's Betalytics model version change, and when (the latest change)? */
+  function modelChange(tr) {
+    var v = tr && tr.versions;
+    return v && v.length > 1 ? v[v.length - 1] : null;
+  }
+
+  function trendCell(tr) {
+    if (!tr || tr.flag === 'few') return '–';
+    var arrow = tr.flag === 'up' ? '↑ ' : tr.flag === 'down' ? '↓ ' : '';
+    var mc = modelChange(tr);
+    return arrow + pct(tr.lateHit) + ' last ' + tr.lateN + ' (was ' + pct(tr.earlyHit) + ')' + (mc ? ' · model changed ' + day(mc.from) : '');
+  }
+
+  /** A sentence for a recommendation card when its group's recent form has really changed. */
+  function trendNote(tr) {
+    if (!tr || (tr.flag !== 'up' && tr.flag !== 'down')) return '';
+    var mc = modelChange(tr);
+    var s = 'Trend: Betalytics’ picks in this group are hitting ' + pct(tr.lateHit) + ' over their last ' + tr.lateN +
+      ' (since ' + day(tr.lateFrom) + '), against ' + pct(tr.earlyHit) + ' before. ';
+    if (mc && Date.parse(mc.from) >= Date.parse(tr.lateFrom) - 3 * 864e5) {
+      s += 'That lines up with a Betalytics model update on ' + day(mc.from) + ', so the change may be real.';
+    } else {
+      s += 'No model update explains it, so treat it as a streak until it lasts.';
+    }
+    return s;
+  }
+
   /** "When to bet" and "worst line" for a recommended pick, from Ledger.betPlan. */
   function planText(it) {
     var pl = Ledger.betPlan(it), mv = pl.move, parts = [];
@@ -64,6 +93,8 @@
         '; ' + pts(edge) + ' pts over break-even.';
       mid.appendChild(h('div', 'meta', why));
       mid.appendChild(h('div', 'plan', planText(it)));
+      var tn = trendNote(it.e.trend);
+      if (tn) mid.appendChild(h('div', 'plan', tn));
       s.appendChild(mid);
       var res = h('div', 'res');
       res.appendChild(h('span', 'tag rec-' + it.action, v[0]));
@@ -76,7 +107,7 @@
     var keys = o.order(Object.keys(rec.groups));
     var wrap = h('div', 'scroll');
     var t = h('table'), head = h('tr');
-    ['Group', 'Decided', 'Record', 'Hit %', 'Units', 'Est. long-run hit', 'Est. edge following', 'Est. edge fading', 'Line move', 'Verdict'].forEach(function (c) { head.appendChild(h('th', null, c)); });
+    ['Group', 'Decided', 'Record', 'Hit %', 'Units', 'Est. long-run hit', 'Est. edge following', 'Est. edge fading', 'Line move', 'Recent form', 'Verdict'].forEach(function (c) { head.appendChild(h('th', null, c)); });
     var thead = h('thead'); thead.appendChild(head); t.appendChild(thead);
     var tb = h('tbody');
     keys.forEach(function (k) {
@@ -91,6 +122,9 @@
       });
       var mv = e.move || { n: 0 };
       tr.appendChild(h('td', null, mv.n ? (mv.mean > 0 ? '+' : mv.mean < 0 ? '−' : '') + Math.abs(mv.mean).toFixed(2) + ' (' + mv.n + ')' : '–'));
+      var tdT = h('td', null, trendCell(e.trend));
+      if (e.trend && (e.trend.flag === 'up' || e.trend.flag === 'down')) tdT.className = e.trend.flag === 'up' ? 'pos' : 'neg';
+      tr.appendChild(tdT);
       var vd = VERDICT[e.verdict], td = h('td'); td.appendChild(h('span', 'sig ' + vd[1], vd[0])); tr.appendChild(td);
       tb.appendChild(tr);
     });
@@ -100,7 +134,10 @@
       'games barely moves it and a real edge has to show up over hundreds. Est. edge is percentage points above break-even ' +
       '(fading assumes the other side at −110). A verdict needs 100+ decided picks and 80% confidence. Line move is how far the ' +
       'line moved from Betalytics’ number to the close, in points (picks with a closing line in brackets); plus means ' +
-      'Betalytics’ side got more expensive by tip, so following it pays to bet early and fading it pays to wait.');
+      'Betalytics’ side got more expensive by tip, so following it pays to bet early and fading it pays to wait. ' +
+      'Recent form compares the latest third of a group’s picks with everything before; ↑ or ↓ marks a change bigger than ' +
+      'luck would explain. Streaks mostly fade, so a trend alone doesn’t change the verdict, but one that starts with a ' +
+      'Betalytics model update (“model changed”) is worth taking seriously.');
     box.appendChild(h('h3', 'subh', 'Real edge by group'));
     box.appendChild(cap);
     box.appendChild(wrap);
