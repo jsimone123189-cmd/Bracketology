@@ -1,0 +1,38 @@
+== Part 1: overreaction audit (positive residual = committee placed the team WORSE than v2.0)
+2019: excluded (v2 wrong teams) 3; at-large corr +0.371 (n 33), champions corr +0.368 (n 32), partial|position +0.441
+     biggest out-performers: Saint Louis surprise +2.11 v2 pos 53 committee 53 resid +0; Gardner-Webb surprise +1.80 v2 pos 60 committee 63 resid +3; Bradley surprise +1.57 v2 pos 63 committee 61 resid -2
+2021: excluded (v2 wrong teams) 1; at-large corr +0.231 (n 36), champions corr -0.236 (n 31), partial|position +0.208
+     biggest out-performers: Georgetown surprise +2.80 v2 pos 48 committee 47 resid -1; App State surprise +2.49 v2 pos 68 committee 68 resid +0; Oregon St. surprise +2.34 v2 pos 50 committee 46 resid -4
+2022: excluded (v2 wrong teams) 3; at-large corr -0.114 (n 33), champions corr +0.193 (n 32), partial|position +0.235
+     biggest out-performers: Richmond surprise +2.26 v2 pos 52 committee 49 resid -3; Virginia Tech surprise +1.97 v2 pos 37 committee 46 resid +9; Akron surprise +1.92 v2 pos 54 committee 54 resid +0
+2023: excluded (v2 wrong teams) 1; at-large corr +0.121 (n 35), champions corr +0.093 (n 32), partial|position +0.234
+     biggest out-performers: Grand Canyon surprise +1.87 v2 pos 57 committee 57 resid +0; Texas Southern surprise +1.84 v2 pos 67 committee 66 resid -1; Southeast Mo. St. surprise +1.73 v2 pos 66 committee 67 resid +1
+2024: excluded (v2 wrong teams) 3; at-large corr +0.250 (n 33), champions corr -0.292 (n 32), partial|position +0.217
+     biggest out-performers: NC State surprise +2.85 v2 pos 45 committee 45 resid +0; Wagner surprise +2.28 v2 pos 68 committee 68 resid +0; Duquesne surprise +2.06 v2 pos 49 committee 46 resid -3
+2025: excluded (v2 wrong teams) 1; at-large corr +0.230 (n 36), champions corr +0.261 (n 31), partial|position +0.216
+     biggest out-performers: Saint Francis surprise +1.85 v2 pos 68 committee 68 resid +0; Michigan surprise +1.79 v2 pos 15 committee 17 resid +2; Mount St. Mary's surprise +1.63 v2 pos 64 committee 66 resid +2
+2026: excluded (v2 wrong teams) 1; at-large corr +0.158 (n 36), champions corr -0.003 (n 31), partial|position +0.105
+     biggest out-performers: Prairie View surprise +2.13 v2 pos 68 committee 68 resid +0; Idaho surprise +1.79 v2 pos 59 committee 60 resid +1; Kennesaw St. surprise +1.62 v2 pos 60 committee 58 resid -2
+positive in: at-large 6/7, champions 4/7, partial 7/7 -> survives: True
+
+== Part 2: v2.0 line moves D-7 -> Selection Sunday (2021-26)
+2021 résumé moves: Abilene Christian 14->13 (seed 14, CT +0.24) -; Grand Canyon 16->14 (seed 15, CT +0.63); Houston 3->2 (seed 2, CT +0.34) +; Loyola Chicago 7->6 (seed 8, CT +0.55) -; Morehead St. 15->14 (seed 14, CT +1.41) +; San Diego St. 10->7 (seed 6, CT +0.63) +; St. Bonaventure 9->8 (seed 9, CT +1.11) -; Winthrop 13->12 (seed 12, CT +0.33) +
+2022 résumé moves: Houston 5->4 (seed 5, CT +0.51) -; Jacksonville St. 16->15 (seed 15, CT -0.39) +; Longwood 16->15 (seed 14, CT +1.14) +; Montana St. 15->14 (seed 14, CT +0.96) +; Villanova 3->2 (seed 2, CT +0.79) +
+2023 résumé moves: Drake 13->12 (seed 12, CT +1.02) +; Fla. Atlantic 7->6 (seed 9, CT +0.69) -; Gonzaga 3->2 (seed 3, CT +0.60) -; Iona 14->13 (seed 13, CT +0.26) +; Montana St. 15->14 (seed 14, CT +0.86) +; UC Santa Barbara 14->13 (seed 14, CT +1.00) -
+2024 résumé moves: Colgate 15->14 (seed 14, CT +0.36) +; Grand Canyon 12->11 (seed 12, CT +0.52) -; Longwood 16->15 (seed 16, CT +1.85) -; McNeese 13->12 (seed 12, CT +0.20) +; Morehead St. 15->14 (seed 14, CT +0.89) +; Samford 13->12 (seed 13, CT +0.63) -; South Dakota St. 16->15 (seed 15, CT +1.05) +
+2025 résumé moves: Bryant 16->15 (seed 15, CT +0.57) +; Grand Canyon 14->13 (seed 13, CT +0.98) +; St. John's (NY) 3->2 (seed 2, CT +0.99) +; UNCW 15->14 (seed 14, CT +0.88) +
+2026 résumé moves: Hawaii 14->13 (seed 13, CT +0.80) +; High Point 13->12 (seed 12, CT +0.44) +; North Dakota St. 14->13 (seed 14, CT +0.46) -; Queens (NC) 15->14 (seed 15, CT +1.42) -; UMBC 16->15 (seed 16, CT +0.62) -; UNI 13->12 (seed 12, CT +1.27) +
+auto    beneficial 63 harmful 41 | exact gained 105 lost 34 | net exact +71
+resume  beneficial 22 harmful 13 | exact gained 20 lost 11 | net exact +9
+MAXIMUM OPPORTUNITY (résumé moves, 6 seasons): freezing all = -9 exact (-1.5/season); perfect selective freeze <= 11 exact (1.8/season)
+
+== Part 4: Anchor-CT, exploratory leave-one-season-out
+2019 337 exact 41
+2021 327 exact 33
+2022 334 exact 38
+2023 342 exact 40
+2024 316 exact 30
+2025 350 exact 42
+2026 358 exact 46
+control  [335, 326, 347, 344, 329, 363, 356] mean 342.9 exact 41.6
+Anchor-CT [337, 327, 334, 342, 316, 350, 358] mean 337.7 diff -5.1 better 3 worse 4 worst -13 bar-for-information False exact 38.6 (-3.0) lines5-8 exact 6.0 (control 6.9) pct [25, 9, 16, 13, 4, 25, 12]

@@ -34,3 +34,38 @@ Each is labeled **beneficial** (moved closer to the committee's seed), **harmful
 
 ## Part 5: 2027 shadow
 If the rule is technically feasible, it's frozen as a research module (`src/bracketology/shadow_anchor.py`, unused by production) with a unit test, and listed in docs/38 as candidate B2b. Wiring it into the daily snapshot needs the owner's approval. A poor exploratory result (worse than -5 mean) is reported, and then the shadow isn't recommended.
+
+## Results (2026-11-15), exploratory
+`research/anchor_ct_output.txt`.
+
+### Part 1: the overreaction sign survives the audit
+- **No sign error.** In the printed examples, out-performers with positive residuals were placed worse by the committee, for example Virginia Tech 2022 (surprise +1.97, v2.0 position 37, committee 46).
+- **At-large teams only:** positive in 6 of 7 seasons. **Partial correlation controlling for predicted position:** positive in 7 of 7 (+0.44, +0.21, +0.24, +0.23, +0.22, +0.22, +0.11).
+- **Automatic-bid winners only:** mixed (4 of 7), so the effect isn't driven by champions.
+- **Selection effect:** only 1-3 field teams a season were excluded as v2.0's wrong picks, so it's small.
+- The pattern is real, and it's about at-large teams.
+
+### Part 2: the actual movements (2021-26)
+| v2.0 line changes D-7 → final | Beneficial | Harmful | Exact gained | Exact lost | Net exact |
+|---|---|---|---|---|---|
+| Automatic-bid effect (status changed, or entered or left the field) | 63 | 41 | 105 | 34 | +71 |
+| Résumé change | 22 | 13 | 20 | 11 | +9 |
+
+- v2.0 makes only about **6 résumé-driven line changes a season**, and they're **net beneficial** (22 beneficial, 13 harmful).
+- Most are small-conference champions moving one line as their résumé finalizes. The examples are listed in the output.
+- **Maximum opportunity for any anchoring rule:** freezing every résumé move = **-9 exact** (-1.5 a season). A perfect selective freeze could recover at most **11 exact over six seasons, 1.8 a season (about 5 points)**.
+- **Anchoring can't close the roughly 8-exact-seed gap.**
+
+### Part 4: Anchor-CT, exploratory leave-one-season-out
+| | 2019 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | Mean | Exact |
+|---|---|---|---|---|---|---|---|---|---|
+| v2.0 | 335 | 326 | 347 | 344 | 329 | 363 | 356 | 342.9 | 41.6 |
+| Anchor-CT | 337 | 327 | 334 | 342 | 316 | 350 | 358 | 337.7 | 38.6 |
+
+-5.1 mean, better in 3, worse in 4, worst -13. Exact seeds -3.0, lines 5-8 exact 6.0 against 6.9. It fails even the information-only bar.
+
+### Correction to docs/39's interpretation
+docs/39 said the elite edge looked like "restraint plus accuracy." Part 2 contradicts the restraint half. v2.0's own championship-week résumé moves are few and net helpful, and stopping them costs points. The level-based overreaction (Part 1) is real but small, a weak correlation of about 0.2. The elite gain is mostly **moves v2.0 never makes**: about 24 line changes per elite bracket over the week, 77% in the right direction, against about 6 résumé moves a season for v2.0. That's information or judgment outside the model, not over-movement by the model.
+
+### Part 5: shadow decision
+By the rule fixed above (worse than -5 mean → not recommended), **Anchor-CT is not recommended as a 2027 shadow.** `src/bracketology/shadow_anchor.py` stays as documented, unused research code, and docs/38 is unchanged. B2 stays v2.0 plus head-to-head and common opponents.
