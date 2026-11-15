@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 89 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 90 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -73,6 +73,18 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Saturday-night cutoff** (every feature recomputed without Selection Sunday's games; 7-9 field teams play that day): 334 332 339 349 330 359 356, -0.1, better in 3, worse in 3. Failed.
 - **Review-process diagnostic** (the nine plus RFS as proxy reviewers, substituting their lines into v2.0's bracket; diagnostic only): low-confidence teams only +568 pooled, high-confidence only +493, all teams +1061. That's about +8.4 a season from low-only review, gaining in 6 of 7 seasons. **Expert review pays across the whole bracket. The low-confidence list is about 1.5 times denser in gains, but it isn't a sharp filter.**
 - **Evidence summary:** elite agreement comes from shared crowd information (.998 with the consensus). The best automated Matrix entry, T-Rank, averages 348.9, below the human median of 354.0.
+
+## KEY NEW FINDING: the elite edge is built in championship week (docs/36)
+- **Method:** Internet Archive snapshots of bracketmatrix.com one week before Selection Sunday (D-7), for 2021, 2022, 2023, 2025 and 2026 (no usable capture for 2019 or 2024). Elite brackets counted only if updated within 3 days. v2.0 was rebuilt as of D-7 with timestamp-correct NET (Wayback ncaa.com), games through D-7, and only the conference champions decided by then. Retrospective only; never a model input.
+- **Exact seed lines against the final committee bracket:** v2.0 went from 28.0 a week out to 42.8 at the end (mean), the elite from 28.5 to 50.7.
+- **The gap a week out is +0.5 (tied). On Selection Sunday it's +7.9.** It grew in 5 of 5 seasons.
+- **Game-information share:** v2.0 gets 67% of the elite's final-week improvement from the new games alone. The other third (about 7 exact seeds, about 21 points) is how the elite process championship week: conference-tournament results, Sunday-final contingencies, the bubble, and convergence on each other.
+- **Implication for Path A:** the target is how the committee weighs championship-week results compared with the regular season, and nothing held all season. Experiments 01-35 used season-long features.
+
+## Path B and 2027 plan (docs/37, docs/38)
+- **Review page design:** neighbours panel, résumé comparison, head-to-head, metric disagreement, "why this could be wrong" flags, and an edit form that preserves line sizes.
+- **Ledger:** reason codes and confidence on every adjustment, graded per entry after the bracket.
+- **2027 tracking:** frozen v2.0, the shadow candidate (v2.0 plus head-to-head and common opponents), and model plus owner edits, all frozen at 12:00 ET on Selection Sunday.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
