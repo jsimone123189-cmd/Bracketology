@@ -36,3 +36,30 @@ V1 has **no information v2.0 lacks** (except the unknown G). The real difference
 
 ## 5. Hybrid (Test 24), only if Part 4 qualifies a situation
 If at least one situation favors V1: v2.0's order is kept, but the teams in every qualifying situation are re-ordered among their own slots by V1 score. Bar: +3 mean, better in at least 5 of 7, no season worse than -5. The control must reproduce 335 326 347 344 329 363 356. If no situation qualifies, no hybrid is run, and that is reported. A plain blend was already tested in docs/06 (75/25: +1.5 against the older base) and isn't repeated.
+
+## Results (2026-11-15)
+`research/v1_vs_v2_output.txt`. The control reproduced. V1-full faithful reproduced docs/06's independent figures exactly (309 335 314 317 308 350 348), a consistency check.
+
+| | 2019 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | Mean | Vs v2.0 | Exact |
+|---|---|---|---|---|---|---|---|---|---|---|
+| v2.0 | 335 | 326 | 347 | 344 | 329 | 363 | 356 | 342.9 | | 41.6 |
+| V1-full, faithful | 309 | 335 | 314 | 317 | 308 | 350 | 348 | 325.9 | -17.0 (better 1, worse 6) | 36.0 |
+| V1-full, rank clamp fixed | 309 | 335 | 318 | 317 | 320 | 354 | 351 | 329.1 | -13.7 | 37.6 |
+| V1-seed (v2.0's field) | 315 | 339 | 313 | 319 | 309 | 350 | 348 | 327.6 | -15.3 | 36.0 |
+
+**Disagreements.** Mean absolute seed error, v2.0 against V1, and the seasons V1 was better:
+- Predicted lines 1-4: 0.30 against 0.38 (1 of 7).
+- **Lines 5-8:** 0.85 against 1.04 (1 of 7).
+- Lines 9-12: 0.54 against 0.78 (0 of 7).
+- Lines 13-16: 0.25 against 0.43 (1 of 7).
+- **Small-conference champions:** 0.40 against 0.63 (1 of 7).
+- Non-power at-large: 0.79 against 0.75 (2 of 7).
+- Power at-large: 0.50 against 0.69 (0 of 7).
+
+No situation favors V1 in 6 or more seasons, so **Test 24 (hybrid) was not run**, per the rule.
+
+**Findings.**
+- V1 holds no information v2.0 lacks. Its distinct choices (quadratic rank shape, heavy Q4 penalty, hand weights) do worse than learned weights in every situation, including lines 5-8 and small-conference champions, where V1 is worse than v2.0.
+- **The one exception is 2021,** where V1 beat v2.0 by 9-13 points and 8 exact seeds. 2021 was the COVID season: few non-conference games, and v2.0's worst year. Fixed hand weights didn't inherit the other seasons' patterns, which hurt v2.0 that year. It doesn't repeat.
+- The rank-clamp fix helps V1 by +3.2 (2022, 2024-26). The R10 and L-N quirks have no effect on order.
+- **Caveat:** docs/06's 2026 run of the owner's real sheet scored 362, against v2.0's 356, but it used his own field and his seeds for 7 teams missing from the sheet, so it carries his judgment. With rebuilt inputs and no manual pieces, V1 scores 348 in 2026. On the real archived metrics (docs/06: 2021 337, 2022 316, 2023 326, 2025 364), V1 still trails v2.0 in 2022 and 2023, so better inputs don't change the conclusion.

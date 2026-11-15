@@ -1,0 +1,23 @@
+2019 {'control': 335, 'V1-full faithful': 309, 'V1-full clamped': 309, 'V1-seed (v2 field)': 315} exact {'control': 40, 'V1-full faithful': 33, 'V1-full clamped': 33, 'V1-seed (v2 field)': 33}
+2021 {'control': 326, 'V1-full faithful': 335, 'V1-full clamped': 335, 'V1-seed (v2 field)': 339} exact {'control': 33, 'V1-full faithful': 41, 'V1-full clamped': 41, 'V1-seed (v2 field)': 41}
+2022 {'control': 347, 'V1-full faithful': 314, 'V1-full clamped': 318, 'V1-seed (v2 field)': 313} exact {'control': 45, 'V1-full faithful': 31, 'V1-full clamped': 33, 'V1-seed (v2 field)': 31}
+2023 {'control': 344, 'V1-full faithful': 317, 'V1-full clamped': 317, 'V1-seed (v2 field)': 319} exact {'control': 42, 'V1-full faithful': 33, 'V1-full clamped': 33, 'V1-seed (v2 field)': 32}
+2024 {'control': 329, 'V1-full faithful': 308, 'V1-full clamped': 320, 'V1-seed (v2 field)': 309} exact {'control': 37, 'V1-full faithful': 30, 'V1-full clamped': 36, 'V1-seed (v2 field)': 31}
+2025 {'control': 363, 'V1-full faithful': 350, 'V1-full clamped': 354, 'V1-seed (v2 field)': 350} exact {'control': 49, 'V1-full faithful': 42, 'V1-full clamped': 44, 'V1-seed (v2 field)': 42}
+2026 {'control': 356, 'V1-full faithful': 348, 'V1-full clamped': 351, 'V1-seed (v2 field)': 348} exact {'control': 45, 'V1-full faithful': 42, 'V1-full clamped': 43, 'V1-seed (v2 field)': 42}
+control reproduces: True
+control               [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 exact 41.6 pct [21, 9, 39, 14, 10, 75, 10]
+V1-full faithful      [309, 335, 314, 317, 308, 350, 348] mean 325.9 diff -17.0 better 1 worse 6 worst -33 exact 36.0 pct [3, 19, 5, 4, 3, 25, 7]
+V1-full clamped       [309, 335, 318, 317, 320, 354, 351] mean 329.1 diff -13.7 better 1 worse 6 worst -29 exact 37.6 pct [3, 19, 6, 4, 5, 37, 8]
+V1-seed (v2 field)    [315, 339, 313, 319, 309, 350, 348] mean 327.6 diff -15.3 better 1 worse 6 worst -34 exact 36.0 pct [5, 23, 4, 4, 3, 25, 7]
+
+Disagreement analysis: mean absolute seed error, v2.0 vs V1-seed, teams in v2.0's field and the real field
+  pred lines 1-4       n/season [16, 16, 16, 16, 16, 16, 16]  v2 0.30  V1 0.38  V1 better in 1/7 (ties 2)  
+  pred lines 5-8       n/season [15, 16, 16, 16, 16, 16, 16]  v2 0.85  V1 1.04  V1 better in 1/7 (ties 0)  
+  pred lines 9-12      n/season [16, 17, 15, 17, 15, 17, 17]  v2 0.54  V1 0.78  V1 better in 0/7 (ties 2)  
+  pred lines 13-16     n/season [18, 18, 18, 18, 18, 18, 18]  v2 0.25  V1 0.43  V1 better in 1/7 (ties 0)  
+  small-conf champs    n/season [27, 26, 27, 27, 27, 26, 26]  v2 0.40  V1 0.63  V1 better in 1/7 (ties 0)  
+  non-power at-large   n/season [7, 8, 9, 8, 11, 4, 3]  v2 0.79  V1 0.75  V1 better in 2/7 (ties 2)  
+  power at-large       n/season [26, 28, 24, 27, 22, 32, 33]  v2 0.50  V1 0.69  V1 better in 0/7 (ties 2)  
+
+No situation favors V1 in 6+ seasons: Test 24 not run (docs/34 rule).
