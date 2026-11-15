@@ -1,0 +1,12 @@
+2019 {'control': 335, 'T8a dRatings order': 322, 'T8b committee+dRatings': 332} exact (all, 1-4, 5-8) {'control': (40, 11, 7), 'T8a dRatings order': (34, 9, 5), 'T8b committee+dRatings': (39, 11, 6)} T8a matches dRatings' line 59%
+2021 {'control': 326, 'T8a dRatings order': 322, 'T8b committee+dRatings': 326} exact (all, 1-4, 5-8) {'control': (33, 11, 4), 'T8a dRatings order': (32, 13, 2), 'T8b committee+dRatings': (35, 12, 5)} T8a matches dRatings' line 55%
+2022 {'control': 347, 'T8a dRatings order': 343, 'T8b committee+dRatings': 343} exact (all, 1-4, 5-8) {'control': (45, 13, 10), 'T8a dRatings order': (43, 13, 10), 'T8b committee+dRatings': (43, 13, 9)} T8a matches dRatings' line 59%
+2023 {'control': 344, 'T8a dRatings order': 341, 'T8b committee+dRatings': 344} exact (all, 1-4, 5-8) {'control': (42, 8, 5), 'T8a dRatings order': (41, 8, 5), 'T8b committee+dRatings': (42, 8, 5)} T8a matches dRatings' line 61%
+2024 {'control': 329, 'T8a dRatings order': 331, 'T8b committee+dRatings': 328} exact (all, 1-4, 5-8) {'control': (37, 12, 4), 'T8a dRatings order': (39, 11, 5), 'T8b committee+dRatings': (37, 11, 4)} T8a matches dRatings' line 70%
+2025 {'control': 363, 'T8a dRatings order': 368, 'T8b committee+dRatings': 363} exact (all, 1-4, 5-8) {'control': (49, 13, 9), 'T8a dRatings order': (51, 15, 10), 'T8b committee+dRatings': (49, 15, 9)} T8a matches dRatings' line 73%
+2026 {'control': 356, 'T8a dRatings order': 344, 'T8b committee+dRatings': 351} exact (all, 1-4, 5-8) {'control': (45, 13, 9), 'T8a dRatings order': (40, 11, 10), 'T8b committee+dRatings': (42, 11, 10)} T8a matches dRatings' line 64%
+control reproduces: True
+control                 [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact [41.6 11.6  6.9]
+T8a dRatings order      [322, 322, 343, 341, 331, 368, 344] mean 338.7 diff -4.1 better 2 worse 5 worst -13 PASS=False pct [7, 7, 27, 13, 13, 87, 6] all>=75 False exact [40.  11.4  6.7]
+T8b committee+dRatings  [332, 326, 343, 344, 328, 363, 351] mean 341.0 diff -1.9 better 0 worse 4 worst -5 PASS=False pct [18, 9, 27, 14, 10, 75, 8] all>=75 False exact [41.  11.6  6.9]
+exit 0

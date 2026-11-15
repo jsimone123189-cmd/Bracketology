@@ -14,3 +14,10 @@ Committed before running. The owner asked to reproduce the consistent bracketolo
 - **T8b, committee plus dRatings:** v2.0's committee pairs plus T8a's pairs, equal weight. dRatings' habits are kept where they agree with the committee and outvoted where they don't.
 
 Usual bar against v2.0, and the owner's standard: 75th percentile or better in all seven seasons. Also reported for each season: exact seeds, exact on lines 1-4 and 5-8, and how often T8a matches dRatings' line, which shows how reproducible its style is from free stats.
+
+## Results (2026-11-14): both failed
+`research/learn_dratings_output.txt`. The control reproduced.
+- **T8a, dRatings order:** 322 322 343 341 331 368 344. Mean -4.1, better in 2, worse in 5.
+- **T8b, committee plus dRatings:** 332 326 343 344 328 363 351. Mean -1.9, better in 0.
+- **Our free stats reproduce dRatings' exact line only 55-73% of the time** (59, 55, 59, 61, 70, 73, 64). Much of its bracket comes from information outside our stats: its own power rating, judgment, or the crowd.
+- Archived copies of its ratings near Selection Sunday exist only for 2021, so its rating can't be studied over seven seasons.
