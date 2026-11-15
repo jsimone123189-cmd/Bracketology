@@ -1,0 +1,16 @@
+   h2h only (docs/22) pair coefficients (trained without 2019): [0.407]
+   common only (reported) pair coefficients (trained without 2019): [0.151]
+   Test 10 h2h+common pair coefficients (trained without 2019): [0.414, 0.169]
+2019 {'control': 335, 'h2h only (docs/22)': 335, 'common only (reported)': 335, 'Test 10 h2h+common': 335} exact {'control': 40, 'h2h only (docs/22)': 40, 'common only (reported)': 40, 'Test 10 h2h+common': 40}
+2021 {'control': 326, 'h2h only (docs/22)': 326, 'common only (reported)': 326, 'Test 10 h2h+common': 330} exact {'control': 33, 'h2h only (docs/22)': 33, 'common only (reported)': 33, 'Test 10 h2h+common': 35}
+2022 {'control': 347, 'h2h only (docs/22)': 347, 'common only (reported)': 347, 'Test 10 h2h+common': 347} exact {'control': 45, 'h2h only (docs/22)': 45, 'common only (reported)': 45, 'Test 10 h2h+common': 45}
+2023 {'control': 344, 'h2h only (docs/22)': 348, 'common only (reported)': 344, 'Test 10 h2h+common': 348} exact {'control': 42, 'h2h only (docs/22)': 44, 'common only (reported)': 42, 'Test 10 h2h+common': 44}
+2024 {'control': 329, 'h2h only (docs/22)': 329, 'common only (reported)': 329, 'Test 10 h2h+common': 325} exact {'control': 37, 'h2h only (docs/22)': 37, 'common only (reported)': 37, 'Test 10 h2h+common': 35}
+2025 {'control': 363, 'h2h only (docs/22)': 363, 'common only (reported)': 363, 'Test 10 h2h+common': 363} exact {'control': 49, 'h2h only (docs/22)': 49, 'common only (reported)': 49, 'Test 10 h2h+common': 49}
+2026 {'control': 356, 'h2h only (docs/22)': 359, 'common only (reported)': 356, 'Test 10 h2h+common': 363} exact {'control': 45, 'h2h only (docs/22)': 46, 'common only (reported)': 45, 'Test 10 h2h+common': 48}
+control reproduces: True
+control                         [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact 41.6
+h2h only (docs/22)              [335, 326, 347, 348, 329, 363, 359] mean 343.9 diff +1.0 better 2 worse 0 worst +0 PASS=False pct [21, 9, 39, 18, 10, 75, 13] all>=75 False exact 42.0
+common only (reported)          [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact 41.6
+Test 10 h2h+common              [335, 330, 347, 348, 325, 363, 363] mean 344.4 diff +1.6 better 3 worse 1 worst -4 PASS=False pct [21, 12, 39, 18, 6, 75, 18] all>=75 False exact 42.3
+exit 0

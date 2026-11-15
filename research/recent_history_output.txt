@@ -1,0 +1,10 @@
+  2019: field teams with 0/1/2/3 recent appearances [20, 19, 16, 13]
+  2021: field teams with 0/1/2/3 recent appearances [21, 18, 17, 12]
+  2022: field teams with 0/1/2/3 recent appearances [18, 18, 20, 12]
+  2023: field teams with 0/1/2/3 recent appearances [16, 21, 22, 9]
+  2024: field teams with 0/1/2/3 recent appearances [15, 21, 18, 14]
+  2025: field teams with 0/1/2/3 recent appearances [21, 13, 14, 20]
+  2026: field teams with 0/1/2/3 recent appearances [23, 12, 16, 17]
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+Test 11 recent apps [326, 327, 336, 342, 338, 360, 357] mean 340.9 diff -2.0 better 3 worse 4 worst -11 PASS=False pct [10, 9, 18, 13, 31, 59, 11] all>=75 False exact 41.6 -> 40.6
+exit 0

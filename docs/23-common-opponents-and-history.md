@@ -12,3 +12,7 @@ The NCAA criteria list results against common opponents next to head-to-head.
 - **`recent_apps`** = how many of the previous three NCAA tournaments the team was in. The 2020 tournament wasn't held, so 2021 uses 2017, 2018 and 2019. Fields come from official Matrix pages for 2016-2025, all known before the season.
 - Added as `z_recent_apps` to both the field and seed models.
 - This tests whether the committee treats established programs differently when résumés are equal.
+
+## Results (2026-11-14)
+- **Test 10, head-to-head plus common opponents:** 335 330 347 348 325 363 363. Mean +1.6, better in 3, worse in 1, worst -4. Didn't pass. Common opponents alone changed nothing (coefficient 0.15 to 0.17). `research/common_opponents_output.txt`.
+- **Test 11, recent appearances:** 326 327 336 342 338 360 357. Mean -2.0, better in 3, worse in 4, worst -11. Didn't pass. `research/recent_history_output.txt`.
