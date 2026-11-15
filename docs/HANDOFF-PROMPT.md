@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 87 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 89 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -68,6 +68,11 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Quirks:** the R10 reference shifts 8 rows down and points at empty cells (adds 0). Columns L-N are blank, so column P = O + 8.08 and orders teams the same.
 - **Scored on all 7 seasons with rebuilt inputs (nothing fit):** 309 335 314 317 308 350 348 = 325.9 (-17.0 vs v2.0, better only in 2021). Clamping ranks at 200: 329.1. V1 ordering v2.0's field: 327.6.
 - **Situations:** V1 is worse than v2.0 on lines 1-4, 5-8, 9-12 and 13-16, on small-conference champions, and on power at-large. It's better in at most 2 of 7 seasons on any of them, so no hybrid qualified. V1 holds no information v2.0 lacks.
+
+## Information-gap round (docs/35)
+- **Saturday-night cutoff** (every feature recomputed without Selection Sunday's games; 7-9 field teams play that day): 334 332 339 349 330 359 356, -0.1, better in 3, worse in 3. Failed.
+- **Review-process diagnostic** (the nine plus RFS as proxy reviewers, substituting their lines into v2.0's bracket; diagnostic only): low-confidence teams only +568 pooled, high-confidence only +493, all teams +1061. That's about +8.4 a season from low-only review, gaining in 6 of 7 seasons. **Expert review pays across the whole bracket. The low-confidence list is about 1.5 times denser in gains, but it isn't a sharp filter.**
+- **Evidence summary:** elite agreement comes from shared crowd information (.998 with the consensus). The best automated Matrix entry, T-Rank, averages 348.9, below the human median of 354.0.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
