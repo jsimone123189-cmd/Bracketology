@@ -5,8 +5,12 @@ CREATE TABLE reviews (
   generated_at TEXT NOT NULL,
   uploaded_at TEXT NOT NULL,             -- server time
   body TEXT NOT NULL,                    -- review JSON (B1, B2, evidence); never contains edits
+  body_sha256 TEXT NOT NULL,
+  core TEXT NOT NULL,                    -- just what freezes and B3 need (brackets, order, team info, inputs, checks): small, so it fits the free CPU limit
   PRIMARY KEY (season, collected_at)
 );
+CREATE TRIGGER reviews_no_update BEFORE UPDATE ON reviews BEGIN SELECT RAISE(ABORT, 'reviews are immutable'); END;
+CREATE TRIGGER reviews_no_delete BEFORE DELETE ON reviews BEGIN SELECT RAISE(ABORT, 'reviews are immutable'); END;
 
 CREATE TABLE edits (
   seq INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -127,7 +127,7 @@ function logRow(e){const undone=S.edits.some(u=>u.op==="undo"&&u.undo_of===e.id)
    <div class="muted">${esc(S.reasons[e.reason_code]||e.reason_code)} · confidence ${e.confidence}${a?` · line ${a.line_before??"out"} → ${a.line_after??"out"} · ${a.teams_changed.length} teams moved`:" · not applied now"}</div>
    ${e.explanation?`<div>${esc(e.explanation)}</div>`:""}${!undone&&S.window.open?`<button class="btn sec" style="min-height:40px;width:auto;padding:0 14px" data-undo="${esc(e.id)}">Undo</button>`:""}${undone?`<div class="muted">Undone</div>`:""}</div>`}
 function log(){const rows=S.edits.filter(e=>e.op!=="undo").slice().reverse();
-  return`<h2>Edit history</h2><div class="sub">Times are set by the server when you save. Undo adds a new entry; nothing is ever deleted.</div><div class="card">${rows.length?rows.map(logRow).join(""):`<div class="empty">No edits yet.</div>`}</div>`}
+  return`<h2>Edit history</h2><div class="sub">Times are set by the server when you save. Undo adds a new entry; nothing is ever deleted.</div><div class="card">${rows.length?rows.map(logRow).join(""):`<div class="empty">No edits yet.</div>`}</div><a class="btn sec" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="/api/export-edits?season=${SEASON}">Download a backup of all edits</a>`}
 function brackets(){const rv=S.review;if(!rv)return"";const B1=rv.brackets.B1_model,B2=rv.brackets.B2_shadow||{},B3=S.b3;
   const ks=[...new Set([...Object.keys(B1),...Object.keys(B3)])].sort((a,b)=>(B3[a]??99)-(B3[b]??99)||(B1[a]??99)-(B1[b]??99));
   const d=ks.filter(k=>B1[k]!==B3[k]||B1[k]!==B2[k]);

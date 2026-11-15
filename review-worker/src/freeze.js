@@ -45,6 +45,14 @@ export function problems(rv, cutoff, cfg) {
   return bad;
 }
 
+// The parts of a review that freezes, B3 and published lines use. Kept separately at upload so those paths never parse the evidence.
+export const CORE_KEYS = ["season", "generated_at", "model_version", "lines", "inputs", "consistency", "shadow", "v2_fingerprint", "model_files", "brackets", "model_order", "rest_order", "all_info", "phase"];
+export function coreOf(rv) {
+  const c = Object.fromEntries(CORE_KEYS.filter((k) => k in rv).map((k) => [k, rv[k]]));
+  c.sources = { ...Object.fromEntries(Object.entries(rv.sources || {}).filter(([k]) => k !== "checks")), checks: (rv.sources || {}).checks || [] };
+  return c;
+}
+
 export function b3(rv, edits, cfg) {
   return applyEdits(rv.model_order, rv.rest_order, edits, slotsOf(cfg.lines), rv.all_info, cfg.selection_sunday);
 }
@@ -54,28 +62,33 @@ function fullBracket(L, info) {
     .sort((a, b) => a.line - b.line || ((info[b.key] || {}).rank_score ?? 0) - ((info[a.key] || {}).rank_score ?? 0));
 }
 
-// reviews: [{collected_at, body}] newest first (already restricted by the caller or not). edits: all logged edits, oldest first.
+// reviews: [{collected_at, core, body_sha256}] newest first. edits: all logged edits, oldest first.
+// Scans newest to oldest and stops at the first usable review (research) or the first usable one with every conference final in
+// (final, looking at most MAX_SCAN usable reviews), so the work stays small whatever the number of uploads.
+const MAX_SCAN = 4;
 export async function buildFreeze({ season, kind, cfg, reviews, edits, now }) {
   const cutoff = cutoffOf(cfg, kind);
   if (cutoff === null) throw new Error(`No confirmed ${kind} deadline for ${season}. It's set in config.js once confirmed.`);
   const inTime = edits.filter((e) => when(e.at) !== null && when(e.at) <= cutoff), late = edits.length - inTime.length;
   const skipped = [], valid = [];
+  const complete = (rv) => Array.isArray(rv.inputs.conference_games_pending) && rv.inputs.conference_games_pending.length === 0;
   for (const r of reviews) {
-    let rv; try { rv = JSON.parse(r.body); } catch { skipped.push({ review: r.collected_at, problems: ["unreadable"] }); continue; }
+    if (when(r.collected_at) > cutoff) { skipped.push({ review: r.collected_at, problems: [`data collected ${r.collected_at} after the ${iso(cutoff)} cutoff`] }); continue; }
+    if (valid.length && (kind === "research" || complete(valid[valid.length - 1].rv) || valid.length >= MAX_SCAN)) break;
+    let rv; try { rv = JSON.parse(r.core); } catch { skipped.push({ review: r.collected_at, problems: ["unreadable"] }); continue; }
     const bad = problems(rv, cutoff, cfg);
-    let B = null;
-    if (!bad.length) { B = b3(rv, inTime, cfg); const e = sizesOk(linesOf(B.order, slotsOf(cfg.lines)), cfg.lines); if (e) bad.push(`B3 has ${e}`); }
-    if (bad.length) skipped.push({ review: r.collected_at, problems: bad }); else valid.push({ r, rv, B });
+    if (bad.length) skipped.push({ review: r.collected_at, problems: bad }); else valid.push({ r, rv });
   }
   if (!valid.length) throw new Error(`No freezable review for ${season} (${kind}). Skipped: ${JSON.stringify(skipped)}`);
-  const complete = (rv) => Array.isArray(rv.inputs.conference_games_pending) && rv.inputs.conference_games_pending.length === 0;
   const pick = kind === "final" ? (valid.find((v) => complete(v.rv)) || valid[0]) : valid[0];
-  const { r, rv, B } = pick, mf = rv.model_files || {}, info = rv.all_info;
+  const { r, rv } = pick, mf = rv.model_files || {}, info = rv.all_info;
+  const B = b3(rv, inTime, cfg), e3 = sizesOk(linesOf(B.order, slotsOf(cfg.lines)), cfg.lines);
+  if (e3) throw new Error(`B3 has ${e3}`);        // can't happen: edits keep line sizes by construction
   const brackets = { B1_model: fullBracket(rv.brackets.B1_model, info), B2_shadow: fullBracket(rv.brackets.B2_shadow, info), B3_manual: fullBracket(linesOf(B.order, slotsOf(cfg.lines)), info) };
   const body = {
     schema: 2, kind, season, store: "cloudflare-d1", frozen_at: iso(now), cutoff: iso(cutoff), frozen_after_cutoff: now > cutoff,
     final_results_complete: complete(rv), conference_games_pending: rv.inputs.conference_games_pending ?? null,
-    review_file: r.collected_at, review_sha256: await sha256hex(r.body), review_generated_at: rv.generated_at,
+    review_file: r.collected_at, review_sha256: r.body_sha256, review_generated_at: rv.generated_at,
     inputs: rv.inputs, sources: Object.fromEntries(Object.entries(rv.sources || {}).filter(([k]) => k !== "checks")), data_checks: (rv.sources || {}).checks || [],
     model: { version: rv.model_version, v2_fingerprint_used: rv.v2_fingerprint ?? null, v2_saved_fingerprint: mf.v2_saved_fingerprint ?? null,
       v2_file_sha256: mf.v2_file_sha256 ?? null, v2_expected_file_sha256: mf.v2_expected_file_sha256 ?? null,

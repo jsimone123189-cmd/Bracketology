@@ -6,7 +6,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { authenticate } from "./auth.js";
 import { season as seasonCfg } from "./config.js";
 import { checkEdit, linesOf, slotsOf, REASONS, when } from "./engine.js";
-import { b3, buildFreeze, cutoffOf, verifyFreeze } from "./freeze.js";
+import { b3, buildFreeze, coreOf, cutoffOf, sha256hex, verifyFreeze } from "./freeze.js";
 import PAGE from "./page.html";
 
 const EARLIEST_MS = 30 * 60000;
@@ -25,8 +25,8 @@ function localNow(env, req) {
   return local && h && when(h) !== null ? when(h) : Date.now();
 }
 
-async function latestReview(env, season) {
-  return env.DB.prepare("SELECT collected_at, body FROM reviews WHERE season = ? ORDER BY collected_at DESC LIMIT 1").bind(season).first();
+async function latestReview(env, season, withBody = false) {
+  return env.DB.prepare(`SELECT collected_at, core${withBody ? ", body" : ""} FROM reviews WHERE season = ? ORDER BY collected_at DESC LIMIT 1`).bind(season).first();
 }
 async function allEdits(env, season) {
   const { results } = await env.DB.prepare("SELECT id, at, client_at, body FROM edits WHERE season = ? ORDER BY seq").bind(season).all();
@@ -51,7 +51,7 @@ function slim(rv) {
 }
 
 async function state(env, season, cfg, now) {
-  const r = await latestReview(env, season);
+  const r = await latestReview(env, season, true);
   const edits = await allEdits(env, season);
   const freezes = [];
   for (const kind of ["research", "final"]) {
@@ -60,9 +60,11 @@ async function state(env, season, cfg, now) {
     freezes.push({ kind, cutoff: c === null ? null : iso(c), earliest: c === null ? null : iso(c - EARLIEST_MS), frozen: !!f, frozen_at: f ? f.frozen_at : null, sha256: f ? f.sha256 : null });
   }
   const win = await editWindow(env, season, cfg, now);
-  if (!r) return { season, review: null, edits, freezes, window: win, reasons: REASONS };
-  const rv = JSON.parse(r.body), B = b3(rv, edits, cfg);
-  return { season, server_time: iso(now), review: rv, edits, b3_order: B.order, b3: linesOf(B.order, slotsOf(cfg.lines)), applied: B.applied, notes: B.notes, freezes, window: win, reasons: REASONS };
+  if (!r) return json({ season, review: null, edits, freezes, window: win, reasons: REASONS });
+  const core = JSON.parse(r.core), B = b3(core, edits, cfg);
+  const rest = JSON.stringify({ season, server_time: iso(now), edits, b3_order: B.order, b3: linesOf(B.order, slotsOf(cfg.lines)), applied: B.applied, notes: B.notes, freezes, window: win, reasons: REASONS });
+  // The stored review text is passed through unparsed (it is large); everything else is built here.
+  return new Response(`{"review":${r.body},${rest.slice(1)}`, { headers: { ...SEC, "Content-Type": "application/json" } });
 }
 
 function cleanEdit(input) {
@@ -86,7 +88,7 @@ async function saveEdit(env, season, cfg, input, now) {
   const clientAt = typeof input.client_at === "string" && when(input.client_at) !== null ? input.client_at : null;
   const bad = checkEdit(e);
   if (bad.length) return json({ error: bad.join("; ") }, 422);
-  const rv = JSON.parse(r.body), prior = await allEdits(env, season);
+  const rv = JSON.parse(r.core), prior = await allEdits(env, season);
   if (e.op === "undo" && !prior.some((p) => p.id === e.undo_of && p.op !== "undo")) return json({ error: "Nothing to undo with that id." }, 422);
   const before = b3(rv, prior, cfg), after = b3(rv, [...prior, e], cfg);
   if (e.op !== "undo" && !after.applied.some((a) => a.id === e.id)) return json({ error: (after.notes.find((n) => n.includes(e.id)) || "Not possible").replace(/^Edit \S+ (not applied|skipped): /, "") }, 422);
@@ -109,7 +111,7 @@ async function doFreeze(env, season, kind, now) {
   }
   const cutoff = cutoffOf(cfg, kind);
   if (cutoff === null) return { status: "error", error: `No confirmed ${kind} deadline for ${season}.` };
-  const { results } = await env.DB.prepare("SELECT collected_at, body FROM reviews WHERE season = ? ORDER BY collected_at DESC LIMIT 40").bind(season).all();
+  const { results } = await env.DB.prepare("SELECT collected_at, core, body_sha256 FROM reviews WHERE season = ? ORDER BY collected_at DESC LIMIT 60").bind(season).all();
   const edits = await allEdits(env, season);
   let f;
   try { f = await buildFreeze({ season, kind, cfg, reviews: results, edits, now }); } catch (err) { return { status: "error", error: err.message }; }
@@ -145,7 +147,8 @@ async function ingest(env, body, now) {
   if (rv.edits && rv.edits.length) return json({ error: "reviews must not carry edits (they live only here)" }, 422);
   const text = JSON.stringify(slim(rv));
   try {
-    await env.DB.prepare("INSERT INTO reviews (season, collected_at, generated_at, uploaded_at, body) VALUES (?, ?, ?, ?, ?)").bind(rv.season, rv.inputs.collected_at, rv.generated_at, iso(now), text).run();
+    await env.DB.prepare("INSERT INTO reviews (season, collected_at, generated_at, uploaded_at, body, body_sha256, core) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .bind(rv.season, rv.inputs.collected_at, rv.generated_at, iso(now), text, await sha256hex(text), JSON.stringify(coreOf(rv))).run();
   } catch { return json({ error: "a review with this collection time already exists" }, 409); }
   return json({ stored: true, season: rv.season, collected_at: rv.inputs.collected_at, bytes: text.length });
 }
@@ -156,7 +159,7 @@ async function published(env, season, cfg) {
   if (f) return json({ season, source: "final_freeze", sha256: f.sha256, teams: JSON.parse(f.body).brackets.B3_manual.map(({ key, team, line }) => ({ key, team, line })) });
   const r = await latestReview(env, season);
   if (!r) return json({ error: "no review" }, 404);
-  const rv = JSON.parse(r.body), B = b3(rv, await allEdits(env, season), cfg), L = linesOf(B.order, slotsOf(cfg.lines));
+  const rv = JSON.parse(r.core), B = b3(rv, await allEdits(env, season), cfg), L = linesOf(B.order, slotsOf(cfg.lines));
   return json({ season, source: "live", collected_at: r.collected_at, teams: B.order.map((k) => ({ key: k, team: (rv.all_info[k] || {}).team || k, line: L[k] })) });
 }
 
@@ -180,10 +183,12 @@ export default {
     if (p.startsWith("/api/machine/")) return deny();
     if (req.method === "POST" && req.headers.get("X-Review") !== "1") return deny();
     if (p === "/" && req.method === "GET") return new Response(PAGE, { headers: { ...SEC, "Content-Type": "text/html; charset=utf-8" } });
-    if (p === "/api/state" && req.method === "GET") return json(await state(env, season, cfg, now));
+    if (p === "/api/state" && req.method === "GET") return state(env, season, cfg, now);
     if (p === "/api/edits" && req.method === "POST") return saveEdit(env, season, cfg, await req.json().catch(() => ({})), now);
     if (p === "/api/freeze" && req.method === "POST") { const { kind } = await req.json().catch(() => ({})); return ["research", "final"].includes(kind) ? json(await doFreeze(env, season, kind, now)) : json({ error: "kind" }, 422); }
     if (p === "/api/verify" && req.method === "POST") { const { kind } = await req.json().catch(() => ({})); return ["research", "final"].includes(kind) ? json(await doVerify(env, season, kind, now)) : json({ error: "kind" }, 422); }
+    if (p === "/api/export-edits" && req.method === "GET")      // your own backup of the full edit log (D1 free restore covers only 7 days)
+      return new Response(JSON.stringify(await allEdits(env, season), null, 1), { headers: { ...SEC, "Content-Type": "application/json", "Content-Disposition": `attachment; filename="${season}_edits.json"` } });
     if (p === "/api/export" && req.method === "GET") {
       const kind = url.searchParams.get("kind"), f = ["research", "final"].includes(kind) ? await freezeRow(env, season, kind) : null;
       if (!f) return json({ error: "no such freeze" }, 404);

@@ -135,6 +135,19 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Public site leaks to remove (approval needed):** `model_line`, `override_reason` and `p_in` per team, the review list, and `model_bracket`/ledger on the public snapshots branch.
 - **Status:** awaiting owner approvals A-E in docs/43. No tokens, deploys or cron changes made.
 
+## Private review interface built locally (2026-11-15, docs/44)
+- **`review-worker/`:** a Cloudflare Worker with D1, tested with `wrangler dev` and a local database. Not deployed, no credentials, Access not configured.
+- **Login:** Access token checked on every request (signature, audience, issuer, expiry, owner email). Fails closed. A service token is accepted only for upload and published-lines.
+- **Storage:** edits, reviews and snapshots are append-only at the database level. Edits get server timestamps.
+- **Both snapshots** are built in the Worker. The exported research snapshot passes the Python verifier.
+- **Engine:** the JS edit engine is identical to Python on 400 random sequences.
+- **Phone page:** board → team sheet → line buttons, reason, confidence → Preview → Save; history with undo and backup download.
+- **Tests:** Worker 18 pass. Python 55 on master, 59 on branch `public-privacy`.
+- **Free-plan CPU:** freeze 5-6 ms in Node (10 ms limit), after storing a 20 KB core per review.
+- **Public privacy (branch, not merged):** removes `model_line`, `override_reason`, `p_in`, the review list, model bracket, ranking, overrides and ledger. The published bracket arrives as lines only from the Worker. In model-only mode the page is unchanged.
+- **Bug fixed:** a failed "add" with a bad line removed a team without restoring it.
+- **Awaiting owner approvals 1, A-G in docs/44.** No model experiments.
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.

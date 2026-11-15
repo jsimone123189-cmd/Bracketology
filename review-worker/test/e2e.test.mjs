@@ -161,6 +161,12 @@ test("published lines: team and line only, from the final snapshot", { skip }, a
   const s = JSON.stringify(r.body); for (const w of ["reason", "confidence", "explanation", "model_line", "p_in", "B1", "B2"]) assert.ok(!s.includes(w), w);
 });
 
+test("edit backup download: owner only, full history", { skip }, async () => {
+  const r = await owner("/api/export-edits"); assert.equal(r.status, 200);
+  const e = await r.json(); assert.equal(e.length, 6); assert.ok(e.some((x) => x.op === "undo"));
+  assert.equal((await fetch(base + "/api/export-edits")).status, 403); assert.equal((await machine("/api/export-edits")).status, 403);
+});
+
 test("stored edits and snapshots can't be changed or deleted, even with direct database access", { skip }, async () => {
   for (const c of ["UPDATE freezes SET sha256 = 'x'", "DELETE FROM freezes", "UPDATE edits SET at = '2027-03-14T12:00:00Z'", "DELETE FROM edits",
     "INSERT INTO freezes (season, kind, frozen_at, sha256, body) VALUES (2027, 'research', 'x', 'x', 'x')"]) {
