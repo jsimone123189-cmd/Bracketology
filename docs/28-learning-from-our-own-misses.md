@@ -16,3 +16,14 @@ Judged: full correction. Also reported but not judged: half correction.
 Head-to-head plus common opponents (docs/23, +1.6) and nonlinear pairs (docs/16) each helped in some seasons and hurt in others, and they work differently. Averaging can cancel each one's mistakes.
 - Each of the three scores (v2.0 `rank_score`, the docs/23 Test 10 pair score, the docs/16 M2 score) is z-scored within h's field. The equal-weight mean sets the order. The weights are fixed now and won't be tuned.
 - Each component is built exactly as in its own doc, trained on the six other seasons.
+
+## Results (2026-11-14)
+`research/own_misses_output.txt`. The control reproduced.
+
+| Variant | Seasons | Mean change | Better / worse | Worst |
+|---|---|---|---|---|
+| Test 17, full correction | 337 324 345 344 328 363 355 | -0.6 | 1 / 4 | -2 |
+| Test 17, half (reported) | 335 326 345 344 329 363 359 | +0.1 | 1 / 1 | -2 |
+| Test 18, ensemble | 328 330 341 343 329 365 366 | +0.3 | 3 / 3 | -7 |
+
+Both failed. The residual model moved teams by about 0.5-1 position on average but found nothing that carried over to an unseen season. v2.0's misses don't follow a pattern in the free statistics. The ensemble gained in 2021, 2025 and 2026 (+10 in 2026) and lost in 2019 and 2022, the same split the nonlinear model showed before.

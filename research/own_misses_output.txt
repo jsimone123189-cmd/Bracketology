@@ -1,0 +1,14 @@
+2019 {'control': 335, 'T17 full correction': 337, 'T17 half (reported)': 335, 'T18 ensemble': 328} exact {'control': 40, 'T17 full correction': 40, 'T17 half (reported)': 40, 'T18 ensemble': 37} | residual model n=399 mean |corr| 0.64
+2021 {'control': 326, 'T17 full correction': 324, 'T17 half (reported)': 326, 'T18 ensemble': 330} exact {'control': 33, 'T17 full correction': 32, 'T17 half (reported)': 33, 'T18 ensemble': 35} | residual model n=396 mean |corr| 0.52
+2022 {'control': 347, 'T17 full correction': 345, 'T17 half (reported)': 345, 'T18 ensemble': 341} exact {'control': 45, 'T17 full correction': 44, 'T17 half (reported)': 44, 'T18 ensemble': 42} | residual model n=397 mean |corr| 0.66
+2023 {'control': 344, 'T17 full correction': 344, 'T17 half (reported)': 344, 'T18 ensemble': 343} exact {'control': 42, 'T17 full correction': 42, 'T17 half (reported)': 42, 'T18 ensemble': 41} | residual model n=396 mean |corr| 0.76
+2024 {'control': 329, 'T17 full correction': 328, 'T17 half (reported)': 329, 'T18 ensemble': 329} exact {'control': 37, 'T17 full correction': 37, 'T17 half (reported)': 37, 'T18 ensemble': 36} | residual model n=396 mean |corr| 1.04
+2025 {'control': 363, 'T17 full correction': 363, 'T17 half (reported)': 363, 'T18 ensemble': 365} exact {'control': 49, 'T17 full correction': 49, 'T17 half (reported)': 49, 'T18 ensemble': 50} | residual model n=396 mean |corr| 0.76
+2026 {'control': 356, 'T17 full correction': 355, 'T17 half (reported)': 359, 'T18 ensemble': 366} exact {'control': 45, 'T17 full correction': 44, 'T17 half (reported)': 46, 'T18 ensemble': 50} | residual model n=395 mean |corr| 0.62
+control reproduces: True
+control                 [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False exact 41.6
+T17 full correction     [337, 324, 345, 344, 328, 363, 355] mean 342.3 diff -0.6 better 1 worse 4 worst -2 PASS=False pct [25, 7, 34, 14, 10, 75, 10] all>=75 False exact 41.1
+T17 half (reported)     [335, 326, 345, 344, 329, 363, 359] mean 343.0 diff +0.1 better 1 worse 1 worst -2 PASS=False pct [21, 9, 34, 14, 10, 75, 13] all>=75 False exact 41.6
+T18 ensemble            [328, 330, 341, 343, 329, 365, 366] mean 343.1 diff +0.3 better 3 worse 3 worst -7 PASS=False pct [13, 12, 24, 14, 10, 81, 24] all>=75 False exact 41.6
+
+[exited with code 0]
