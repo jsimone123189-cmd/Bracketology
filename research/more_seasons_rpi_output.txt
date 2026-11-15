@@ -1,0 +1,17 @@
+  2014: field teams matched 65/68, champs 31, power teams in field 26
+  2015: field teams matched 66/68, champs 32, power teams in field 31
+  2016: field teams matched 64/68, champs 31, power teams in field 29
+  2017: field teams matched 67/68, champs 32, power teams in field 34
+  2018: field teams matched 67/68, champs 32, power teams in field 34
+2019 {'control': 335, 'Test 12 both': 325, 'seeding only (reported)': 330}
+2021 {'control': 326, 'Test 12 both': 320, 'seeding only (reported)': 320}
+2022 {'control': 347, 'Test 12 both': 342, 'seeding only (reported)': 342}
+2023 {'control': 344, 'Test 12 both': 338, 'seeding only (reported)': 338}
+2024 {'control': 329, 'Test 12 both': 332, 'seeding only (reported)': 328}
+2025 {'control': 363, 'Test 12 both': 353, 'seeding only (reported)': 359}
+2026 {'control': 356, 'Test 12 both': 364, 'seeding only (reported)': 364}
+control reproduces: True
+control                   [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False pct [21, 9, 39, 14, 10, 75, 10] all>=75 False
+Test 12 both              [325, 320, 342, 338, 332, 353, 364] mean 339.1 diff -3.7 better 2 worse 5 worst -10 PASS=False pct [9, 6, 26, 9, 14, 34, 19] all>=75 False
+seeding only (reported)   [330, 320, 342, 338, 328, 359, 364] mean 340.1 diff -2.7 better 1 worse 6 worst -6 PASS=False pct [18, 6, 26, 9, 10, 57, 19] all>=75 False
+exit 0

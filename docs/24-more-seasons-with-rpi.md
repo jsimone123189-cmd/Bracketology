@@ -16,3 +16,10 @@ Committed before running.
 **Test 12:** 2014-18 added to both the field and seed training. Leave-one-season-out over 2019 and 2021-26 only, so 2014-18 is always training and never scored. Usual bar, percentile each season and the 75th-in-all-seven check.
 
 **Reported, not judged:** 2014-18 added to seeding only.
+
+## Result (2026-11-14): failed
+`research/more_seasons_rpi_output.txt`. The control reproduced. 64-67 of 68 field teams were matched each season, 2014-18.
+- **Test 12, both models:** 325 320 342 338 332 353 364. Mean -3.7, better in 2, worse in 5, worst -10.
+- **Seeding only:** 330 320 342 338 328 359 364. Mean -2.7, better in 1.
+
+Even with the RPI in NET's place, pre-NET seasons make the model worse. That supports the committee having changed with NET, and possibly again around 2025. Older seasons teach habits it no longer has.
