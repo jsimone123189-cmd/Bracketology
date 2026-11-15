@@ -1,0 +1,7 @@
+2019: group mean vs consensus rank corr 0.998; members match the rounded consensus line on 80% of teams; when they leave it: right 28, consensus right 28, neither 9; consensus exact 48
+2021: group mean vs consensus rank corr 0.998; members match the rounded consensus line on 85% of teams; when they leave it: right 19, consensus right 43, neither 21; consensus exact 52
+2022: group mean vs consensus rank corr 0.999; members match the rounded consensus line on 84% of teams; when they leave it: right 35, consensus right 55, neither 3; consensus exact 50
+2023: group mean vs consensus rank corr 0.999; members match the rounded consensus line on 87% of teams; when they leave it: right 25, consensus right 45, neither 10; consensus exact 55
+2024: group mean vs consensus rank corr 0.999; members match the rounded consensus line on 94% of teams; when they leave it: right 12, consensus right 17, neither 9; consensus exact 43
+2025: group mean vs consensus rank corr 0.999; members match the rounded consensus line on 89% of teams; when they leave it: right 28, consensus right 29, neither 2; consensus exact 54
+2026: group mean vs consensus rank corr 0.999; members match the rounded consensus line on 91% of teams; when they leave it: right 15, consensus right 41, neither 0; consensus exact 58

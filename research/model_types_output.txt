@@ -1,0 +1,13 @@
+2019 {'control': 335, 'M1 comparables': 318, 'M2 nonlinear pairs': 325, 'M3 blend': 321}
+2021 {'control': 326, 'M1 comparables': 318, 'M2 nonlinear pairs': 325, 'M3 blend': 318}
+2022 {'control': 347, 'M1 comparables': 312, 'M2 nonlinear pairs': 346, 'M3 blend': 318}
+2023 {'control': 344, 'M1 comparables': 337, 'M2 nonlinear pairs': 341, 'M3 blend': 344}
+2024 {'control': 329, 'M1 comparables': 322, 'M2 nonlinear pairs': 327, 'M3 blend': 326}
+2025 {'control': 363, 'M1 comparables': 339, 'M2 nonlinear pairs': 370, 'M3 blend': 349}
+2026 {'control': 356, 'M1 comparables': 319, 'M2 nonlinear pairs': 366, 'M3 blend': 338}
+control reproduces: True
+control             [335, 326, 347, 344, 329, 363, 356] mean 342.9 diff +0.0 better 0 worse 0 worst +0 PASS=False  percentiles [21, 9, 39, 14, 10, 75, 10] all>=75: False
+M1 comparables      [318, 318, 312, 337, 322, 339, 319] mean 323.6 diff -19.3 better 0 worse 7 worst -37 PASS=False  percentiles [5, 6, 4, 8, 5, 9, 2] all>=75: False
+M2 nonlinear pairs  [325, 325, 346, 341, 327, 370, 366] mean 342.9 diff +0.0 better 2 worse 5 worst -10 PASS=False  percentiles [9, 7, 36, 13, 8, 93, 24] all>=75: False
+M3 blend            [321, 318, 318, 344, 326, 349, 338] mean 330.6 diff -12.3 better 0 worse 6 worst -29 PASS=False  percentiles [6, 6, 6, 14, 8, 24, 4] all>=75: False
+exit 0

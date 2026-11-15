@@ -13,3 +13,11 @@ Field selection stays exactly v2.0's. Only the order within the field changes. I
 - also reported, the owner's standard: each season's percentile against all Matrix entries, and whether it reaches the 75th percentile (the consistent nine's average) in all seven.
 
 Anything that passes goes to 2027 shadow tracking first and doesn't replace v2.0 without the owner's decision.
+
+## Results (2026-11-14)
+`research/model_types_output.txt`. The control reproduced. All three failed:
+- **M1, comparables:** mean -19.3, worse in 7 of 7.
+- **M2, nonlinear pairs:** mean 0.0. Better only in 2025 (+7) and 2026 (+10), worse in five seasons, worst -10.
+- **M3, blend:** mean -12.3.
+
+None came close to the 75th percentile in every season. Percentiles for M2: 9, 7, 36, 13, 8, 93, 24.

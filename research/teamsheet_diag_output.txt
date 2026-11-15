@@ -1,0 +1,6 @@
+2021 n=68 v2.0: 34.0 exact, 332  sheet average: 33.0 exact, 329  resume only: 33.0 exact, 316  predictive only: 27.0 exact, 305  blend: 41.0 exact, 345  group (own fields): 48.0 exact
+2022 n=68 v2.0: 45.0 exact, 359  sheet average: 29.0 exact, 313  resume only: 33.0 exact, 334  predictive only: 18.0 exact, 289  blend: 32.0 exact, 333  group (own fields): 47.8 exact
+2023 n=68 v2.0: 43.0 exact, 350  sheet average: 34.0 exact, 329  resume only: 33.0 exact, 328  predictive only: 27.0 exact, 307  blend: 43.0 exact, 349  group (own fields): 51.8 exact
+2025 n=68 v2.0: 51.0 exact, 371  sheet average: 42.0 exact, 350  resume only: 32.0 exact, 327  predictive only: 27.0 exact, 316  blend: 46.0 exact, 361  group (own fields): 51.9 exact
+DECISION sheet average: beats v2.0 by 2+ exact in 0/4 seasons, mean diff -8.8 -> missing piece: False
+DECISION blend: beats v2.0 by 2+ exact in 1/4 seasons, mean diff -2.8 -> missing piece: False

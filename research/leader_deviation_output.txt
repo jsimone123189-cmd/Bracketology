@@ -1,0 +1,21 @@
+2019: teams 64  corr(group dev, committee dev) +0.74  group moved 27 teams by 0.5+; committee moved the same way 18/19 (others: committee kept v2.0's line 8)
+2021: teams 66  corr(group dev, committee dev) +0.80  group moved 31 teams by 0.5+; committee moved the same way 27/28 (others: committee kept v2.0's line 3)
+2022: teams 65  corr(group dev, committee dev) +0.72  group moved 19 teams by 0.5+; committee moved the same way 12/12 (others: committee kept v2.0's line 7)
+2023: teams 66  corr(group dev, committee dev) +0.84  group moved 25 teams by 0.5+; committee moved the same way 21/21 (others: committee kept v2.0's line 4)
+2024: teams 65  corr(group dev, committee dev) +0.50  group moved 16 teams by 0.5+; committee moved the same way 10/11 (others: committee kept v2.0's line 5)
+2025: teams 65  corr(group dev, committee dev) +0.73  group moved 15 teams by 0.5+; committee moved the same way 11/11 (others: committee kept v2.0's line 4)
+2026: teams 67  corr(group dev, committee dev) +0.80  group moved 25 teams by 0.5+; committee moved the same way 18/18 (others: committee kept v2.0's line 7)
+
+characteristic     corr with group deviation by season          mean   same sign   committee mean  qualifies
+conf_reg_champ   [-0.22, 0.13, -0.13, 0.08, -0.05, -0.19, -0.11]  -0.07   5/7     -0.05        False
+ct_wins          [0.02, 0.05, -0.05, 0.31, 0.07, 0.04, -0.06]  +0.05   5/7     +0.10        False
+ct_lost_first    [-0.07, -0.12, 0.23, -0.32, -0.2, -0.17, 0.01]  -0.09   5/7     -0.10        False
+losses           [0.19, -0.23, 0.26, -0.33, 0.03, 0.14, 0.14]  +0.03   5/7     -0.02        False
+q34_losses       [0.07, -0.05, 0.01, 0.16, -0.07, -0.04, -0.02]  +0.01   4/7     -0.01        False
+is_power         [0.27, -0.11, 0.22, -0.48, 0.19, 0.22, 0.28]  +0.09   5/7     +0.05        False
+champ            [0.02, 0.1, 0.1, 0.28, 0.02, -0.09, -0.07]  +0.05   5/7     +0.09        False
+net_vs_rating    [0.19, 0.05, 0.15, -0.31, 0.34, 0.26, 0.23]  +0.13   6/7     +0.07        False
+kpi_sor_vs_net   [0.23, -0.11, 0.17, 0.11]  +0.10   3/4     +0.06        False
+last10           [-0.21, 0.11, -0.14, 0.34, -0.01, 0.02, 0.06]  +0.02   4/7     +0.02        False
+
+STRONGEST QUALIFYING (seven seasons): None

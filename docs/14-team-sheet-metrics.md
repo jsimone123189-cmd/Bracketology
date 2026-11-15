@@ -19,3 +19,17 @@ The actual field is given, to isolate seeding. Each method ranks those teams, an
 Four seasons can't meet the seven-season bar, so nothing goes into production on this alone. The step after would be:
 - a committed test of v2.0 plus the sheet metrics, using the four seasons that have them,
 - and shadow tracking the variant all through 2027 from Warren Nolan's daily columns, graded on Selection Sunday against v2.0.
+
+## Results (2026-11-14)
+`research/teamsheet_diag_output.txt`. Exact seeds on the actual field, four seasons:
+
+| Method | Mean exact per season | Gap to v2.0 |
+|---|---|---|
+| v2.0 | 43.3 | |
+| Sheet average | 34.5 | -8.8 |
+| Résumé only | 32.8 | |
+| Predictive only | 24.8 | |
+| Blend | 40.5 | -2.8 |
+| The nine | 49.9 | |
+
+The sheet average beat v2.0 by 2+ in 0 of 4 seasons and the blend in 1 of 4, so the real team-sheet metrics are not the missing piece.
