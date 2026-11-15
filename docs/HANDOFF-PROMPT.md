@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 83 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 87 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -62,6 +62,12 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 ## Owner's 2026 bracket (370 against v2.0's held-out 356), docs/33
 - He differed on 23 teams, net +14. **13 of those were on v2.0's low-confidence list (31 teams), worth +10.** The other +4 came from picking Miami (OH) over Auburn.
 - He moved non-power at-large teams up and power-conference mid-seeds down. That was v2.0's 2026 bias, but the bias flips direction season to season (right in 4 of 7), so a fixed rule fails.
+
+## Owner's original spreadsheet formula (V1), docs/01 and docs/34
+- **Formula:** 0.15·Q1A wins + 0.13·Q1 wins + 0.12·Q2 wins − 0.5·Q3 losses − 1.5·Q4 losses + 0.24·s(WAB rank) + 0.19·s(SOR rank) + 0.17·s(NET rank) + 0.10·s(Torvik rank), where s(x) = 100·(1−(x−1)/199)², unclamped. There's also a column G term (0.06 x unknown count) that can't be rebuilt.
+- **Quirks:** the R10 reference shifts 8 rows down and points at empty cells (adds 0). Columns L-N are blank, so column P = O + 8.08 and orders teams the same.
+- **Scored on all 7 seasons with rebuilt inputs (nothing fit):** 309 335 314 317 308 350 348 = 325.9 (-17.0 vs v2.0, better only in 2021). Clamping ranks at 200: 329.1. V1 ordering v2.0's field: 327.6.
+- **Situations:** V1 is worse than v2.0 on lines 1-4, 5-8, 9-12 and 13-16, on small-conference champions, and on power at-large. It's better in at most 2 of 7 seasons on any of them, so no hybrid qualified. V1 holds no information v2.0 lacks.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
