@@ -121,8 +121,14 @@ def live(season: int, fitted: model.Model) -> dict:
             "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + [c["message"] for c in found], "checks": found,
             "teams": [team_record(r, table, season, public=True) for r in final], "out": [team_record(r, table, season, public=True) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
-            "missed": [], "accuracy": acc,
+            "missed": [], "accuracy": acc, "status": public_status(pub, source),
             "archive": {"sources": info, "published": {"source": source, "sha256": (pub or {}).get("sha256")}}}
+
+def public_status(pub: dict | None, source: str) -> dict:
+    """What the page says about the bracket it shows. A final snapshot frozen before every Selection Sunday conference final
+    ended is labelled as such, with the games still in progress (never shown silently as a complete final)."""
+    if source != "final_freeze": return {"final": False}
+    return {"final": True, "complete": bool(pub.get("complete")), "pending": [str(x) for x in (pub.get("pending") or [])][:10], "frozen_at": pub.get("frozen_at")}
 
 def snapshot(data: dict, stamp: time.struct_time, model_path: str = "models/v2.joblib") -> dict:
     """Permanent record of one run. Holds official NET and NCAA-derived figures, never third-party metric columns (r_*).

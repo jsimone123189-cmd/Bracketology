@@ -38,3 +38,10 @@ def test_template_never_shows_edits_or_model_odds_for_a_live_season():
     t = open("site/template.html", encoding="utf-8").read()
     for w in ("override_reason", "model_line", "Edited", "Manual edit", "manual edits, marked"): assert w not in t, w
     assert t.count("pct(t.p_in)") == t.count("demo?pct(t.p_in)") + t.count("demo||t.champ?`<div><b>${t.champ?\"Auto\":pct(t.p_in)}")   # odds only in the historical demo
+
+def test_incomplete_final_is_labelled_never_silent():
+    st = sitebuild.public_status({"source": "final_freeze", "complete": False, "pending": ["Purdue vs Michigan"], "frozen_at": "2027-03-14T21:36:00Z"}, "final_freeze")
+    assert st == {"final": True, "complete": False, "pending": ["Purdue vs Michigan"], "frozen_at": "2027-03-14T21:36:00Z"}
+    assert sitebuild.public_status({"source": "published"}, "published") == {"final": False}
+    t = open("site/template.html", encoding="utf-8").read()
+    assert "frozen before every conference final ended" in t and "Those automatic bids are projected" in t
