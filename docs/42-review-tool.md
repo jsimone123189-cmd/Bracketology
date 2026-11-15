@@ -17,7 +17,7 @@ Implements docs/37-38. v2.0 is unchanged. Nothing here runs in the daily workflo
 | `src/bracketology/shadow_h2h.py` | B2 shadow model (docs/23 method). |
 | `src/bracketology/review_demo.py` | Historical walk-through (2026 a week out, then Selection Sunday). |
 | `models/shadow_h2h.joblib` | Shadow weights trained on 2019 and 2021-26, so CI won't need the local Torvik history. |
-| `reviews/2027.json` | Your edit log (starts empty). |
+| `private/reviews/2027.json` | Your edit log. Gitignored and never committed (owner decision 2). |
 | `tests/test_review.py` | Edit engine, grading groups, freeze rules. |
 
 ## How it works
@@ -94,3 +94,52 @@ This replays known-good moves to show the mechanics. It's not evidence that revi
 - **bracketology.tv:** 2027 format facts (above).
 
 None of them describes a free, automatic seeding method not already tested here.
+
+## Deployment readiness (2026-11-15), after the owner's decisions
+**Decisions:** the editing interface and the edit ledger stay private. The public site shows only the resulting bracket. The freeze runs at 11:30 a.m. ET with a verified noon ET cutoff.
+
+### Fixed in this round
+- **Ledger privacy:**
+  - `reviews/2027.json` (empty) was removed from the repo.
+  - Edits, reviews and freezes now default to `private/`, which is gitignored.
+  - `write()` refuses to write into the site output or snapshot folders.
+  - A test confirms nothing under `private/` or `reviews/*.json` is tracked by git.
+- **Shadow leakage guard:** saved shadow weights now record their training seasons (`train_years`) and are reused only if those exclude the evaluated season; otherwise the shadow is refit. The earlier 2026 demo was clean (its B2 equals a fresh fit without 2026), but the old code would have leaked on any later replay.
+- **Review files** are named by collection time, so an 11:30 build no longer overwrites the morning one.
+- **Freeze** (`review.freeze`):
+  - Picks the **newest review whose data were collected at or before the cutoff and that passes every check**: all three brackets present, field size and line sizes match the season's format, B2 on the same field as B1, no data-check alerts, shadow not trained on the season.
+  - Records full bracket contents (team, line, champion and projected-auto flags), input timestamps (`collected_at`, `games_through`, latest game used, NET source and as-of), model version, fingerprints of the models actually used, saved v2.0 file hash, code commit, the edit file's SHA-256, the edits as logged, the applied edits with line changes, edits not applied, and the reviews skipped and why.
+  - Writes with an atomic create-only link, sets the file read-only, and writes a `.sha256`.
+  - A second attempt verifies and returns `already_frozen` without rewriting.
+  - A late run (missed schedule) can still freeze, but only a review collected before noon; `frozen_after_cutoff` is recorded.
+- **Independent noon verification** (`review verify`): recomputes the hash and re-checks the cutoff, completeness and, for live seasons, that the model used is exactly the saved v2.0. It writes a separate dated `{season}_verify_*.json` and never touches the freeze.
+
+### Reconciliation of the 2026 demo
+**The 377 is a replay, not your 2026 submission.** It applies five of your 2026 moves to v2.0. Your submitted bracket scored **370**. The two differ on 16 teams, net +7 for the replay:
+- **Better in the replay:** Purdue, Michigan State, Virginia, Miami (FL), Utah State, Missouri, UCF, Miami (OH) and Siena.
+- **Better in your submission:** Gonzaga, TCU, Santa Clara, Kennesaw State, Furman and UMBC.
+- **Queens:** same points either way.
+
+### Tested (47 tests pass)
+- **Edit engine:** valid line sizes for 68 and 76 teams; one team shifted per boundary; automatic-bid guard; undo; invalid edits reported. The JavaScript engine matches the Python one exactly.
+- **Grading:** groups are exactly additive; interacting edits are credited jointly. A perfect 76-team bracket scores 456 (= 76 × 6).
+- **Cutoff:** the noon ET cutoff is 16:00 UTC on March 14, 2027 (EDT starts that morning). An 11:30 run freezes the 11:30 review. A 12:01 review is refused even when newer.
+- **Recovery:** a missed run falls back to the morning review (flagged late). Incomplete reviews (no B2, broken line sizes, data alert, shadow trained on the season, half-written file) are skipped. No valid review fails loudly.
+- **Duplicates and tampering:** duplicate freezes are idempotent. Tampering is caught by verify and blocks re-freezing. A substituted model fails verification for a live season.
+- **Privacy:** no private file is tracked, and writes into public output are refused.
+- **End-to-end 2026 demo:** freeze picked the 15:30Z review (cutoff 16:00Z); verify passed at 16:05Z; scores B1 356, B2 346, B3 377; groups sum to +21.
+
+### Verified by construction
+B1, B2 and B3 come from **one** `build()` call. They share the same rows, the same game list filtered at the same `games_through`, and the same field (B2 re-orders B1's field; B3 is B1 plus logged edits). The freeze records `consistency.one_cutoff_for_all_brackets` and checks `B2_same_field_as_B1`.
+
+### Blocked: needs approval or decisions before deployment
+1. **Private automation host.** The freeze must run automatically at 11:30 ET where the private ledger lives. GitHub Actions in the public repo can't hold it privately, and artifacts in public repos are downloadable. Recommended ($0): a free **private GitHub repo** holding `reviews/`, review outputs and freezes, with its own workflow that checks out the public code and runs `review build` → `freeze` at 15:30Z (retry 15:45Z) → `verify` at 16:05Z and 16:30Z. It's triggered by the existing Cloudflare timer (two new cron entries plus a dispatch to the private repo, which needs a fine-grained token scoped to that repo). Not created yet.
+2. **Public site shows only the resulting bracket.** Today the template shows "Edited (model N)" tags and override reasons, and snapshots include the model bracket next to the adjusted one, which together would reveal the edits. Changing `sitebuild`, the template and the snapshot contents is a production change.
+3. **How the resulting bracket reaches the public build without the ledger.** Options:
+   - (a) the private workflow commits a lines-only bracket file to the public repo;
+   - (b) an encrypted secret.
+
+   I recommend (a): it reveals only what the site shows anyway.
+4. **Trade-off of the noon freeze, for the owner to confirm.** Selection Sunday conference finals are usually played in the afternoon, and 7-9 field teams play that day (docs/35). An 11:30 freeze uses projected champions for those leagues and can't see a Sunday bid thief. The Matrix deadline is later in the day.
+5. **Daily review build and grading job** wiring, after item 1.
+6. **2027 official bracket parsing:** `bracketmatrix.collect` is verified on 68-team pages only. The rubric and formats handle 76, but the 2027 page parser can only be checked once the page exists. Fallback: `review grade 2027 official.json`.

@@ -49,6 +49,7 @@ class ShadowH2H:
     def fit(self, train: list[dict], evidence: dict[int, PairEvidence]) -> "ShadowH2H":
         """train: prepared training rows with year, key, in_field and ov. evidence: season -> PairEvidence."""
         field = [r for r in train if r["in_field"] and r.get("ov")]
+        self.train_years = sorted({r["year"] for r in field})     # checked before reuse, so an evaluation season can't leak in
         self.sd = StandardScaler().fit(model._X(field, model.SEED)); dX, dy = [], []
         for yr in sorted({r["year"] for r in field}):
             rs = [r for r in field if r["year"] == yr]; Z = self.sd.transform(model._X(rs, model.SEED)); ev = evidence[yr]

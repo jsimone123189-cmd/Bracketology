@@ -112,7 +112,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Freeze:** at noon ET on Selection Sunday, with SHA-256 and no overwrite.
 - **Grading:** Matrix scores and percentiles. The owner's contribution is split into exactly additive edit groups (edits sharing teams are credited jointly).
 - **2026 demo** (trained without 2026): B1 356, B2 346, B3 with five replayed owner moves 377.
-- **Pending owner decisions:** page hosting (public repo), public vs local edit log, a 15:30 UTC Selection Sunday run for the freeze.
+- **Owner decisions:** private interface and ledger; public site shows only the resulting bracket; freeze at 11:30 ET with a verified noon cutoff. Implemented and tested locally: private storage, a leakage guard, a cutoff-checked idempotent freeze, an independent verify, and recovery. Blocked on approval: private automation host (free private repo plus Cloudflare cron), public-site changes, publishing lines only.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).

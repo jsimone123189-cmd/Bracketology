@@ -166,8 +166,16 @@ def build(rows: list[dict], season: int, fitted: model.Model, games: list[dict],
     outside = [{"key": r["key"], "team": r["team"], "p_in": round(r["p_in"], 3), "net": r["net"], "lg": r.get("lg"), "rank_score": round(r["rank_score"], 4)} for r in rest_rows[:16]]
     atl = sorted((t for t in teams if not t["champ"] and not t["projected_auto"]), key=lambda t: t["p_in"])
     asof = sources.get("games_through", day) if sources else day
+    sources = sources or {}
+    inputs = {"collected_at": sources.get("collected_at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "games_through": day,
+              "latest_game_used": max((g["date_iso"] for g in games if g["date_iso"] <= day), default=None), "net_source": sources.get("net_source"),
+              "net_asof": sources.get("net_asof"), "game_rows": sources.get("game_rows", len(games))}
+    consistency = {"one_cutoff_for_all_brackets": day, "B2_same_field_as_B1": None if B2 is None else set(B2) == set(B1),
+                   "B3_is_B1_plus_logged_edits": True, "field_size": len(B1), "expected_field_size": fieldformat.format_for(season).size}
     out = {"season": season, "asof": asof, "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "model_version": model.MODEL_VERSION,
-           "lines": fieldformat.line_sizes(season), "u": u, "sources": sources or {}, "phase": phase(season, asof),
+           "lines": fieldformat.line_sizes(season), "u": u, "sources": sources, "inputs": inputs, "consistency": consistency,
+           "shadow": None if shadow is None else {"train_years": sorted(getattr(shadow, "train_years", [])) or None, "fingerprint": fingerprint(shadow)},
+           "v2_fingerprint": fingerprint(fitted), "phase": phase(season, asof),
            "teams": teams, "outside": outside, "bubble": {"last_in": [t["key"] for t in atl[:6]], "first_out": [t["key"] for t in outside[:6]]},
            "brackets": {"B1_model": B1, "B2_shadow": B2, "B3_manual": B3}, "edits": applied, "edit_notes": notes, "all_info": {k: {"team": v["team"], "lg": v["lg"], "champ": v["champ"], "projected_auto": v["projected_auto"], "rank_score": round(v["rank_score"], 4), "p_in": round(v["p_in"], 4)} for k, v in info.items() if k in set(m_order) | set(rest[:40])},
            "model_order": m_order, "rest_order": rest[:40]}
@@ -178,6 +186,17 @@ def build(rows: list[dict], season: int, fitted: model.Model, games: list[dict],
 def selection_sunday(season: int) -> date | None:
     from .history import SELECTION_SUNDAY
     return project.SELECTION_SUNDAY_LIVE.get(season) or (date.fromisoformat(SELECTION_SUNDAY[season]) if season in SELECTION_SUNDAY else None)
+
+def fingerprint(m) -> str:
+    """SHA-256 of a fitted model's learned numbers (the objects actually used, not a file on disk)."""
+    parts = []
+    for name in ("coef", "sd", "lr", "rank", "s_sel", "s_seed"):
+        o = getattr(m, name, None)
+        if o is None: continue
+        for a in ("coef_", "intercept_", "mean_", "scale_"):
+            if hasattr(o, a): parts.append(np.asarray(getattr(o, a), float).round(12).tobytes())
+        if isinstance(o, np.ndarray): parts.append(o.astype(float).round(12).tobytes())
+    return hashlib.sha256(b"".join(parts)).hexdigest()
 
 def phase(season: int, asof: str) -> str:
     ss = selection_sunday(season)
@@ -198,41 +217,162 @@ def change_report(cur: dict, prev: dict) -> dict:
             "near_boundary": sorted(t["team"] for t in cur["teams"] if min(x for x in (t["boundary_up_u"], t["boundary_down_u"], 99) if x is not None) < .5),
             "confidence_changes": conf}
 
-# ------------------------------------------------------------------ freeze and grade
+# ------------------------------------------------------------------ storage (private; never in the public repo or site)
+PRIVATE = "private"          # gitignored. Edits, reviews and freezes stay on the owner's machine (or a private store) only.
+def edits_path(season: int) -> str: return f"{PRIVATE}/reviews/{season}.json"
+def reviews_dir() -> str: return f"{PRIVATE}/review"
+def freeze_dir() -> str: return f"{PRIVATE}/freeze"
+_FORBIDDEN = ("data/output/site", "site", "data/output/snapshots")
+
+def _ts(s: str) -> datetime: return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+def _sha(b: bytes) -> str: return hashlib.sha256(b).hexdigest()
+def _file_sha(p: str) -> str | None: return _sha(open(p, "rb").read()) if os.path.exists(p) else None
+
+def load_edits(season: int) -> list[dict]:
+    p = edits_path(season)
+    return json.load(open(p)) if os.path.exists(p) else []
+
+def write(review: dict, outdir: str | None = None) -> tuple[str, str]:
+    from .review_page import render
+    outdir = outdir or reviews_dir()
+    if any(os.path.abspath(outdir).startswith(os.path.abspath(f)) for f in _FORBIDDEN): raise SystemExit(f"Refusing to write the private review into public output {outdir}.")
+    os.makedirs(outdir, exist_ok=True); stamp = review["inputs"]["collected_at"].replace("-", "").replace(":", "")
+    jp = f"{outdir}/{review['season']}_{stamp}.json"; json.dump(review, open(jp, "w"), indent=1)
+    hp = f"{outdir}/{review['season']}_{stamp}.html"; open(hp, "w").write(render(review))
+    return jp, hp
+
+def all_reviews(season: int, folder: str | None = None) -> list[tuple[str, dict]]:
+    import glob
+    out = []
+    for p in sorted(glob.glob(f"{folder or reviews_dir()}/{season}_*.json")):
+        try: rv = json.load(open(p))
+        except (OSError, ValueError): continue      # a half-written file is skipped, never frozen
+        if isinstance(rv, dict) and (rv.get("inputs") or {}).get("collected_at"): out.append((p, rv))
+    return sorted(out, key=lambda x: x[1]["inputs"]["collected_at"])
+
+def previous(season: int, collected_at: str, folder: str | None = None) -> dict | None:
+    ps = [r for _, r in all_reviews(season, folder) if r["inputs"]["collected_at"] < collected_at]
+    return ps[-1] if ps else None
+
+# ------------------------------------------------------------------ freeze, verify, grade
 def freeze_deadline(season: int) -> datetime:
     ss = selection_sunday(season)
     return datetime(ss.year, ss.month, ss.day, 12, 0, tzinfo=ZoneInfo("America/New_York")).astimezone(timezone.utc)
 
-def freeze(review: dict, outdir: str = "data/freeze", now: datetime | None = None, deadline: datetime | None = None) -> str:
-    """Writes the three brackets, edits and input timestamps once, with a SHA-256 of the exact bytes. Refuses to overwrite,
-    and refuses a review generated after the deadline."""
-    deadline = deadline or freeze_deadline(review["season"]); gen = datetime.strptime(review["generated_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    if gen > deadline: raise SystemExit(f"Review generated {gen:%Y-%m-%d %H:%M}Z is after the freeze deadline {deadline:%Y-%m-%d %H:%M}Z.")
-    path = f"{outdir}/{review['season']}_freeze.json"
-    if os.path.exists(path): raise SystemExit(f"{path} already exists; frozen brackets are never overwritten.")
-    body = {"season": review["season"], "frozen_at": (now or datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ"), "deadline": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "review_generated_at": review["generated_at"], "inputs_asof": review["asof"], "sources": review["sources"], "model_version": review["model_version"],
-            "brackets": review["brackets"], "edits": review["edits"], "edit_notes": review["edit_notes"], "model_order": review["model_order"]}
+def problems(review: dict, deadline: datetime) -> list[str]:
+    """Why a review can't be frozen. Empty list = freezable."""
+    bad = []; fmt = fieldformat.format_for(review["season"]); inp = review.get("inputs") or {}
+    if not inp.get("collected_at"): return ["no collection time recorded"]
+    if _ts(inp["collected_at"]) > deadline: bad.append(f"data collected {inp['collected_at']} after the {deadline:%H:%M}Z cutoff")
+    if _ts(review["generated_at"]) > deadline: bad.append(f"generated {review['generated_at']} after the cutoff")
+    if inp.get("latest_game_used") and inp["latest_game_used"] > deadline.date().isoformat(): bad.append("uses games dated after Selection Sunday")
+    for name, L in review["brackets"].items():
+        if L is None: bad.append(f"{name} missing"); continue
+        sizes = [sum(1 for v in L.values() if v == l) for l in range(1, 17)]
+        if len(L) != fmt.size or sizes != list(fmt.lines): bad.append(f"{name} has {len(L)} teams / line sizes {sizes}, expected {fmt.size} / {list(fmt.lines)}")
+    c = review.get("consistency") or {}
+    if c.get("B2_same_field_as_B1") is False: bad.append("B2 field differs from B1")
+    if review.get("shadow") and review["shadow"].get("train_years") and review["season"] in review["shadow"]["train_years"]: bad.append("shadow was trained on the season being frozen")
+    alerts = [x["message"] for x in (review.get("sources") or {}).get("checks", []) if x.get("level") == "alert"]
+    if alerts: bad.append(f"data-check alerts: {alerts[:3]}")
+    return bad
+
+def full_bracket(review: dict, name: str) -> list[dict]:
+    L = review["brackets"][name]; info = review["all_info"]
+    return sorted(({"key": k, "team": info.get(k, {}).get("team", k), "line": v, "champ": info.get(k, {}).get("champ"), "projected_auto": info.get(k, {}).get("projected_auto")}
+                   for k, v in L.items()), key=lambda r: (r["line"], -info.get(r["key"], {}).get("rank_score", 0)))
+
+def freeze(season: int, folder: str | None = None, outdir: str | None = None, now: datetime | None = None, deadline: datetime | None = None,
+           edits_file: str | None = None) -> dict:
+    """Freezes the newest review whose data were collected before the cutoff and that passes every check.
+    Idempotent: if a valid freeze exists it is verified and returned, never overwritten. A late run (missed schedule) may still freeze,
+    but only a review collected before the cutoff; frozen_at records when it happened."""
+    deadline = deadline or freeze_deadline(season); now = now or datetime.now(timezone.utc); outdir = outdir or freeze_dir()
+    path = f"{outdir}/{season}_freeze.json"
+    if os.path.exists(path):
+        v = verify(season, outdir, deadline, write_record=False)
+        if not v["ok"]: raise SystemExit(f"{path} exists but fails verification: {v['problems']}. Not overwriting; investigate.")
+        return {"status": "already_frozen", "path": path, "sha256": v["sha256"]}
+    skipped, chosen = [], None
+    for p, rv in reversed(all_reviews(season, folder)):
+        bad = problems(rv, deadline)
+        if not bad: chosen = (p, rv); break
+        skipped.append({"review": os.path.basename(p), "problems": bad})
+    if chosen is None: raise SystemExit(f"No freezable review for {season}. Skipped: {skipped}")
+    p, rv = chosen; ep = edits_file or edits_path(season)
+    v2 = "models/v2.joblib"; sh = "models/shadow_h2h.joblib"
+    body = {"schema": 1, "season": season, "frozen_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "cutoff": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "frozen_after_cutoff": now > deadline, "review_file": os.path.basename(p), "review_sha256": _file_sha(p), "review_generated_at": rv["generated_at"],
+            "inputs": rv["inputs"], "sources": {k: v for k, v in rv["sources"].items() if k != "checks"}, "data_checks": rv["sources"].get("checks", []),
+            "model": {"version": rv["model_version"], "v2_fingerprint_used": rv.get("v2_fingerprint"), "v2_saved_fingerprint": _saved_fp(v2),
+                      "v2_file_sha256": _file_sha(v2), "v2_expected_file_sha256": model.MODEL_SHA256,
+                      "shadow_fingerprint_used": (rv.get("shadow") or {}).get("fingerprint"), "shadow_train_years": (rv.get("shadow") or {}).get("train_years"),
+                      "code_commit": os.environ.get("GITHUB_SHA") or _git_head()},
+            "consistency": rv["consistency"], "brackets": {n: full_bracket(rv, n) for n in rv["brackets"]},
+            "edit_history": {"file_sha256": _file_sha(ep), "entries_as_logged": json.load(open(ep)) if os.path.exists(ep) else [], "applied": rv["edits"], "not_applied": rv["edit_notes"]},
+            "skipped_reviews": skipped}
     raw = json.dumps(body, sort_keys=True, indent=1).encode()
-    os.makedirs(outdir, exist_ok=True); open(path, "wb").write(raw); open(path + ".sha256", "w").write(hashlib.sha256(raw).hexdigest() + "\n")
-    return path
+    os.makedirs(outdir, exist_ok=True); tmp = path + ".tmp"
+    with open(tmp, "wb") as f: f.write(raw)
+    try: os.link(tmp, path)                                  # atomic create-only: fails if another run froze first
+    except FileExistsError:
+        os.remove(tmp); return freeze(season, folder, outdir, now, deadline, edits_file)
+    os.remove(tmp); open(path + ".sha256", "w").write(_sha(raw) + "\n"); os.chmod(path, 0o444)
+    return {"status": "frozen", "path": path, "sha256": _sha(raw), "review": os.path.basename(p), "skipped": skipped}
+
+def _saved_fp(p: str) -> str | None:
+    try:
+        import joblib; return fingerprint(joblib.load(p)) if os.path.exists(p) else None
+    except Exception: return None
+
+def _git_head() -> str | None:
+    try:
+        import subprocess; return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10).stdout.strip() or None
+    except Exception: return None
+
+def verify(season: int, outdir: str | None = None, deadline: datetime | None = None, write_record: bool = True, now: datetime | None = None) -> dict:
+    """Independent check (run after noon). Recomputes the hash, re-checks the cutoff and contents, and writes a separate dated
+    verification record. Never modifies the freeze."""
+    outdir = outdir or freeze_dir(); deadline = deadline or freeze_deadline(season); path = f"{outdir}/{season}_freeze.json"; now = now or datetime.now(timezone.utc)
+    res = {"season": season, "checked_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "path": path, "problems": []}
+    if not os.path.exists(path): res["problems"].append("no freeze file"); res["ok"] = False
+    else:
+        raw = open(path, "rb").read(); res["sha256"] = _sha(raw)
+        rec = open(path + ".sha256").read().strip() if os.path.exists(path + ".sha256") else None
+        if rec != res["sha256"]: res["problems"].append(f"hash mismatch: file {res['sha256']} recorded {rec}")
+        b = json.loads(raw); fmt = fieldformat.format_for(season)
+        if _ts(b["inputs"]["collected_at"]) > deadline: res["problems"].append("frozen data collected after the cutoff")
+        if _ts(b["review_generated_at"]) > deadline: res["problems"].append("frozen review generated after the cutoff")
+        for n, rows in b["brackets"].items():
+            sizes = [sum(1 for r in rows if r["line"] == l) for l in range(1, 17)]
+            if len(rows) != fmt.size or sizes != list(fmt.lines): res["problems"].append(f"{n} incomplete")
+        m = b["model"]
+        if season in project.SELECTION_SUNDAY_LIVE:      # live seasons must use the frozen v2.0 exactly (historical replays refit without the season)
+            if m.get("v2_file_sha256") != m.get("v2_expected_file_sha256"): res["problems"].append("models/v2.joblib differs from the frozen baseline")
+            if m.get("v2_fingerprint_used") != m.get("v2_saved_fingerprint"): res["problems"].append("the model used is not the saved v2.0")
+        res["ok"] = not res["problems"]; res["frozen_after_cutoff"] = b["frozen_after_cutoff"]
+    if write_record:
+        os.makedirs(outdir, exist_ok=True)
+        json.dump(res, open(f"{outdir}/{season}_verify_{res['checked_at'].replace(':', '').replace('-', '')}.json", "w"), indent=1)
+    return res
 
 def grade(frozen: dict, official: dict[str, int], matrix_scores: list[int] | None = None) -> dict:
     """Bracket Matrix scores for B1-B3 and the owner's contribution. Scoring is a sum over teams, so edits are grouped by the teams
     they changed (union-find): each group's points are exact and groups add up to the total. Edits in one group interact and are credited jointly."""
     from .sources.bracketmatrix import score
+    br = {n: ({r["key"]: r["line"] for r in L} if isinstance(L, list) else L) for n, L in frozen["brackets"].items()}
     res = {}
-    for name, L in frozen["brackets"].items():
+    for name, L in br.items():
         if L is None: continue
-        s = score(L, official); res[name] = {**s, "percentile": None if not matrix_scores else round(100 * sum(x < s["score"] for x in matrix_scores) / len(matrix_scores))}
-    B1, B3 = frozen["brackets"]["B1_model"], frozen["brackets"]["B3_manual"]
+        s = score(L, official); res[name] = {**s, "max": 6 * len(official), "percentile": None if not matrix_scores else round(100 * sum(x < s["score"] for x in matrix_scores) / len(matrix_scores))}
+    B1, B3 = br["B1_model"], br["B3_manual"]
     parent = {}
     def find(x):
         parent.setdefault(x, x)
         while parent[x] != x: parent[x] = parent[parent[x]]; x = parent[x]
         return x
     def union(a, b): parent[find(a)] = find(b)
-    edits = frozen["edits"]
+    edits = frozen["edit_history"]["applied"] if "edit_history" in frozen else frozen["edits"]
     for e in edits:
         for t in e["teams_changed"]: union(t, ("edit", e["id"]))
     groups = {}
@@ -246,10 +386,6 @@ def grade(frozen: dict, official: dict[str, int], matrix_scores: list[int] | Non
     return {"scores": res, "manual_minus_model": total, "edit_groups": out, "groups_sum": sum(g["points"] for g in out)}
 
 # ------------------------------------------------------------------ CLI
-def load_edits(season: int) -> list[dict]:
-    p = f"reviews/{season}.json"
-    return json.load(open(p)) if os.path.exists(p) else []
-
 def _games_live(season: int) -> list[dict]:
     from .dataset import _d
     from .teams import key
@@ -258,51 +394,41 @@ def _games_live(season: int) -> list[dict]:
     return gs
 
 def _shadow(exclude: set[int]) -> ShadowH2H | None:
+    """Saved weights are used only if they were trained without every excluded season; otherwise refit."""
     import joblib
     p = "models/shadow_h2h.joblib"
-    if os.path.exists(p): return joblib.load(p)
+    if os.path.exists(p):
+        s = joblib.load(p); ty = set(getattr(s, "train_years", []) or [])
+        if ty and not (ty & set(exclude)): return s
     try:
         from .shadow_h2h import history_evidence
         from .history import SELECTION_SUNDAY
         years = [y for y in SELECTION_SUNDAY if y not in exclude]
-        return ShadowH2H().fit(project.training_rows(exclude=exclude), history_evidence(years, SELECTION_SUNDAY.get))
+        s = ShadowH2H().fit(project.training_rows(exclude=exclude), history_evidence(years, SELECTION_SUNDAY.get)); s.train_years = years; return s
     except Exception as e:
         print("Shadow unavailable:", e); return None
 
-def write(review: dict, outdir: str = "data/output/review") -> tuple[str, str]:
-    from .review_page import render
-    os.makedirs(outdir, exist_ok=True); stamp = review["asof"][:10]
-    jp = f"{outdir}/{review['season']}_{stamp}.json"; json.dump(review, open(jp, "w"), indent=1)
-    hp = f"{outdir}/{review['season']}_{stamp}.html"; open(hp, "w").write(render(review))
-    return jp, hp
-
-def previous(season: int, asof: str, outdir: str = "data/output/review") -> dict | None:
-    import glob
-    ps = sorted(p for p in glob.glob(f"{outdir}/{season}_*.json") if os.path.basename(p)[5:15] < asof[:10])
-    return json.load(open(ps[-1])) if ps else None
-
 def main(argv: list[str]) -> None:
-    cmd = argv[0] if argv else "build"
+    cmd = argv[0] if argv else "build"; season = int(argv[1]) if len(argv) > 1 else 2027
     if cmd == "build":
         from .sitebuild import load_or_fit
-        season = int(argv[1]) if len(argv) > 1 else 2027; info = {}; rows, warn = project.live_rows(season, info=info)
-        day = info.get("games_through"); prev = previous(season, day)
+        info = {"collected_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}; rows, warn = project.live_rows(season, info=info)
+        day = info.get("games_through"); prev = previous(season, info["collected_at"])
         rv = build(rows, season, load_or_fit(season=season), _games_live(season), day, _shadow({season}), load_edits(season), prev, info)
         rv["warnings"] = warn; print(*write(rv))
-    elif cmd == "freeze":
-        season = int(argv[1]) if len(argv) > 1 else 2027; import glob
-        p = sorted(glob.glob(f"data/output/review/{season}_*.json"))[-1]; print(freeze(json.load(open(p))))
+    elif cmd == "freeze": print(json.dumps(freeze(season), indent=1))
+    elif cmd == "verify":
+        v = verify(season); print(json.dumps(v, indent=1)); sys.exit(0 if v["ok"] else 1)
     elif cmd == "grade":
-        season = int(argv[1]) if len(argv) > 1 else 2027
         from .sources import bracketmatrix as bm
         from .teams import key
-        fz = json.load(open(f"data/freeze/{season}_freeze.json")); m = bm.collect(season)
+        fz = json.load(open(f"{freeze_dir()}/{season}_freeze.json")); m = bm.collect(season)
         off = json.load(open(argv[2])) if len(argv) > 2 else m["official"]; off = {key(t): int(s) for t, s in off.items()}
         ms = [int(v) for k, v in m["reported"]["SCORE"].items() if v.isdigit() and k != "MATRIX"]
         print(json.dumps(grade(fz, off, ms), indent=1, default=list))
     elif cmd == "demo":
         from .review_demo import demo
-        print(*demo(int(argv[1]) if len(argv) > 1 else 2026, argv[2] if len(argv) > 2 else "final"))
+        print(*demo(season if len(argv) > 1 else 2026, argv[2] if len(argv) > 2 else "final"))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
