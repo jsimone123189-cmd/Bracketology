@@ -1,0 +1,89 @@
+control [335, 326, 347, 344, 329, 363, 356]
+
+== 2. Where the group beats v2.0
+2019 n=5  picked v2 65 grp 66.6 | exact 40 vs 46.6 | within1 60 vs 63.0 | score 335 vs 356.0
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.69, 0.44, 0.67, 0.67]  grp [0.79, 0.51, 0.64, 0.84]
+      mean signed line error at-large power v2 -0.15 grp -0.05 | non-power v2 +1.14 grp +0.34
+      v2 wrong team in: Clemson (NET 35), group had it in 0/5
+      v2 wrong team in: NC State (NET 33), group had it in 0/5
+      v2 wrong team in: TCU (NET 52), group had it in 0/5
+2021 n=8  picked v2 67 grp 67.0 | exact 33 vs 48.0 | within1 59 vs 63.1 | score 326 vs 360.1
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.69, 0.25, 0.59, 0.44]  grp [0.87, 0.41, 0.76, 0.81]
+      mean signed line error at-large power v2 +0.11 grp -0.11 | non-power v2 +0.38 grp +0.11
+      v2 wrong team in: Louisville (NET 56), group had it in 0/8
+2022 n=9  picked v2 65 grp 66.9 | exact 45 vs 47.8 | within1 62 vs 66.6 | score 347 vs 362.8
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.81, 0.62, 0.47, 0.83]  grp [0.88, 0.81, 0.51, 0.69]
+      mean signed line error at-large power v2 -0.12 grp +0.02 | non-power v2 +0.56 grp +0.04
+      v2 wrong team in: Oklahoma (NET 40), group had it in 0/9
+      v2 wrong team in: SMU (NET 44), group had it in 0/9
+      v2 wrong team in: Texas A&M (NET 42), group had it in 0/9
+2023 n=9  picked v2 67 grp 67.0 | exact 42 vs 51.8 | within1 59 vs 66.2 | score 344 vs 370.8
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.5, 0.31, 0.76, 0.89]  grp [0.82, 0.56, 0.82, 0.87]
+      mean signed line error at-large power v2 +0.41 grp -0.02 | non-power v2 -0.50 grp +0.13
+      v2 wrong team in: North Texas (NET 38), group had it in 0/9
+2024 n=9  picked v2 65 grp 66.9 | exact 37 vs 41.6 | within1 60 vs 61.6 | score 329 vs 345.3
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.75, 0.25, 0.4, 0.83]  grp [0.88, 0.33, 0.42, 0.85]
+      mean signed line error at-large power v2 +0.00 grp +0.10 | non-power v2 +0.00 grp -0.27
+      v2 wrong team in: Indiana St. (NET 29), group had it in 0/9
+      v2 wrong team in: Oklahoma (NET 46), group had it in 0/9
+      v2 wrong team in: Seton Hall (NET 67), group had it in 0/9
+2025 n=9  picked v2 67 grp 66.0 | exact 49 vs 51.9 | within1 64 vs 64.0 | score 363 vs 365.8
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.81, 0.56, 0.65, 0.89]  grp [0.97, 0.49, 0.66, 1.0]
+      mean signed line error at-large power v2 +0.00 grp +0.05 | non-power v2 -0.25 grp -0.42
+      v2 wrong team in: West Virginia (NET 51), group had it in 0/9
+2026 n=9  picked v2 67 grp 68.0 | exact 45 vs 55.1 | within1 65 vs 68.0 | score 356 vs 382.2
+      exact rate by band 1-4/5-8/9-12/13-16  v2 [0.81, 0.56, 0.65, 0.67]  grp [0.74, 0.85, 0.8, 0.85]
+      mean signed line error at-large power v2 -0.15 grp -0.03 | non-power v2 +1.33 grp +0.06
+      v2 wrong team in: Auburn (NET 38), group had it in 0/9
+
+Teams the group placed (75%+ within one line) where v2.0 missed by 2+ or left out
+season team seed v2line grp_right/n NET power champ WABrk ratingrk Q1 W-L SOS
+   2019 UCF              9 11 5/5 30 0 0 None 47 2-5 3.7
+   2019 Minnesota        10 8 4/5 61 1 0 None 50 5-10 9.1
+   2019 Temple           11 None 5/5 56 0 0 None 72 2-6 3.4
+   2019 Arizona St.      11 None 4/5 63 0 0 None 59 3-3 4.5
+   2019 St. John's (NY)  11 None 4/5 73 1 0 None 82 5-7 5.1
+   2021 West Virginia    3 5 8/8 24 1 0 None 28 7-7 9.3
+   2021 Texas Tech       6 8 8/8 16 1 0 None 17 4-10 6.2
+   2021 Loyola Chicago   8 6 8/8 10 0 1 None 15 2-2 0.8
+   2021 North Carolina   8 10 8/8 32 1 0 None 26 3-9 8.3
+   2021 Oklahoma         8 10 8/8 36 1 0 None 33 5-9 7.9
+   2021 Utah St.         11 None 7/8 39 0 0 None 44 2-5 1.3
+   2021 Colgate          14 7 8/8 9 0 1 None 9 0-0 0.3
+   2022 Murray St.       7 10 9/9 21 0 1 None 33 2-1 -2.4
+   2022 San Diego St.    8 10 9/9 25 0 0 None 26 5-8 5.2
+   2022 Iowa St.         11 9 7/9 49 1 0 None 52 9-8 7.5
+   2022 Indiana          12 None 9/9 39 1 0 None 32 4-8 6.6
+   2023 Virginia         4 6 9/9 27 1 0 None 36 5-5 4.5
+   2023 Miami (FL)       5 7 9/9 35 1 0 None 40 5-5 4.8
+   2023 Memphis          8 5 9/9 23 0 1 None 25 4-4 5.5
+   2023 Maryland         8 10 9/9 31 1 0 None 28 3-10 6.2
+   2023 Fla. Atlantic    9 6 8/9 13 0 1 None 20 2-1 0.8
+   2023 Utah St.         10 8 9/9 18 0 0 None 19 2-5 6.1
+   2023 Boise St.        10 8 9/9 29 0 0 None 33 3-5 5.4
+   2023 Pittsburgh       11 None 9/9 67 1 0 None 78 4-4 2.9
+   2024 San Diego St.    5 7 9/9 21 0 0 None 23 4-9 7.2
+   2024 Michigan St.     9 None 9/9 24 1 0 None 18 3-9 8.9
+   2025 Purdue           4 6 9/9 19 1 0 20 16 7-10 11.4
+   2026 Vanderbilt       5 3 9/9 13 1 0 None 10 10-7 10.1
+   2026 Saint Louis      9 11 9/9 30 0 0 None 31 2-1 1.4
+   2026 Miami (OH)       11 None 9/9 64 0 0 None 90 0-0 -4.1
+count 30 v2 line too good (lower number) in 9 too bad in 13 left out 8
+
+== 3. Rating magnitude (Torvik held for 2019, 2022-25)
+2019 n=65 corr(residual, magnitude gap) -0.057  corr(residual, rank gap) -0.026  magnitude coef after rank -1.72
+      committee in, v2 out (magnitude gap, rank gap): [('Temple', np.float64(0.27), 0.22), ('Arizona St.', np.float64(-0.15), -0.17), ("St. John's (NY)", np.float64(0.27), 0.22)]  v2 in, committee out: [('NC State', np.float64(-0.15), -0.28), ('TCU', np.float64(0.0), 0.05), ('Clemson', np.float64(0.16), 0.39)]
+      2+ line misses (team, seed, v2 line, magnitude gap): [('Utah St.', 8, 10, -0.24), ('UCF', 9, 11, 0.38), ('VCU', 8, 11, 0.27), ('Iowa', 10, 7, 0.02), ('Minnesota', 10, 8, 0.08)]
+2022 n=65 corr(residual, magnitude gap) +0.044  corr(residual, rank gap) +0.010  magnitude coef after rank -0.08
+      committee in, v2 out (magnitude gap, rank gap): [('Indiana', np.float64(0.19), 0.33), ('Notre Dame', np.float64(0.2), 0.31), ('Rutgers', np.float64(0.05), 0.05)]  v2 in, committee out: [('Texas A&M', np.float64(0.06), 0.17), ('Oklahoma', np.float64(0.01), -0.14), ('SMU', np.float64(-0.02), 0.02)]
+      2+ line misses (team, seed, v2 line, magnitude gap): [('Murray St.', 7, 10, -0.09), ('San Diego St.', 8, 10, -0.08), ('Iowa St.', 11, 9, -0.08)]
+2023 n=67 corr(residual, magnitude gap) -0.125  corr(residual, rank gap) -0.053  magnitude coef after rank -1.96
+      committee in, v2 out (magnitude gap, rank gap): [('Pittsburgh', np.float64(-0.14), -0.09)]  v2 in, committee out: [('North Texas', np.float64(0.04), 0.21)]
+      2+ line misses (team, seed, v2 line, magnitude gap): [('Fla. Atlantic', 9, 6, -0.26), ('Utah St.', 10, 8, 0.01), ('Texas A&M', 7, 4, 0.31), ('Memphis', 8, 5, 0.24), ('Virginia', 4, 6, 0.05), ('Boise St.', 10, 8, -0.07), ('Maryland', 8, 10, -0.09), ('Miami (FL)', 5, 7, 0.09)]
+2024 n=65 corr(residual, magnitude gap) +0.049  corr(residual, rank gap) +0.051  magnitude coef after rank +0.23
+      committee in, v2 out (magnitude gap, rank gap): [('Michigan St.', np.float64(-0.14), -0.25), ('Texas A&M', np.float64(0.12), 0.13), ('Virginia', np.float64(0.04), 0.16)]  v2 in, committee out: [('Oklahoma', np.float64(-0.17), -0.27), ('Seton Hall', np.float64(0.14), 0.23), ('Indiana St.', np.float64(-0.09), -0.2)]
+      2+ line misses (team, seed, v2 line, magnitude gap): [('San Diego St.', 5, 7, -0.17), ('New Mexico', 11, 9, -0.09), ('Boise St.', 10, 8, -0.05), ('Nevada', 10, 7, 0.09), ('Fla. Atlantic', 8, 10, -0.26)]
+2025 n=67 corr(residual, magnitude gap) +0.048  corr(residual, rank gap) +0.113  magnitude coef after rank +1.70
+      committee in, v2 out (magnitude gap, rank gap): [('Xavier', np.float64(0.08), 0.08)]  v2 in, committee out: [('West Virginia', np.float64(0.07), 0.28)]
+      2+ line misses (team, seed, v2 line, magnitude gap): [('Purdue', 4, 6, 0.09), ('Louisville', 8, 5, 0.1), ('Memphis', 5, 8, -0.24)]
+DECISION: negative in 2/5, mean -0.008, coefficient negative in 3/5 -> explains misses: False

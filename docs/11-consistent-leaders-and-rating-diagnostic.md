@@ -42,3 +42,25 @@ Measures, by season, over teams in the actual field:
 - the magnitude coefficient stays negative after rank in at least 4 of 5.
 
 If it does, the next step is one committed test of a better rating of our own, built from free live data. Torvik would never be an input. If it doesn't, item B is closed.
+
+## Results (2026-11-14)
+Output: `research/leaders_and_magnitude_output.txt`. The control reproduced 335 326 347 344 329 363 356.
+
+### Where the consistent group beats v2.0
+They outscore v2.0 by about 20 points a season. Season by season, v2.0 then the group average: 335/356, 326/360, 347/363, 344/371, 329/345, 363/366, 356/382. Nearly all of the gap is seeding, not selection.
+- **Exact seeds:** v2.0 averaged 41.6 a season, the group about 49. That's roughly 7 more teams on the exact line, worth about 21 points. Teams picked differs by about 1 a season, worth about 3 points.
+- **Middle lines are the weakest spot.** Exact rate on lines 5-8 was 0.43 for v2.0 against 0.57 for the group. Lines 1-4 were 0.72 against 0.85.
+- **Selection:** v2.0 had 14 wrong teams over seven seasons, and **all 9 of the group left out every one of them.** Most were power-conference teams with NET 33-56: Clemson, NC State, TCU, Louisville, Oklahoma twice, SMU, Texas A&M, Seton Hall, West Virginia, Auburn. Two were mid-majors: Indiana State and North Texas.
+- **Non-power at-large teams:** v2.0 put them too low (higher line numbers) by more than a line in 2019 (+1.14) and 2026 (+1.33), and by +0.56 in 2022. The group was within about 0.3 of zero in each. 2023 went the other way (-0.50).
+- **Small-conference champions are v2.0's biggest single misses, in both directions:** Colgate 2021 (seed 14, v2.0 line 7, NET 9), Loyola Chicago 2021 (8 vs 6), Memphis 2023 (8 vs 5), Florida Atlantic 2023 (9 vs 6), Murray State 2022 (7 vs 10). The group got all of these within a line.
+- 30 team-seasons fit the list rule (75%+ of the group within one line, v2.0 off by 2+ or missing). v2.0's line was too high for 9, too low for 13, and the team was missing for 8.
+
+### Rating magnitude: closed
+Torvik's rating gaps don't explain v2.0's misses. The correlation was negative in 2 of 5 seasons, mean -0.008, and the coefficient after rank was negative in 3 of 5. The rule needed 4 of 5, a mean of -0.15 or lower, and 4 of 5. Plan item B is closed.
+
+**Correction made during the run:** the saved Torvik pages append text to team names, like next-game notes and, in 2023-24, the tournament seed. The first pass matched almost no 2022-24 teams. Names are now cleaned before matching. The seed notes also show that the 2023 and 2024 pages were saved after Selection Sunday. v2.0 never reads these files (checked: no Torvik field in features, metrics, model or project), so the baseline isn't affected. They should not be used as cutoff-time data without checking their dates.
+
+### What could come next (not yet run)
+At most two hypotheses, each needing its own committed test:
+1. **Selection:** why the committee and every consistent bracketologist rejected v2.0's 14 wrong teams, mostly power-conference teams with NET 33-56. The test would be one free-data feature for that profile.
+2. **Seeding small-conference champions and non-power at-large teams.** These are the largest misses, and they go both ways.
