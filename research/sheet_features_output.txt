@@ -1,0 +1,11 @@
+2021 field teams found on sheet: 68 / 68
+2022 field teams found on sheet: 68 / 68
+2023 field teams found on sheet: 68 / 68
+2025 field teams found on sheet: 68 / 68
+2021 {'control (3-season v2.0)': (321, 32), 'T19 seed model': (325, 33), 'seed + selection (reported)': (325, 33)}
+2022 {'control (3-season v2.0)': (338, 41), 'T19 seed model': (328, 36), 'seed + selection (reported)': (328, 36)}
+2023 {'control (3-season v2.0)': (340, 42), 'T19 seed model': (336, 39), 'seed + selection (reported)': (336, 39)}
+2025 {'control (3-season v2.0)': (357, 48), 'T19 seed model': (356, 47), 'seed + selection (reported)': (362, 48)}
+control (3-season v2.0)       [np.int64(321), np.int64(338), np.int64(340), np.int64(357)] mean 339.0 diff +0.0 better 0 worse 0 worst +0 PASS=False exact 40.8 pct [6, 20, 10, 47]
+T19 seed model                [np.int64(325), np.int64(328), np.int64(336), np.int64(356)] mean 336.2 diff -2.8 better 1 worse 3 worst -10 PASS=False exact 38.8 pct [7, 10, 7, 42]
+seed + selection (reported)   [np.int64(325), np.int64(328), np.int64(336), np.int64(362)] mean 337.8 diff -1.2 better 2 worse 2 worst -10 PASS=False exact 39.0 pct [7, 10, 7, 67]

@@ -1,0 +1,7 @@
+2019 in-sample exact: linear 44 | deep GBM 65 | perfect 68
+2021 in-sample exact: linear 37 | deep GBM 50 | perfect 68
+2022 in-sample exact: linear 45 | deep GBM 59 | perfect 68
+2023 in-sample exact: linear 43 | deep GBM 52 | perfect 68
+2024 in-sample exact: linear 38 | deep GBM 52 | perfect 68
+2025 in-sample exact: linear 49 | deep GBM 59 | perfect 68
+2026 in-sample exact: linear 47 | deep GBM 64 | perfect 68
