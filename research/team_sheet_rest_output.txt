@@ -1,0 +1,7 @@
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+Test 13 all four, both models [320, 330, 340, 343, 336, 362, 361] mean 341.7 diff -1.1 better 3 worse 4 worst -15 PASS=False pct [6, 12, 22, 14, 23, 67, 16] all>=75 False
+  reported: avg_net_w in seeding[333, 331, 333, 344, 330, 363, 356] mean 341.4 diff -1.4 better 2 worse 2 worst -14 PASS=False pct [20, 14, 15, 14, 11, 75, 10] all>=75 False
+  reported: avg_net_l in seeding[335, 326, 349, 344, 329, 359, 355] mean 342.4 diff -0.4 better 1 worse 2 worst -4 PASS=False pct [21, 9, 47, 14, 10, 57, 10] all>=75 False
+  reported: net_sos in seeding[329, 331, 332, 340, 330, 363, 356] mean 340.1 diff -2.7 better 2 worse 3 worst -15 PASS=False pct [15, 14, 15, 10, 11, 75, 10] all>=75 False
+  reported: net_ncsos in seeding[325, 334, 339, 345, 336, 362, 354] mean 342.1 diff -0.7 better 3 worse 4 worst -10 PASS=False pct [9, 18, 20, 15, 23, 67, 9] all>=75 False
+exit 0
