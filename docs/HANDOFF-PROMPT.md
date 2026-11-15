@@ -114,6 +114,15 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **2026 demo** (trained without 2026): B1 356, B2 346, B3 with five replayed owner moves 377.
 - **Owner decisions:** private interface and ledger; public site shows only the resulting bracket; freeze at 11:30 ET with a verified noon cutoff. Implemented and tested locally: private storage, a leakage guard, a cutoff-checked idempotent freeze, an independent verify, and recovery. Blocked on approval: private automation host (free private repo plus Cloudflare cron), public-site changes, publishing lines only.
 
+## Pre-approval check (2026-11-15)
+- **Live 2027 build works locally:** `python -m bracketology.review build 2027` → `private/review/2027_<time>.html`. It produced a 76-team field, with B1, B2 and B3 on one cutoff and the same field. Early season (median 3 games) gives rough seeds; the shadow is especially unstable this early.
+- **How saving works:** edit on the page → Edit log → Copy JSON → paste into `private/reviews/2027.json`. Later that file lives in the private repo, editable on github.com from a phone. The next build applies it. No server, $0.
+- **The 377 replay is not the owner's submission.** The five replayed moves are in his submitted 2026 bracket, but their reason codes, confidence and timestamps were invented for the demo. They were also picked with hindsight (all five scored). His real 23 changes from v2.0 netted +14 (370 vs 356). The replay and his bracket differ on 16 teams, net +7 to the replay.
+- **Schedule:** Selection Sunday is March 14, 2027, and daylight saving starts at 2 a.m. that day. The cutoff is computed as noon America/New_York with zoneinfo, which comes to 16:00 UTC. The freeze runs at 15:30 UTC with a retry at 15:45; verification at 16:05 and 16:30. Cloudflare crons are UTC-only, so they must be updated each year. The freeze rejects data collected after noon New York time regardless of when it runs.
+- **Field size:** configurable through `fieldformat.format_for` (68 through 2026, 76 from 2027). The scoring rubric has no team count; the maximum is size × 6. Leftover hard-coded 68s exist only in unused research modules (`backtest.py`, `picker.py`).
+- **Proposed automation (not built):** a free private GitHub repo that runs build, freeze and verify. Token A (private repo Actions) is stored as a Cloudflare Worker secret; token B (public repo Contents) is used only to push a lines-only public bracket. Exposure risks: making the repo public later, or the public site's "Edited (model N)" tags plus the public model bracket revealing edits. That needs a site change.
+- **Owner approval needed for:** the private repo, both tokens, the Cloudflare crons and dispatch, the public site/snapshot change, and whether to keep the noon freeze (most Sunday conference finals are played after noon).
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.
