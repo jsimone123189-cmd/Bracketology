@@ -1,0 +1,9 @@
+2021 v2 game-driven moves toward/away 19/11; v2 all 19/9; elite all (sum over 6) 121/29, per bracket 20.2/4.8
+2022 v2 game-driven moves toward/away 19/8; v2 all 17/6; elite all (sum over 7) 145/39, per bracket 20.7/5.6
+2023 v2 game-driven moves toward/away 9/10; v2 all 12/11; elite all (sum over 6) 109/46, per bracket 18.2/7.7
+2024 v2 game-driven moves toward/away 14/12; v2 all 12/13
+2025 v2 game-driven moves toward/away 11/8; v2 all 13/7; elite all (sum over 6) 97/29, per bracket 16.2/4.8
+2026 v2 game-driven moves toward/away 10/10; v2 all 12/8; elite all (sum over 4) 82/19, per bracket 20.5/4.8
+v2 game-driven (champions fixed)   toward 82 away 59  share toward 58%
+v2 all                             toward 85 away 54  share toward 61%
+elite all                          toward 554 away 162  share toward 77%
