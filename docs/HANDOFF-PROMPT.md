@@ -19,7 +19,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Seasons:** 2019 and 2021-2026 (2020 had no tournament; NET began in 2018-19). Evaluation is leave-one-season-out: train on six seasons, score the seventh.
 - **Scoring (Bracket Matrix):** 3 points for each correct team in the field, plus 3 for the exact seed line or 1 for one line off. The maximum is 408.
 - **Baseline v2.0 held-out scores:** 335 326 347 344 329 363 356 (mean 342.9). Matrix percentiles 21, 9, 39, 14, 10, 75, 10. Any new test must reproduce these exactly as its control.
-- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 91 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
+- **Bar to replace v2.0:** +3 mean points, better in at least 5 of 7 seasons, and no season worse than -5. About 92 variants have been tried, so a single pass could be luck. Anything that passes goes to 2027 shadow tracking first.
 
 ## What v2.0 is
 - **Features**, from game logs (Torvik's free game logs, held locally) plus NET from Wayback captures (as of Saturday night before Selection Sunday): log NET, our own WAB, our own SOR-style metric, our own margin rating, Q1A/Q1/Q2 wins, Q1 losses, Q3/Q4 losses, win %, SOS, road and neutral wins, last-10, best-3 wins, power conference, and auto-bid status. These are z-scored among NET ≤ 120.
@@ -87,6 +87,13 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Test 26** (CT surprise as a learned feature): -5.0, better in 2, worse in 4. Failed. The signal is too weak for a linear weight.
 - **Line moves D-7 → final** (exploratory): elite moves go toward the committee's seed **77%** of the time (554/716). v2.0's game-driven moves go toward it 58% (82/141), close to a coin flip.
 - **Open:** what tells the elite which teams to move, and how far? A "pre-tournament résumé plus champion status" model (discounting conference-tournament games) was suggested by these same seasons, so it can only be validated prospectively.
+
+## Anchoring round (docs/40, exploratory: hypothesis came from the same seasons)
+- **Overreaction audit:** survives. At-large-only correlation positive in 6 of 7, partial correlation controlling for predicted position positive in 7 of 7 (about +0.2). Not driven by champions (4 of 7). No sign error.
+- **Actual v2.0 line moves D-7 → final (2021-26):** auto-bid-driven 63 beneficial / 41 harmful (net +71 exact). **Résumé-driven only about 6 a season: 22 beneficial / 13 harmful (net +9 exact).**
+- **Maximum opportunity from limiting v2.0's movement:** freezing all résumé moves = -1.5 exact a season. A perfect selective freeze is at most +1.8 exact a season (about 5 points). **Anchoring can't close the roughly 8-exact gap.**
+- **Anchor-CT rule** (seed on each team's pre-conference-tournament résumé; final NET, champions and selection kept current; no parameters): 337 327 334 342 316 350 358 = -5.1, better in 3, worse in 4, exact -3.0. Not shadowed.
+- **Corrected interpretation:** the elite gain isn't model restraint. It's moves v2.0 never makes: about 24 line changes per elite bracket over championship week, 77% correct, against about 6 résumé moves a season for v2.0. That's information or judgment outside the free stats.
 
 ## Path B and 2027 plan (docs/37, docs/38)
 - **Review page design:** neighbours panel, résumé comparison, head-to-head, metric disagreement, "why this could be wrong" flags, and an edit form that preserves line sizes.
