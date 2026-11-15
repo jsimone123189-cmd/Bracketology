@@ -1,0 +1,11 @@
+  2019: double champions in field 19, field teams with Q1 losses 65
+  2021: double champions in field 10, field teams with Q1 losses 62
+  2022: double champions in field 14, field teams with Q1 losses 67
+  2023: double champions in field 19, field teams with Q1 losses 67
+  2024: double champions in field 12, field teams with Q1 losses 65
+  2025: double champions in field 20, field teams with Q1 losses 65
+  2026: double champions in field 15, field teams with Q1 losses 62
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+Test 15 Q1 loss margin      [335, 326, 343, 348, 329, 359, 356] mean 342.3 diff -0.6 better 1 worse 2 worst -4 PASS=False pct [21, 9, 27, 18, 10, 57, 10] all>=75 False
+Test 16 double champion     [335, 324, 347, 344, 329, 357, 352] mean 341.1 diff -1.7 better 0 worse 3 worst -6 PASS=False pct [21, 7, 39, 14, 10, 47, 8] all>=75 False
+exit 0
