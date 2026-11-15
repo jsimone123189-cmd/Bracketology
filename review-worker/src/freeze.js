@@ -14,7 +14,14 @@ export const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 // An incomplete final (a Selection Sunday conference final not yet over) may be frozen only in the last minutes before the
 // deadline, so it is never taken while the finals could still finish in time.
 export const INCOMPLETE_FINAL_WINDOW_MS = 10 * 60000;
-export const EARLIEST_MS = 30 * 60000;
+export const EARLIEST_MS = 30 * 60000;                  // final: manual freeze not before 30 min ahead of its deadline
+// Research (owner decision, 2026-11-15): frozen at 12:01 p.m. ET, never earlier, with a strict noon cutoff for collected data and
+// logged edits. Freezing a minute after the cutoff means every edit logged up to 12:00:00 is already stored when it runs.
+export const RESEARCH_DELAY_MS = 60000;
+export function earliestOf(cfg, kind) {
+  const c = cutoffOf(cfg, kind);
+  return c === null ? null : kind === "research" ? c + RESEARCH_DELAY_MS : c - EARLIEST_MS;
+}
 
 export function cutoffOf(cfg, kind) {
   if (kind === "research") return Date.parse(cfg.research_cutoff);
@@ -83,8 +90,10 @@ export function choose({ season, kind, cfg, reviews, now }) {
   const pick = kind === "final" ? (valid.find((v) => complete(v.rv)) || valid[0]) : valid[0];
   const isComplete = complete(pick.rv);
   // Timing rules (also protect against an accidental early tap):
-  if (now < cutoff - EARLIEST_MS && !(kind === "final" && isComplete && now > cutoffOf(cfg, "research")))
-    return { error: `Too early: the ${kind} snapshot can't be frozen before ${iso(cutoff - EARLIEST_MS)}${kind === "final" ? " unless every conference final is in" : ""}.`, wait: true };
+  if (kind === "research" && now < earliestOf(cfg, kind))
+    return { error: `Too early: the research snapshot is frozen from ${iso(earliestOf(cfg, kind))} (one minute after the noon cutoff), so every edit up to noon counts.`, wait: true };
+  if (kind === "final" && now < earliestOf(cfg, kind) && !(isComplete && now > cutoffOf(cfg, "research")))
+    return { error: `Too early: the final snapshot can't be frozen before ${iso(earliestOf(cfg, kind))} unless every conference final is in.`, wait: true };
   if (kind === "final" && !isComplete && now < cutoff - INCOMPLETE_FINAL_WINDOW_MS) {
     const p = pick.rv.inputs.conference_games_pending;
     return { error: `Waiting for conference finals (${p == null ? "the scoreboard couldn't be read" : p.map((g) => g.game || g.conf).join(", ")}). An incomplete final is frozen only after ${iso(cutoff - INCOMPLETE_FINAL_WINDOW_MS)}.`, wait: true };

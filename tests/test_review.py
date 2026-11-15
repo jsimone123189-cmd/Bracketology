@@ -72,11 +72,11 @@ def put(folder, rv):
 def test_deadline_is_noon_eastern():
     assert review.freeze_deadline(2027) == CUT
 
-def test_1130_run_freezes_and_post_noon_data_is_never_frozen(tmp_path):
+def test_1201_run_freezes_and_post_noon_data_is_never_frozen(tmp_path):
     f = str(tmp_path / "rv"); put(f, fake_review("2027-03-14T10:17:00Z")); put(f, fake_review("2027-03-14T15:30:00Z")); put(f, fake_review("2027-03-14T16:01:00Z"))
-    r = review.freeze(2027, f, str(tmp_path / "fz"), now=datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc), edits_file=str(tmp_path / "none.json"))
+    r = review.freeze(2027, f, str(tmp_path / "fz"), now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file=str(tmp_path / "none.json"))
     b = json.load(open(r["path"]))
-    assert r["status"] == "frozen" and b["inputs"]["collected_at"] == "2027-03-14T15:30:00Z" and not b["frozen_after_cutoff"]
+    assert r["status"] == "frozen" and b["inputs"]["collected_at"] == "2027-03-14T15:30:00Z" and b["cutoff"] == "2027-03-14T16:00:00Z"
     assert any("after the" in p for s in b["skipped_reviews"] for p in s["problems"])        # the 16:01 review was refused
     assert len(b["brackets"]["B1_model"]) == 76 and b["model"]["version"] == "v2.0" and "edit_history" in b
 
@@ -90,14 +90,14 @@ def test_incomplete_reviews_are_skipped_and_none_valid_fails(tmp_path):
     put(f, fake_review("2027-03-14T15:20:00Z", b2=False)); put(f, fake_review("2027-03-14T15:25:00Z", broken=True)); put(f, fake_review("2027-03-14T15:30:00Z", alert=True))
     put(f, fake_review("2027-03-14T15:31:00Z", shadow_years=(2019, 2027)))
     open(f"{f}/2027_garbage.json", "w").write("{half written")
-    r = review.freeze(2027, f, str(tmp_path / "fz"), now=datetime(2027, 3, 14, 15, 40, tzinfo=timezone.utc), edits_file="nope")
+    r = review.freeze(2027, f, str(tmp_path / "fz"), now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file="nope")
     b = json.load(open(r["path"])); assert b["inputs"]["collected_at"] == "2027-03-14T10:17:00Z" and len(b["skipped_reviews"]) == 4
     g = str(tmp_path / "rv2"); put(g, fake_review("2027-03-14T15:20:00Z", b2=False))
-    with pytest.raises(SystemExit): review.freeze(2027, g, str(tmp_path / "fz2"), now=datetime(2027, 3, 14, 15, 40, tzinfo=timezone.utc), edits_file="nope")
+    with pytest.raises(SystemExit): review.freeze(2027, g, str(tmp_path / "fz2"), now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file="nope")
 
 def test_duplicate_freeze_is_idempotent_and_tampering_is_caught(tmp_path):
     f = str(tmp_path / "rv"); fz = str(tmp_path / "fz"); put(f, fake_review("2027-03-14T15:30:00Z"))
-    now = datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc)
+    now = datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc)
     r1 = review.freeze(2027, f, fz, now=now, edits_file="nope"); raw = open(r1["path"], "rb").read()
     put(f, fake_review("2027-03-14T15:45:00Z"))                                                  # a newer pre-noon review appears
     r2 = review.freeze(2027, f, fz, now=now, edits_file="nope")
@@ -117,7 +117,7 @@ def test_private_paths_are_ignored_and_untracked():
 
 def test_verify_rejects_a_substituted_model_for_a_live_season(tmp_path):
     f = str(tmp_path / "rv"); fz = str(tmp_path / "fz"); put(f, fake_review("2027-03-14T15:30:00Z", v2fp="0" * 64))
-    review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc), edits_file="nope")
+    review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file="nope")
     v = review.verify(2027, fz, write_record=False); assert not v["ok"] and any("saved v2.0" in p for p in v["problems"])
 
 # ---------------- final competitive snapshot (docs/43)
@@ -156,7 +156,7 @@ def test_final_freeze_falls_back_and_flags_incomplete_results(tmp_path):
 def test_research_and_final_are_separate_immutable_files(tmp_path):
     f = str(tmp_path / "rv"); fz = str(tmp_path / "fz")
     put(f, fake_review("2027-03-14T15:30:00Z")); put(f, fake_review("2027-03-14T21:35:00Z", pending=[]))
-    r1 = review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 15, 35, tzinfo=timezone.utc), edits_file="nope")
+    r1 = review.freeze(2027, f, fz, now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file="nope")
     r2 = review.freeze(2027, f, fz, now=FINAL, deadline=FINAL, edits_file="nope", kind="final")
     assert r1["path"] != r2["path"] and json.load(open(r1["path"]))["inputs"]["collected_at"] == "2027-03-14T15:30:00Z"
     assert review.verify(2027, fz, write_record=False)["ok"] and review.verify(2027, fz, FINAL, write_record=False, kind="final")["ok"]
@@ -183,3 +183,9 @@ def test_undo_of_names_the_retracted_edit():
     order, rest, info = setup()
     new, rec, _ = review.apply_edits(order, rest, [E(1, op="move", team="t30", to_line=6), {"id": "u1", "at": "2026-03-10T13:00:00Z", "op": "undo", "undo_of": "e1"}], 2026, info)
     assert new == order and rec == []
+
+def test_research_freeze_never_before_1201(tmp_path):
+    f = str(tmp_path / "rv"); put(f, fake_review("2027-03-14T15:30:00Z"))
+    for t in (datetime(2027, 3, 14, 15, 30, tzinfo=timezone.utc), datetime(2027, 3, 14, 16, 0, 30, tzinfo=timezone.utc)):
+        with pytest.raises(SystemExit, match="Too early"): review.freeze(2027, f, str(tmp_path / "fz"), now=t, edits_file="nope")
+    assert review.freeze(2027, f, str(tmp_path / "fz"), now=datetime(2027, 3, 14, 16, 1, tzinfo=timezone.utc), edits_file="nope")["status"] == "frozen"

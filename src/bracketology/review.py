@@ -343,6 +343,8 @@ def freeze(season: int, folder: str | None = None, outdir: str | None = None, no
     assert kind in KINDS
     deadline = deadline or freeze_deadline(season, kind); now = now or datetime.now(timezone.utc); outdir = outdir or freeze_dir()
     path = freeze_path(season, outdir, kind)
+    if kind == "research" and now < deadline + timedelta(minutes=1) and not os.path.exists(path):     # owner decision: frozen at 12:01, never earlier
+        raise SystemExit(f"Too early: the research snapshot is frozen from {deadline + timedelta(minutes=1):%H:%M}Z (one minute after the noon cutoff).")
     if os.path.exists(path):
         v = verify(season, outdir, deadline, write_record=False, kind=kind)
         if not v["ok"]: raise SystemExit(f"{path} exists but fails verification: {v['problems']}. Not overwriting; investigate.")

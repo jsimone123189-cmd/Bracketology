@@ -160,6 +160,11 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Staged plan:** 1 Access+Worker+D1, 2 phone acceptance, 3 daily upload + merge branch, 4 Selection Sunday timer + rehearsal. Inactive drafts are in `review-worker/deploy/`. The stage-4 timer is simulated in tests.
 - **Tests:** Worker 29. Python 55 on master, 60 on the branch. Nothing deployed.
 
+## Stage 1 started (2026-11-15)
+- **Owner approved Stage 1 only:** the private Access + Worker + D1 review interface.
+- **Research freeze:** moved to 12:01 p.m. America/New_York, strict noon cutoff for data and edits; refused earlier (Worker and Python, tested). Final snapshot unchanged.
+- **Walkthrough:** the owner is setting up the Cloudflare dashboard one screen at a time. Deployment waits for explicit confirmation.
+
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
 - RFS Bracket Science (rfsbracketscience.blogspot.com) publishes no method.

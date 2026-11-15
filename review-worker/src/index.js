@@ -7,7 +7,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { authenticate } from "./auth.js";
 import { season as seasonCfg } from "./config.js";
 import { checkEdit, linesOf, slotsOf, REASONS, when, applyEdits } from "./engine.js";
-import { b3, choose, coreOf, cutoffOf, editsFor, iso, replayStart, replayStep, sha256hex, verifyFreeze, writeBody, EARLIEST_MS } from "./freeze.js";
+import { b3, choose, coreOf, cutoffOf, earliestOf, editsFor, iso, replayStart, replayStep, sha256hex, verifyFreeze, writeBody } from "./freeze.js";
 import { runBackup, bundle } from "./backup.js";
 import PAGE from "./page.html";
 
@@ -62,7 +62,7 @@ async function freezeSummary(env, season, cfg) {
     const f = await freezeRow(env, season, kind), c = cutoffOf(cfg, kind);
     let complete = null, pending = null;
     if (f && kind === "final") { const b = JSON.parse(f.body); complete = b.final_results_complete; pending = b.conference_games_pending; }
-    out.push({ kind, cutoff: c === null ? null : iso(c), earliest: c === null ? null : iso(c - EARLIEST_MS), frozen: !!f, frozen_at: f ? f.frozen_at : null, sha256: f ? f.sha256 : null, complete, pending });
+    out.push({ kind, cutoff: c === null ? null : iso(c), earliest: c === null ? null : iso(earliestOf(cfg, kind)), frozen: !!f, frozen_at: f ? f.frozen_at : null, sha256: f ? f.sha256 : null, complete, pending });
   }
   return out;
 }

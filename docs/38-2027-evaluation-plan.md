@@ -37,3 +37,5 @@ Committed before the 2027 season. This plan, not any later choice, decides how 2
 **Status (2026-11-15):** B1/B2/B3 build, freeze (with SHA-256, no overwrite, noon-ET deadline) and grade (edit groups) are implemented in `review.py` (docs/42). Still needed: freeze-time cron, daily workflow step, page hosting decision.
 
 **Update (2026-11-15, docs/43):** Selection Sunday now has two immutable snapshots. The noon-ET research snapshot (B1/B2/B3) is the one graded under these rules. A separate final competitive snapshot is taken after the Sunday conference finals and before a confirmed submission deadline. Scoring and decision rules here are unchanged.
+
+**Update (2026-11-15, owner decision):** the research snapshot (graded under this plan) is frozen at 12:01 p.m. America/New_York, with a strict noon cutoff for collected data and logged edits (docs/45).

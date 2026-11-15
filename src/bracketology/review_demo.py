@@ -54,8 +54,8 @@ def demo(season: int = 2026, which: str = "final", outdir: str = "private/review
     for q in (p, p + ".sha256"):
         if os.path.exists(q): os.chmod(q, 0o644); os.remove(q)
     y, mo, d = map(int, ss.split("-"))
-    review.freeze(season, folder=outdir, outdir=fz, now=datetime(y, mo, d, 15, 35, tzinfo=timezone.utc), edits_file=ef); out.append(p)
-    out.append(json.dumps(review.verify(season, fz, now=datetime(y, mo, d, 16, 5, tzinfo=timezone.utc))["ok"]))
+    review.freeze(season, folder=outdir, outdir=fz, now=datetime(y, mo, d, 16, 1, tzinfo=timezone.utc), edits_file=ef); out.append(p)
+    out.append(json.dumps(review.verify(season, fz, now=datetime(y, mo, d, 16, 10, tzinfo=timezone.utc))["ok"]))
     from .sources import bracketmatrix as bm
     m = bm.collect(season); off = {key(t): int(s) for t, s in m["official"].items()}
     ms = [int(v) for k, v in m["reported"]["SCORE"].items() if v.isdigit() and k != "MATRIX"]

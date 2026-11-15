@@ -107,6 +107,12 @@ test("research snapshot at noon ET: only pre-noon data and edits, immutable, ver
   assert.equal(r.status, 200);
   r = await j(await owner("/api/freeze", { now: "2027-03-14T15:00:00Z", body: { kind: "research" } }));
   assert.equal(r.body.status, "waiting"); assert.match(r.body.error, /Too early/, "an accidental early tap is refused");
+  r = await j(await owner("/api/edits", { now: "2027-03-14T16:00:30Z", body: { op: "move", team: ids.t7, to_line: 4, reason_code: "recent_form", confidence: 1 } }));
+  assert.equal(r.status, 200); ids.just_after_noon = r.body.edit.id;                                    // logged at 12:00:30: final only
+  r = await j(await owner("/api/freeze", { now: "2027-03-14T15:59:00Z", body: { kind: "research" } }));
+  assert.equal(r.body.status, "waiting", "not before 12:01, even a minute before noon");
+  r = await j(await owner("/api/freeze", { now: "2027-03-14T16:00:30Z", body: { kind: "research" } }));
+  assert.equal(r.body.status, "waiting", "not at 12:00:30 either");
   r = await j(await owner("/api/freeze", { now: "2027-03-14T16:35:00Z", body: { kind: "research" } }));
   assert.equal(r.body.status, "frozen", JSON.stringify(r.body)); assert.equal(r.body.review, "2027-03-14T14:00:00Z");
   research = r.body.sha256;
@@ -117,6 +123,7 @@ test("research snapshot at noon ET: only pre-noon data and edits, immutable, ver
   assert.equal(createHash("sha256").update(text).digest("hex"), research); assert.equal(ex.headers.get("x-sha256"), research);
   assert.equal(b.kind, "research"); assert.equal(b.cutoff, "2027-03-14T16:00:00Z"); assert.equal(b.inputs.collected_at, "2027-03-14T14:00:00Z");
   assert.deepEqual(b.edit_history.applied.map((e) => e.id).sort(), [ids.move, ids.add, ids.late_morning].sort(), "pre-noon edits, minus the undone swap");
+  assert.ok(!b.edit_history.entries_as_logged.some((e) => e.id === ids.just_after_noon) && b.edit_history.logged_after_cutoff_excluded >= 1, "12:00:30 edit excluded");
   assert.ok(b.skipped_reviews.some((s) => s.problems.some((p) => p.includes("after the"))), "the 16:30 review was refused");
   const L = (n) => Object.fromEntries(b.brackets[n].map((x) => [x.key, x.line]));
   assert.deepEqual(L("B1_model"), A.brackets.B1_model); assert.deepEqual(L("B2_shadow"), A.brackets.B2_shadow);
@@ -163,7 +170,7 @@ test("published lines: team and line only, from the final snapshot", { skip }, a
 
 test("edit backup download: owner only, full history", { skip }, async () => {
   const r = await owner("/api/export-edits"); assert.equal(r.status, 200);
-  const e = await r.json(); assert.equal(e.length, 6); assert.ok(e.some((x) => x.op === "undo"));
+  const e = await r.json(); assert.equal(e.length, 7); assert.ok(e.some((x) => x.op === "undo"));
   assert.equal((await fetch(base + "/api/export-edits")).status, 403); assert.equal((await machine("/api/export-edits")).status, 403);
 });
 
@@ -171,5 +178,5 @@ test("stored edits and snapshots can't be changed or deleted, even with direct d
   for (const c of ["UPDATE freezes SET sha256 = 'x'", "DELETE FROM freezes", "UPDATE edits SET at = '2027-03-14T12:00:00Z'", "DELETE FROM edits",
     "INSERT INTO freezes (season, kind, frozen_at, sha256, body) VALUES (2027, 'research', 'x', 'x', 'x')"]) {
     const r = sql(S.persist, c); assert.equal(r.ok, false, c); }
-  const r = sql(S.persist, "SELECT COUNT(*) AS n FROM edits"); assert.ok(r.ok && /"n": 6/.test(r.out), r.out);
+  const r = sql(S.persist, "SELECT COUNT(*) AS n FROM edits"); assert.ok(r.ok && /"n": 7/.test(r.out), r.out);
 });

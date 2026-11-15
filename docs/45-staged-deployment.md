@@ -107,7 +107,7 @@ None of these needs a paid plan.
 9. Sign out (close the browser, or wait 24 h) and you're asked again.
 10. Light and dark mode both readable.
 
-**Timing:** the research freeze stays at **11:30 a.m. ET** (your decision), using only data collected and edits logged before noon. Edits made between the freeze and noon count only for the final snapshot, and the page says so once the research snapshot is frozen. If you'd rather capture edits right up to noon, the freeze could run at 12:01 using the same rules. That's your call.
+**Timing (owner decision, updated 2026-11-15):** the research snapshot is frozen at **12:01 p.m. America/New_York**, never earlier: the Worker and Python both refuse a research freeze before 12:01. The cutoff is a **strict noon** for both collected data and logged edits: an edit logged at 12:00:30 counts only for the final snapshot (tested). Pre-noon reviews are built at 11:01 and 11:41 a.m. ET. `frozen_after_cutoff` is therefore always true for the research snapshot; that's expected. The final competitive snapshot is unchanged.
 
 ## 7. Stage 1, step by step in the Cloudflare dashboard (beginner level)
 Read-only first: nothing below changes anything until you press a Create, Save or Update button.
