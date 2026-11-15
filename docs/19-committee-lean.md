@@ -18,3 +18,12 @@ For each held-out season, with v2.0 trained on the other seasons:
 4. In March, each team with a lean has its predicted overall position moved by half its lean (0.5 × lean, fixed). Then the field is reslotted in that order. Selection is unchanged.
 
 The usual bar applies. Also reported: percentile each season, whether it reaches the 75th in all seven, and exact seeds on lines 1-4.
+
+## Result (2026-11-14): failed
+`research/committee_lean_output.txt`. The control reproduced.
+- Scores: 333 325 344 346 332 355 356. Mean -1.3, better in 2, worse in 4, worst -8.
+- Exact seeds on lines 1-4: 11.6 a season before, 11.4 after.
+- Percentiles: 20, 7, 29, 16, 14, 40, 10.
+
+The committee's February leans don't carry into March reliably. Example: 2025 Wisconsin and Arizona were each 4 spots better in the reveal than v2.0's same-day order, and applying that cost 8 points.
+Note: the 2022 and 2023 reveal lists in `research/diagnose.py` hold 15 names each, not 16.

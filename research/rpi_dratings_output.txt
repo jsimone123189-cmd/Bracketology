@@ -1,0 +1,52 @@
+  2019 RPI vs NET rank corr (NET top 100): 0.850
+  2021 RPI vs NET rank corr (NET top 100): 0.775
+  2022 RPI vs NET rank corr (NET top 100): 0.822
+  2023 RPI vs NET rank corr (NET top 100): 0.791
+  2024 RPI vs NET rank corr (NET top 100): 0.711
+  2025 RPI vs NET rank corr (NET top 100): 0.811
+  2026 RPI vs NET rank corr (NET top 100): 0.838
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+Test 5 RPI [328, 329, 334, 340, 335, 364, 364] mean 342.0 diff -0.9 better 4 worse 3 worst -13 PASS=False percentiles [13, 11, 16, 10, 19, 77, 19] all>=75 False
+
+== dRatings (DII) versus v2.0, actual field
+2019 v2.0 {'exact': 40, 'wrong': 3, 'score': 335, 'power_atl': (-0.15, 0.46), 'nonpower_atl': (1.14, 1.14), 'auto': (0.0, 0.38), 'band1-4': 0.69, 'band5-8': 0.44, 'band9-12': 0.67, 'band13-16': 0.67}
+     DII  {'exact': 45, 'wrong': 2, 'score': 351, 'power_atl': (-0.08, 0.46), 'nonpower_atl': (0.25, 0.5), 'auto': (0.0, 0.25), 'band1-4': 0.81, 'band5-8': 0.62, 'band9-12': 0.62, 'band13-16': 0.67}
+     v2.0 exact, DII not: [('Virginia Tech', 4, 5), ('Wisconsin', 5, 4), ('Marquette', 5, 6), ('Syracuse', 8, 9), ('Baylor', 9, 10), ('Belmont', 11, None), ('Saint Louis', 13, 14), ('Yale', 14, 13), ('Abilene Christian', 15, 16)]
+     DII exact, v2.0 not: [('Gonzaga', 1, 2), ('Michigan St.', 2, 1), ('Kansas St.', 4, 5), ('Auburn', 5, 4), ('Mississippi St.', 5, 6), ('Buffalo', 6, 7), ('Nevada', 7, 8), ('Louisville', 7, 6), ('Ole Miss', 8, 9), ('Arizona St.', 11, None), ('Temple', 11, None), ('Vermont', 13, 14), ('Georgia St.', 14, 13), ('Bradley', 15, 16)]
+2021 v2.0 {'exact': 33, 'wrong': 1, 'score': 326, 'power_atl': (0.11, 0.75), 'nonpower_atl': (0.38, 0.62), 'auto': (-0.19, 0.71), 'band1-4': 0.69, 'band5-8': 0.25, 'band9-12': 0.59, 'band13-16': 0.44}
+     DII  {'exact': 51, 'wrong': 1, 'score': 366, 'power_atl': (-0.07, 0.44), 'nonpower_atl': (0.0, 0.44), 'auto': (0.06, 0.13), 'band1-4': 0.88, 'band5-8': 0.5, 'band9-12': 0.76, 'band13-16': 0.89}
+     v2.0 exact, DII not: [('BYU', 6, 7), ('UConn', 7, 9), ('Virginia Tech', 10, 9), ('Syracuse', 11, None)]
+     DII exact, v2.0 not: [('Texas', 3, 4), ('Virginia', 4, 3), ('Florida St.', 4, 5), ('Villanova', 5, 4), ('Creighton', 5, 4), ('Texas Tech', 6, 8), ('Loyola Chicago', 8, 6), ('Oklahoma', 8, 10), ('North Carolina', 8, 10), ('Rutgers', 10, 9), ('VCU', 10, 11), ('Utah St.', 11, None), ('Wichita St.', 11, 12), ('UC Santa Barbara', 12, 13), ('UNC Greensboro', 13, 14), ('Liberty', 13, 14), ('Colgate', 14, 7), ('Abilene Christian', 14, 13), ('Eastern Wash.', 14, 15), ('Grand Canyon', 15, 14), ('Iona', 15, 16), ('Hartford', 16, 15)]
+2022 v2.0 {'exact': 45, 'wrong': 3, 'score': 347, 'power_atl': (-0.12, 0.29), 'nonpower_atl': (0.56, 0.56), 'auto': (-0.06, 0.38), 'band1-4': 0.81, 'band5-8': 0.62, 'band9-12': 0.47, 'band13-16': 0.83}
+     DII  {'exact': 46, 'wrong': 1, 'score': 360, 'power_atl': (-0.12, 0.12), 'nonpower_atl': (0.0, 0.22), 'auto': (0.06, 0.5), 'band1-4': 0.88, 'band5-8': 0.81, 'band9-12': 0.65, 'band13-16': 0.44}
+     v2.0 exact, DII not: [('Villanova', 2, 3), ('Purdue', 3, 2), ('Wyoming', 12, 11), ('New Mexico St.', 12, 13), ('Vermont', 13, 12), ('Akron', 13, 14), ('Montana St.', 14, 13), ('Colgate', 14, 15), ("Saint Peter's", 15, 14), ('Jacksonville St.', 15, 16), ('Georgia St.', 16, 15)]
+     DII exact, v2.0 not: [('Duke', 2, 3), ('Tennessee', 3, 2), ('Arkansas', 4, 5), ('Houston', 5, 4), ("Saint Mary's (CA)", 5, 6), ('Alabama', 6, 5), ('Marquette', 9, 8), ('San Francisco', 10, 11), ('Davidson', 10, 11), ('Virginia Tech', 11, 10), ('Notre Dame', 11, None), ('Indiana', 12, None)]
+2023 v2.0 {'exact': 42, 'wrong': 1, 'score': 344, 'power_atl': (0.41, 0.78), 'nonpower_atl': (-0.5, 0.5), 'auto': (-0.22, 0.34), 'band1-4': 0.5, 'band5-8': 0.31, 'band9-12': 0.76, 'band13-16': 0.89}
+     DII  {'exact': 53, 'wrong': 1, 'score': 372, 'power_atl': (0.04, 0.32), 'nonpower_atl': (0.14, 0.14), 'auto': (-0.06, 0.19), 'band1-4': 0.88, 'band5-8': 0.5, 'band9-12': 0.94, 'band13-16': 0.83}
+     v2.0 exact, DII not: [("Saint Mary's (CA)", 5, 6), ('Kentucky', 6, 7), ('Iowa St.', 6, 5), ('Arizona St.', 11, None), ('Montana St.', 14, 15), ('Princeton', 15, 13)]
+     DII exact, v2.0 not: [('Marquette', 2, 3), ('Gonzaga', 3, 2), ('Kansas St.', 3, 4), ('Tennessee', 4, 3), ('Indiana', 4, 5), ('Virginia', 4, 6), ('San Diego St.', 5, 4), ('Creighton', 6, 7), ('Northwestern', 7, 8), ('Memphis', 8, 5), ('Arkansas', 8, 9), ('Maryland', 8, 10), ('Auburn', 9, 10), ('Boise St.', 10, 8), ('Utah St.', 10, 8), ('Pittsburgh', 11, None), ('UC Santa Barbara', 14, 13)]
+2024 v2.0 {'exact': 37, 'wrong': 3, 'score': 329, 'power_atl': (0.0, 0.45), 'nonpower_atl': (0.0, 1.09), 'auto': (-0.06, 0.38), 'band1-4': 0.75, 'band5-8': 0.25, 'band9-12': 0.4, 'band13-16': 0.83}
+     DII  {'exact': 42, 'wrong': 1, 'score': 346, 'power_atl': (0.17, 0.42), 'nonpower_atl': (-0.27, 1.18), 'auto': (-0.03, 0.28), 'band1-4': 0.88, 'band5-8': 0.31, 'band9-12': 0.41, 'band13-16': 0.89}
+     v2.0 exact, DII not: [('Clemson', 6, 7), ('Utah St.', 8, 6), ('TCU', 9, 10), ('Colorado St.', 10, 9)]
+     DII exact, v2.0 not: [('North Carolina', 1, 2), ('Iowa St.', 2, 1), ('San Diego St.', 5, 7), ('South Carolina', 6, 5), ('Nebraska', 8, 7), ('Northwestern', 9, 10), ('Colorado', 10, 9), ('UAB', 12, 13), ('Samford', 13, 12)]
+2025 v2.0 {'exact': 49, 'wrong': 1, 'score': 363, 'power_atl': (0.0, 0.44), 'nonpower_atl': (-0.25, 0.25), 'auto': (0.06, 0.26), 'band1-4': 0.81, 'band5-8': 0.56, 'band9-12': 0.65, 'band13-16': 0.89}
+     DII  {'exact': 50, 'wrong': 2, 'score': 362, 'power_atl': (0.06, 0.39), 'nonpower_atl': (-0.5, 0.5), 'auto': (0.03, 0.16), 'band1-4': 0.94, 'band5-8': 0.31, 'band9-12': 0.75, 'band13-16': 1.0}
+     v2.0 exact, DII not: [('Ole Miss', 6, 5), ('Illinois', 6, 7), ('UCLA', 7, 6), ("Saint Mary's (CA)", 7, 6), ('Marquette', 7, 8), ('Gonzaga', 8, 7), ('Texas', 11, None)]
+     DII exact, v2.0 not: [('Kentucky', 3, 4), ('Maryland', 4, 3), ('BYU', 6, 5), ('Kansas', 7, 6), ('Drake', 11, 12), ('Colorado St.', 12, 11), ('Omaha', 15, 16), ('Norfolk St.', 16, 15)]
+2026 v2.0 {'exact': 45, 'wrong': 1, 'score': 356, 'power_atl': (-0.15, 0.33), 'nonpower_atl': (1.33, 1.33), 'auto': (0.03, 0.29), 'band1-4': 0.81, 'band5-8': 0.56, 'band9-12': 0.65, 'band13-16': 0.67}
+     DII  {'exact': 56, 'wrong': 0, 'score': 384, 'power_atl': (0.0, 0.18), 'nonpower_atl': (0.0, 0.0), 'auto': (0.0, 0.19), 'band1-4': 0.94, 'band5-8': 0.75, 'band9-12': 0.83, 'band13-16': 0.78}
+     v2.0 exact, DII not: [('UCLA', 7, 8), ('Clemson', 8, 7), ('Villanova', 8, 9), ('Utah St.', 9, 8), ('Missouri', 10, 11), ('Siena', 16, 15)]
+     DII exact, v2.0 not: [('Gonzaga', 3, 4), ('Kansas', 4, 5), ("St. John's (NY)", 5, 4), ('BYU', 6, 7), ('Miami (FL)', 7, 6), ("Saint Mary's (CA)", 7, 8), ('Georgia', 8, 7), ('Ohio St.', 8, 9), ('TCU', 9, 8), ('Saint Louis', 9, 11), ('Texas A&M', 10, 9), ('Santa Clara', 10, 11), ('Miami (OH)', 11, None), ('SMU', 11, 10), ('Kennesaw St.', 14, 15), ('Furman', 15, 16), ('UMBC', 16, 15)]
+
+seven-season means (signed, abs) by group and exact by band:
+  exact         v2.0 41.57   DII 49.0
+  wrong         v2.0 1.86   DII 1.14
+  score         v2.0 342.86   DII 363.0
+  power_atl     v2.0 (0.01, 0.5)   DII (0.0, 0.33)
+  nonpower_atl  v2.0 (0.38, 0.78)   DII (-0.05, 0.43)
+  auto          v2.0 (-0.06, 0.39)   DII (0.01, 0.24)
+  band1-4       v2.0 0.72   DII 0.89
+  band5-8       v2.0 0.43   DII 0.54
+  band9-12      v2.0 0.6   DII 0.71
+  band13-16     v2.0 0.75   DII 0.79
+exit 0
