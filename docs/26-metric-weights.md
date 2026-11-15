@@ -22,3 +22,12 @@ v2.0 learns its seeding weights by predicting which of two teams the committee r
 - **W2:** half v2.0's rank score, half the composite, each z-scored within the field.
 
 Usual bar against v2.0, plus the owner's standard (75th percentile in all seven). Also reported: the weights chosen in each fold, to show whether they're stable or jump around.
+
+## Result (2026-11-14): failed
+`research/metric_weights_output.txt`. The control reproduced.
+- **W1, composite alone:** 315 320 321 322 312 358 364. Mean -12.6, better in 1.
+- **W2, half v2.0:** 320 331 338 338 315 368 360. Mean -4.3, better in 3, worse in 4, worst -15.
+- **The weights were unstable across folds.** WAB ran from 0.01 to 0.14, SOR 0.05-0.19, Q1 wins 0.00-0.16.
+- **Training fit was weak too.** The best weights matched 39-45 exact seeds a season on their own training seasons, no better than v2.0's 41.6 on held-out seasons.
+
+v2.0's pairwise-learned weights are already better than a direct search for weights that maximize exact seeds.
