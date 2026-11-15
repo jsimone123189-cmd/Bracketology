@@ -106,7 +106,7 @@ test("research snapshot at noon ET: only pre-noon data and edits, immutable, ver
   let r = await j(await machine("/api/machine/review", { body: variant("2027-03-14T16:30:00Z", [{ conf: "big-ten" }]), now: "2027-03-14T16:31:00Z" }));
   assert.equal(r.status, 200);
   r = await j(await owner("/api/freeze", { now: "2027-03-14T15:00:00Z", body: { kind: "research" } }));
-  assert.equal(r.body.status, "error"); assert.match(r.body.error, /Too early/, "an accidental early tap is refused");
+  assert.equal(r.body.status, "waiting"); assert.match(r.body.error, /Too early/, "an accidental early tap is refused");
   r = await j(await owner("/api/freeze", { now: "2027-03-14T16:35:00Z", body: { kind: "research" } }));
   assert.equal(r.body.status, "frozen", JSON.stringify(r.body)); assert.equal(r.body.review, "2027-03-14T14:00:00Z");
   research = r.body.sha256;

@@ -43,3 +43,36 @@ CREATE TABLE verifications (
   ok INTEGER NOT NULL,
   body TEXT NOT NULL
 );
+
+-- What the public site may show: a B3 you chose to publish (lines only). Drafts never leave the Worker.
+CREATE TABLE publications (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  season INTEGER NOT NULL,
+  at TEXT NOT NULL,                      -- server time
+  review_collected_at TEXT NOT NULL,
+  edits_through_seq INTEGER NOT NULL,    -- every edit up to this one is included
+  lines TEXT NOT NULL,                   -- [{key, team, line}]
+  sha256 TEXT NOT NULL
+);
+CREATE TRIGGER publications_no_update BEFORE UPDATE ON publications BEGIN SELECT RAISE(ABORT, 'publications are append-only'); END;
+CREATE TRIGGER publications_no_delete BEFORE DELETE ON publications BEGIN SELECT RAISE(ABORT, 'publications are append-only'); END;
+
+-- Scratch space for a freeze replayed in chunks (only used if one request can't do it within the CPU limit). Not a record.
+CREATE TABLE freeze_jobs (
+  season INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  started_at TEXT NOT NULL,
+  review_collected_at TEXT NOT NULL,
+  max_seq INTEGER NOT NULL,              -- edits considered: seq <= this, logged at or before the cutoff
+  state TEXT NOT NULL,
+  PRIMARY KEY (season, kind)
+);
+
+-- When you downloaded an off-site backup (shown on the page, so a stale copy is noticed).
+CREATE TABLE downloads (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  at TEXT NOT NULL,
+  what TEXT NOT NULL
+);
+CREATE TRIGGER verifications_no_update BEFORE UPDATE ON verifications BEGIN SELECT RAISE(ABORT, 'verifications are append-only'); END;
+CREATE TRIGGER verifications_no_delete BEFORE DELETE ON verifications BEGIN SELECT RAISE(ABORT, 'verifications are append-only'); END;

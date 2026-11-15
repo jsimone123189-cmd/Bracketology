@@ -11,13 +11,13 @@ const data = JSON.stringify(rv).replace(/</g, "\\u003c");
 const stub = `<script>
 ${engine}
 (function(){
-const RV=${data}, LINES=RV.lines, SL=slotsOf(LINES), SS="2027-03-14", edits=[];
+const RV=${data}, LINES=RV.lines, SL=slotsOf(LINES), SS="2027-03-14", edits=[]; let pub=null;
 const iso=()=>new Date().toISOString().replace(/\\.\\d{3}Z$/,"Z");
 const b3=(E)=>applyEdits(RV.model_order,RV.rest_order,E,SL,RV.all_info,SS);
 const resp=(o,s=200)=>Promise.resolve(new Response(JSON.stringify(o),{status:s,headers:{"Content-Type":"application/json"}}));
 function state(){const B=b3(edits);return{season:2027,server_time:iso(),review:RV,edits,b3_order:B.order,b3:linesOf(B.order,SL),applied:B.applied,notes:B.notes,
   freezes:[{kind:"research",cutoff:"2027-03-14T16:00:00Z",earliest:"2027-03-14T15:30:00Z",frozen:false},{kind:"final",cutoff:null,earliest:null,frozen:false}],
-  window:{open:true,note:null},reasons:REASONS}}
+  window:{open:true,note:null},reasons:REASONS,warnings:[],publication:pub&&{at:pub.at,current:pub.n===edits.length},backup:{last_run:{at:iso(),ok:1},last_download:null}}}
 window.fetch=async(url,opt)=>{const p=new URL(url,"https://preview.local").pathname;
   if(p==="/api/state")return resp(state());
   if(p==="/api/edits"){const i=JSON.parse(opt.body),e={op:i.op};for(const f of["team","with","add","remove","reason_code","explanation","undo_of"])if(i[f])e[f]=String(i[f]);
@@ -26,6 +26,8 @@ window.fetch=async(url,opt)=>{const p=new URL(url,"https://preview.local").pathn
     const a=b3(edits),b=b3([...edits,e]);if(e.op!=="undo"&&!b.applied.some(x=>x.id===e.id))return resp({error:(b.notes.find(n=>n.includes(e.id))||"Not possible").replace(/^Edit \\S+ (not applied|skipped): /,"")},422);
     const L0=linesOf(a.order,SL),L1=linesOf(b.order,SL),ch=[...new Set([...Object.keys(L0),...Object.keys(L1)])].filter(k=>L0[k]!==L1[k]).map(k=>({key:k,team:(RV.all_info[k]||{}).team||k,from:L0[k]??null,to:L1[k]??null}));
     if(i.dry_run)return resp({preview:true,edit:e,changes:ch});edits.push(e);return resp({saved:true,edit:e,changes:ch})}
+  if(p==="/api/publish"){pub={at:iso(),n:edits.length};return resp({published:true})}
+  if(p==="/api/backup")return resp({ok:true});
   if(p==="/api/freeze"||p==="/api/verify")return resp({status:"error",error:"Not available in this offline preview.",ok:false,problems:["offline preview"]});
   return resp({error:"not found"},404)};
 })();
