@@ -1,0 +1,10 @@
+  2019 BT vs NET rank corr (NET top 100): 0.833
+  2021 BT vs NET rank corr (NET top 100): 0.751
+  2022 BT vs NET rank corr (NET top 100): 0.800
+  2023 BT vs NET rank corr (NET top 100): 0.746
+  2024 BT vs NET rank corr (NET top 100): 0.697
+  2025 BT vs NET rank corr (NET top 100): 0.803
+  2026 BT vs NET rank corr (NET top 100): 0.820
+control [335, 326, 347, 344, 329, 363, 356] reproduces: True
+Test 7 BT [329, 333, 332, 330, 328, 368, 364] mean 340.6 diff -2.3 better 3 worse 4 worst -15 PASS=False percentiles [15, 17, 15, 6, 10, 87, 19] all>=75 False
+exit 0
