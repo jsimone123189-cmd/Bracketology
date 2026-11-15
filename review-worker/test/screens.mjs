@@ -53,13 +53,23 @@ try {
     await js(`document.getElementById("preview").click()`); await sleep(900);
     await js(`document.getElementById("save").scrollIntoView({block:"end"})`); await sleep(200); await shot("5-preview-before-save");
     await js(`document.getElementById("save").click()`); await sleep(1200); await shot("6-saved-toast");
+    await js(`window.scrollTo(0,0)`); await sleep(200); await shot("6b-publish-bar");
     await js(`document.querySelector('[data-tab="log"]').click()`); await sleep(400); await shot("7-history");
     await js(`document.querySelector('[data-tab="brackets"]').click()`); await sleep(400); await shot("8-three-brackets");
-    await js(`document.querySelector('[data-tab="snaps"]').click()`); await sleep(400); await shot("9-snapshots");
+    await js(`document.querySelector('[data-tab="snaps"]').click()`); await sleep(400); await shot("9-snapshots", true);
   }
   // a stranger: same page, no identity
   await cdp("Network.setExtraHTTPHeaders", { headers: {} });
   await cdp("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: "light" }] });
   await cdp("Page.navigate", { url: S.base + "/" }); await sleep(800); await shot("10-not-signed-in");
+  // what an incomplete final looks like (second local server with a test deadline and a fake clock)
+  await S.stop();
+  const S2 = await start({ port: 8796 }); S.stop = S2.stop;
+  const rv2 = structuredClone(rv); rv2.inputs = { ...rv2.inputs, collected_at: "2027-03-14T21:20:00Z", conference_games_pending: [{ conf: "big-ten", game: "Purdue vs Michigan" }] }; rv2.generated_at = "2027-03-14T21:20:30Z";
+  await fetch(S2.base + "/api/machine/review", { method: "POST", headers: { "Cf-Access-Jwt-Assertion": S2.machineToken(), "Content-Type": "application/json", "X-Test-Now": "2027-03-14T21:21:00Z" }, body: JSON.stringify(rv2) });
+  await fetch(S2.base + "/api/freeze", { method: "POST", headers: { "Cf-Access-Jwt-Assertion": S2.ownerToken(), "Content-Type": "application/json", "X-Review": "1", "X-Test-Now": "2027-03-14T21:36:00Z" }, body: JSON.stringify({ kind: "final" }) });
+  await cdp("Network.setExtraHTTPHeaders", { headers: { "Cf-Access-Jwt-Assertion": S2.ownerToken(), "X-Test-Now": "2027-03-14T21:37:00Z" } });
+  await cdp("Page.navigate", { url: S2.base + "/" }); await sleep(1800); await shot("11-incomplete-final-warning");
+  await js(`document.querySelector('[data-tab="snaps"]').click()`); await sleep(400); await shot("12-incomplete-final-snapshots", true);
   ws.close(); chrome.kill("SIGKILL");
 } finally { await S.stop(); }

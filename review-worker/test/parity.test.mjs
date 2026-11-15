@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { applyEdits, slotsOf } from "../src/engine.js";
+import { applyEdits, slotsOf, undoneSet } from "../src/engine.js";
 import { SEASONS } from "../src/config.js";
 import { python, realReview, rng, REPO } from "./helpers.mjs";
 
@@ -52,4 +52,17 @@ test("season config matches Python (cutoff, 76-team lines, Selection Sunday, fin
   assert.equal(s.lines.reduce((a, b) => a + b, 0), 76);
   assert.equal(s.selection_sunday, config.selection_sunday);
   assert.equal(s.final_deadline, null); assert.equal(config.final_deadline, null);
+});
+
+test("replaying a long log in chunks gives exactly the one-pass result (CPU fallback)", { skip: !rv && "no local 2027 review" }, () => {
+  const r = rng(7), slots = slotsOf(SEASONS[2027].lines), ss = SEASONS[2027].selection_sunday;
+  for (let c = 0; c < 150; c++) {
+    const k = randomCase(r, 5 + (c % 40)), whole = applyEdits(k.order, k.rest, k.edits, slots, k.info, ss), size = 1 + (c % 7), U = undoneSet(k.edits);
+    let st = { order: k.order, rest: k.rest, applied: [], notes: [] };
+    for (let i = 0; i < k.edits.length; i += size) {
+      const x = applyEdits(st.order, st.rest, k.edits.slice(i, i + size), slots, k.info, ss, U);
+      st = { order: x.order, rest: x.rest, applied: st.applied.concat(x.applied), notes: st.notes.concat(x.notes) };
+    }
+    assert.deepEqual(st.order, whole.order); assert.deepEqual(st.applied, whole.applied); assert.deepEqual(st.notes, whole.notes);
+  }
 });

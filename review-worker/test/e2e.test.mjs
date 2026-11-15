@@ -106,7 +106,7 @@ test("research snapshot at noon ET: only pre-noon data and edits, immutable, ver
   let r = await j(await machine("/api/machine/review", { body: variant("2027-03-14T16:30:00Z", [{ conf: "big-ten" }]), now: "2027-03-14T16:31:00Z" }));
   assert.equal(r.status, 200);
   r = await j(await owner("/api/freeze", { now: "2027-03-14T15:00:00Z", body: { kind: "research" } }));
-  assert.equal(r.body.status, "error"); assert.match(r.body.error, /Too early/, "an accidental early tap is refused");
+  assert.equal(r.body.status, "waiting"); assert.match(r.body.error, /Too early/, "an accidental early tap is refused");
   r = await j(await owner("/api/freeze", { now: "2027-03-14T16:35:00Z", body: { kind: "research" } }));
   assert.equal(r.body.status, "frozen", JSON.stringify(r.body)); assert.equal(r.body.review, "2027-03-14T14:00:00Z");
   research = r.body.sha256;
@@ -159,6 +159,12 @@ test("published lines: team and line only, from the final snapshot", { skip }, a
   assert.equal(r.body.teams.length, 76);
   for (const t of r.body.teams) assert.deepEqual(Object.keys(t).sort(), ["key", "line", "team"]);
   const s = JSON.stringify(r.body); for (const w of ["reason", "confidence", "explanation", "model_line", "p_in", "B1", "B2"]) assert.ok(!s.includes(w), w);
+});
+
+test("edit backup download: owner only, full history", { skip }, async () => {
+  const r = await owner("/api/export-edits"); assert.equal(r.status, 200);
+  const e = await r.json(); assert.equal(e.length, 6); assert.ok(e.some((x) => x.op === "undo"));
+  assert.equal((await fetch(base + "/api/export-edits")).status, 403); assert.equal((await machine("/api/export-edits")).status, 403);
 });
 
 test("stored edits and snapshots can't be changed or deleted, even with direct database access", { skip }, async () => {

@@ -9,18 +9,18 @@ import { makeIssuer } from "./jwt.mjs";
 const DIR = path.resolve(new URL("..", import.meta.url).pathname);
 export const OWNER = "owner@example.com", AUD = "local-test-aud", MACHINE = "svc-local.access", FINAL = "2027-03-14T21:45:00Z";
 
-export async function start({ port = 8790, finalDeadline = FINAL } = {}) {
+export async function start({ port = 8790, finalDeadline = FINAL, chunk = null, persist: reuse = null } = {}) {
   const issuer = makeIssuer("k1");
   const certs = createServer((q, s) => { s.writeHead(q.url === "/cdn-cgi/access/certs" ? 200 : 404, { "Content-Type": "application/json" }); s.end(JSON.stringify(issuer.jwks)); });
   await new Promise((r) => certs.listen(0, "127.0.0.1", r));
   const team = `127.0.0.1:${certs.address().port}`;
-  const persist = mkdtempSync(path.join(tmpdir(), "jbp-review-"));
+  const persist = reuse || mkdtempSync(path.join(tmpdir(), "jbp-review-"));
   writeFileSync(path.join(DIR, ".dev.vars"), [
     `ACCESS_TEAM_DOMAIN=${team}`, `ACCESS_AUD=${AUD}`, `OWNER_EMAIL=${OWNER}`, `MACHINE_CLIENT_ID=${MACHINE}`,
-    `ALLOW_TEST_OVERRIDES=local-test-only`, ...(finalDeadline ? [`TEST_FINAL_DEADLINE=${finalDeadline}`] : [])].join("\n") + "\n");
+    `ALLOW_TEST_OVERRIDES=local-test-only`, ...(finalDeadline ? [`TEST_FINAL_DEADLINE=${finalDeadline}`] : []), ...(chunk ? [`TEST_CHUNK=${chunk}`] : [])].join("\n") + "\n");
   const env = { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false", NO_UPDATE_NOTIFIER: "1" };
-  execFileSync("npx", ["wrangler", "d1", "migrations", "apply", "jbp_private", "--local", "--persist-to", persist], { cwd: DIR, env, stdio: "pipe" });
-  const proc = spawn("npx", ["wrangler", "dev", "--local", "--persist-to", persist, "--port", String(port), "--ip", "127.0.0.1", "--show-interactive-dev-session=false"], { cwd: DIR, env, stdio: ["ignore", "pipe", "pipe"], detached: true });
+  if (!reuse) for (const db of ["jbp_private", "jbp_backup"]) execFileSync("npx", ["wrangler", "d1", "migrations", "apply", db, "--local", "--persist-to", persist], { cwd: DIR, env, stdio: "pipe" });
+  const proc = spawn("npx", ["wrangler", "dev", "--local", "--persist-to", persist, "--port", String(port), "--ip", "127.0.0.1", "--show-interactive-dev-session=false", "--test-scheduled"], { cwd: DIR, env, stdio: ["ignore", "pipe", "pipe"], detached: true });
   let log = ""; proc.stdout.on("data", (d) => (log += d)); proc.stderr.on("data", (d) => (log += d));
   const base = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 120; i++) {
@@ -39,8 +39,13 @@ export async function start({ port = 8790, finalDeadline = FINAL } = {}) {
   return { base, persist, ownerToken, machineToken, stop, log: () => log, issuer, team };
 }
 
-export function sql(persist, command) {
+export function sql(persist, command, db = "jbp_private") {
   // Returns {ok, out}: runs against the local D1 copy only.
-  try { return { ok: true, out: execFileSync("npx", ["wrangler", "d1", "execute", "jbp_private", "--local", "--persist-to", persist, "--command", command], { cwd: DIR, env: { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false" }, stdio: "pipe" }).toString() }; }
+  try { return { ok: true, out: execFileSync("npx", ["wrangler", "d1", "execute", db, "--local", "--persist-to", persist, "--command", command], { cwd: DIR, env: { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false" }, stdio: "pipe" }).toString() }; }
   catch (e) { return { ok: false, out: String(e.stdout) + String(e.stderr) }; }
+}
+
+export function wr(args) {
+  // Run a wrangler command locally (tests only).
+  return execFileSync("npx", ["wrangler", ...args], { cwd: DIR, env: { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false" }, stdio: "pipe" }).toString();
 }
