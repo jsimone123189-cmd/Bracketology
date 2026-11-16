@@ -130,4 +130,6 @@ jobs:
           exit 1
       - name: Alert if the final is incomplete
         if: env.incomplete_final == 'true'
-        run: { echo "::error::Final snapshot is INCOMPLETE (labelled on the site). Check the review page."; exit 1; }
+        run: |
+          echo "::error::Final snapshot is INCOMPLETE (labelled on the site). Check the review page."
+          exit 1
