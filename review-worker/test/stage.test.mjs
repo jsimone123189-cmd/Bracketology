@@ -54,8 +54,9 @@ test("publish: nothing public until you publish; later drafts stay private; line
   assert.equal((await machineReq("/api/machine/review", { body: variant("2027-03-10T14:00:00Z", null), now: "2027-03-10T14:01:00Z" })).status, 200);
   assert.equal((await machineReq("/api/machine/published")).status, 404, "nothing published yet");
   const f = RV.model_order, out = RV.rest_order.filter((k) => !f.includes(k));
-  const edits = [["move", { team: f[25], to_line: 2 }], ["move", { team: f[40], to_line: 8 }], ["add", { team: out[0] }], ["swap", { team: f[0], with: f[6] }],
-    ["move", { team: f[60], to_line: 12 }], ["move", { team: f[12], to_line: 6 }], ["move", { team: f[33], to_line: 7 }], ["move", { team: f[20], to_line: 4 }], ["move", { team: f[50], to_line: 10 }]];
+  // "add" goes last: it bumps the weakest at-large, which may be a team a later edit names (depends on the day's board).
+  const edits = [["move", { team: f[25], to_line: 2 }], ["move", { team: f[40], to_line: 8 }], ["move", { team: f[45], to_line: 9 }], ["swap", { team: f[0], with: f[6] }],
+    ["move", { team: f[60], to_line: 12 }], ["move", { team: f[12], to_line: 6 }], ["move", { team: f[33], to_line: 7 }], ["move", { team: f[20], to_line: 4 }], ["add", { team: out[0] }]];
   const ids = [];
   for (const [i, [op, x]] of edits.entries()) {
     const r = await J(await ownerReq("/api/edits", { now: `2027-03-10T15:0${i}:00Z`, body: { op, ...x, reason_code: "recent_form", confidence: 2, client_at: `2027-03-10T15:0${i}:05Z` } }));
