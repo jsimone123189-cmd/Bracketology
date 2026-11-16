@@ -207,3 +207,5 @@ They become Worker secrets at deploy, so your email never appears in the public 
   - end to end 9;
   - pre-deployment suite 7 (route matrix, publish, chunked research freeze, incomplete final, backups, two restores).
 - **Python:** 55 on `master`, 60 on `public-privacy`.
+
+**Stage 3 done (2026-11-16):** `public-privacy` merged into `master`; the two daily steps and the incomplete-final alert from `deploy/daily-update.stage3.md` are in `daily-update.yml`. Owner approved in chat ("Fix this then move with stage 3").

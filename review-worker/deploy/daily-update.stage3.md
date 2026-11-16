@@ -1,4 +1,4 @@
-# Stage 3: changes to `.github/workflows/daily-update.yml` (apply only after approval)
+# Stage 3: APPLIED 2026-11-16 to `.github/workflows/daily-update.yml` (kept for reference)
 
 In the `publish` job, add **after** "Restore saved game results" and **before** the `build` step:
 
