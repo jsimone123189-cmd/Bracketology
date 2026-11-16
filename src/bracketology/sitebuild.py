@@ -2,7 +2,7 @@ from __future__ import annotations
 """Builds the static site: site/template.html + data -> data/output/site/preview.html (private Artifact) and data/output/public/index.html (Cloudflare).
 Run: python -m bracketology.sitebuild demo-2026   (held-out 2026 preview). Live seasons get the same data shape from project.py."""
 import hashlib, itertools, json, os, statistics, sys, time
-from . import checks, early, fieldformat, ledger, model, project
+from . import checks, early, fieldformat, model, project
 from .features import build_year
 from .sources import bracketmatrix as bm
 
@@ -38,10 +38,16 @@ def seed_probs(line: int, table: dict, season: int) -> list[dict]:
     t = sum(out.values())
     return [{"line": l, "p": round(p / t, 3)} for l, p in sorted(out.items())]
 
-def team_record(r: dict, table: dict, season: int) -> dict:
+PRIVATE_FIELDS = ("model_line", "override_reason", "p_in")     # never in a live public page or snapshot (docs/44)
+
+def team_record(r: dict, table: dict, season: int, public: bool = False) -> dict:
+    """public=True (live season): only the published bracket and résumé facts. Nothing that shows the model's own line, its
+    odds, or why the owner changed a team, so the private edits can't be read off the page."""
     d = {k: r.get(k) for k in ("key", "team", "lg", "w", "l", "net", "line", "model_line", "override_reason", "overall", "region", "play_in", "champ", "projected_auto", "seed", "in_field",
                                "q1a_w", "q1a_l", "cq1_w", "cq1_l", "cq2_w", "cq2_l", "cq3_l", "cq4_l", "road_w", "neutral_w", "rating_rank")}
     d.update(p_in=round(r["p_in"], 3), wab=round(r["wab"], 1), sor=round(r["sor"], 2), sos=round(r["sos"], 1), last10=round(r["last10"] * 10))
+    if public:
+        for k in PRIVATE_FIELDS + ("seed", "in_field"): d.pop(k, None)
     if r.get("line"): d["probs"] = seed_probs(r["line"], table, season)
     return d
 
@@ -69,31 +75,60 @@ def demo(season: int = 2026) -> dict:
 
 MIN_MEDIAN_GAMES = 15
 
+def published_lines(season: int, path: str | None = None) -> dict | None:
+    """The bracket the owner chose, as exported by the private review Worker: {"teams": [{"key", "team", "line"}], ...}.
+    Fetched by the daily workflow (approval C in docs/44). Lines only: no reasons, confidence or model comparison."""
+    path = path or f"data/output/published_{season}.json"
+    return json.load(open(path)) if os.path.exists(path) else None
+
+def apply_published(order: list[dict], rest: list[dict], pub: dict, season: int) -> tuple[list[dict], list[str]]:
+    """Rebuilds the field from the published lines. Returns ([], problems) if they don't fit the season's format."""
+    by = {r["key"]: r for r in order + rest}; fmt = fieldformat.format_for(season); bad = []
+    teams = pub.get("teams") or []
+    unknown = [t["key"] for t in teams if t["key"] not in by]
+    if unknown: bad.append(f"published bracket has unknown teams: {unknown[:5]}")
+    sizes = [sum(1 for t in teams if t["line"] == l) for l in range(1, len(fmt.lines) + 1)]
+    if len(teams) != fmt.size or sizes != list(fmt.lines) or len({t["key"] for t in teams}) != len(teams): bad.append(f"published bracket has {len(teams)} teams / line sizes {sizes}")
+    if bad: return [], bad
+    final = []
+    for t in teams:
+        r = dict(by[t["key"]]); r["line"] = int(t["line"]); final.append(r)
+    return final, []
+
 def live(season: int, fitted: model.Model) -> dict:
-    """Live season: model bracket, then the owner's overrides. Public JSON carries no third-party metric values (r_* columns)."""
+    """Live season. The public page shows one bracket: the published lines from the private review Worker when present,
+    otherwise the model's. No model line, odds, review list, model bracket or edit ledger is published (docs/44)."""
     acc = json.load(open("site/accuracy.json")); table = acc["seed_error"]
     info = {}; rows, warn = project.live_rows(season, info=info); model.prepare(rows); fitted.score(rows); early.stabilize(rows)
     field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); project.confidence(order, season)
-    untouched = project.model_bracket(order); review = project.review_list(order)
     fmt = fieldformat.format_for(season); autos = sum(1 for r in field if r["champ"] or r.get("projected_auto"))
     found = info.pop("checks") + checks.autos(autos, fmt.automatic)
-    ranked = [{"key": r["key"], "team": r["team"], "lg": r.get("lg"), "net": r["net"], "w": r["w"], "l": r["l"], "p_in": round(r["p_in"], 4), "rank_score": round(r["rank_score"], 4), "champ": bool(r["champ"])}
-              for r in sorted(rows, key=lambda r: -r["p_in"])]
-    path = f"overrides/{season}.json"; overrides, rejected = ledger.validate(json.load(open(path)) if os.path.exists(path) else {})
-    found += [{"level": "alert", "check": "ledger", "message": m} for m in rejected]
-    final, notes = project.apply_overrides(order, rest, overrides, season)
+    pub = published_lines(season); source = "model"
+    final = None
+    if pub:
+        final, bad = apply_published(order, rest, pub, season)
+        if bad: found += [{"level": "alert", "check": "published", "message": m} for m in bad]; final = None
+        else: source = pub.get("source", "review")
+    if final is None: final = [dict(r) for r in order]
     found += checks.field_size(len(final), fmt.size)
-    final.sort(key=lambda r: (r["line"], r["overall"] if r.get("overall") else 99))
+    rank = {r["key"]: i for i, r in enumerate(sorted(order + rest, key=lambda r: -r["rank_score"]))}
+    final.sort(key=lambda r: (r["line"], rank[r["key"]]))
     for i, r in enumerate(final): r["overall"] = i + 1
     assign_regions(final)
     ids = {r["key"] for r in final}; rest = [r for r in rest if r["key"] not in ids]
-    atl = sorted((r for r in final if not r["champ"] and not r.get("projected_auto")), key=lambda r: r["p_in"])
+    atl = sorted((r for r in final if not r["champ"] and not r.get("projected_auto")), key=lambda r: r["p_in"])   # order only; the odds aren't published
     return {"mode": "live", "season": season, "generated": time.strftime("%B %-d, %Y"), "max": fieldformat.max_score(season), "lines": fieldformat.line_sizes(season), "order": ORDER,
-            "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + notes + [c["message"] for c in found], "checks": found,
-            "teams": [team_record(r, table, season) for r in final], "out": [team_record(r, table, season) for r in rest[:12]],
+            "median_games": statistics.median(r["w"] + r["l"] for r in rows), "warnings": warn + [c["message"] for c in found], "checks": found,
+            "teams": [team_record(r, table, season, public=True) for r in final], "out": [team_record(r, table, season, public=True) for r in rest[:12]],
             "bubble": {"byes": [r["key"] for r in atl[4:8]], "last_in": [r["key"] for r in atl[:4]], "first_out": [r["key"] for r in rest[:4]], "next_out": [r["key"] for r in rest[4:8]]},
-            "missed": [], "accuracy": acc,
-            "archive": {"model_bracket": untouched, "review": review, "ranked": ranked, "overrides": overrides, "sources": info, "ledger": ledger.records(overrides, untouched, final, project.key, model.MODEL_VERSION)}}
+            "missed": [], "accuracy": acc, "status": public_status(pub, source),
+            "archive": {"sources": info, "published": {"source": source, "sha256": (pub or {}).get("sha256")}}}
+
+def public_status(pub: dict | None, source: str) -> dict:
+    """What the page says about the bracket it shows. A final snapshot frozen before every Selection Sunday conference final
+    ended is labelled as such, with the games still in progress (never shown silently as a complete final)."""
+    if source != "final_freeze": return {"final": False}
+    return {"final": True, "complete": bool(pub.get("complete")), "pending": [str(x) for x in (pub.get("pending") or [])][:10], "frozen_at": pub.get("frozen_at")}
 
 def snapshot(data: dict, stamp: time.struct_time, model_path: str = "models/v2.joblib") -> dict:
     """Permanent record of one run. Holds official NET and NCAA-derived figures, never third-party metric columns (r_*).
@@ -101,7 +136,6 @@ def snapshot(data: dict, stamp: time.struct_time, model_path: str = "models/v2.j
     ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", stamp); weights = hashlib.sha256(open(model_path, "rb").read()).hexdigest() if os.path.exists(model_path) else None
     keep = {k: v for k, v in data.items() if k not in ("archive", "accuracy")}
     sid = f"{data['season']}-{time.strftime('%Y%m%dT%H%M%SZ', stamp)}"
-    for e in data["archive"].get("ledger", []): e["snapshot_id"] = sid
     return {"schema": 2, "snapshot_id": sid, "generated_at": ts,
             "model": {"version": model.MODEL_VERSION, "weights_sha256": weights, "weights_match": weights == model.MODEL_SHA256, "code_commit": os.environ.get("GITHUB_SHA")},
             **keep, **data["archive"]}
