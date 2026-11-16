@@ -2,6 +2,13 @@
 
 Prepared 2026-11-15:
 - **Not done:** nothing deployed, no secrets or tokens created, no Cloudflare settings changed, `public-privacy` not merged, production workflows unchanged.
+
+**Stage 1 update (2026-11-15, later the same day):** the owner did the dashboard steps. Differences from the plan below:
+- The account was already on **Workers Paid** and Zero Trust (**Teams Free Base**) already existed with a payment method, so the signup step was skipped. Bracketology adds no subscription and its usage sits far inside the included amounts: still $0.
+- Cloudflare's redesigned screens differ from the step wording below (Zero Trust is now "Cloudflare One"; tokens use policies).
+- Instead of adding D1 to the existing site token (20 tokens, unclear which GitHub uses), a **separate token "JBP review deploy"** was created and stored as `REVIEW_CF_API_TOKEN`. The site token is untouched.
+- The Worker now receives its secrets in the same upload as its code (`wrangler deploy --secrets-file`).
+- `review-deploy.yml` is in `.github/workflows` (manual only). The owner approved and starts it.
 - **Model:** v2.0 unchanged; no model experiments.
 
 ## 1. Automatic private backups (built, tested)

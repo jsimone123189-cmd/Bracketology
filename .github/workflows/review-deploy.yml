@@ -1,0 +1,64 @@
+name: review-deploy
+# STAGE 1 (docs/45). Deploys the private review Worker jbp-review. Run by hand only (Actions -> review-deploy -> Run workflow),
+# and only with the owner's approval. Pushing this file does not run it.
+# Needs repository secrets: REVIEW_CF_API_TOKEN (its own token, "Edit Cloudflare Workers" template + Account D1 Write;
+# the site's CLOUDFLARE_API_TOKEN is not used), REVIEW_ACCESS_TEAM_DOMAIN, REVIEW_ACCESS_AUD, REVIEW_OWNER_EMAIL,
+# plus the existing CLOUDFLARE_ACCOUNT_ID. Nothing private is printed: secrets reach wrangler through a temporary file
+# that is deleted at the end, and the Worker gets its code and secrets in one upload (it is never live without them).
+on: workflow_dispatch
+permissions:
+  contents: read
+concurrency: { group: review-deploy, cancel-in-progress: false }
+env:
+  WRANGLER: "npx --yes wrangler@4.162.0"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.REVIEW_CF_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    defaults: { run: { working-directory: review-worker } }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required secrets exist (names only)
+        env:
+          A: ${{ secrets.REVIEW_ACCESS_TEAM_DOMAIN }}
+          B: ${{ secrets.REVIEW_ACCESS_AUD }}
+          C: ${{ secrets.REVIEW_OWNER_EMAIL }}
+        run: |
+          for v in A B C CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do test -n "${!v}" || { echo "::error::Secret for $v is missing (docs/45 stage 1)."; exit 1; }; done
+          if grep -q '00000000-0000-0000-0000-00000000000' wrangler.jsonc; then echo "::error::Placeholder D1 ids in wrangler.jsonc."; exit 1; fi
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Unit tests (auth)
+        run: node --test test/auth.test.mjs
+      - name: Check the token can see both databases
+        run: $WRANGLER d1 list | grep -E 'jbp_private|jbp_backup' | cut -c1-120
+      - name: Create tables in jbp_private
+        run: $WRANGLER d1 migrations apply jbp_private --remote
+      - name: Create tables in jbp_backup
+        run: $WRANGLER d1 migrations apply jbp_backup --remote
+      - name: Deploy the Worker with its secrets in one upload
+        env:
+          ACCESS_TEAM_DOMAIN: ${{ secrets.REVIEW_ACCESS_TEAM_DOMAIN }}
+          ACCESS_AUD: ${{ secrets.REVIEW_ACCESS_AUD }}
+          OWNER_EMAIL: ${{ secrets.REVIEW_OWNER_EMAIL }}
+        run: |
+          umask 077
+          node -e 'const e=process.env;require("fs").writeFileSync(process.argv[1],JSON.stringify({ACCESS_TEAM_DOMAIN:e.ACCESS_TEAM_DOMAIN,ACCESS_AUD:e.ACCESS_AUD,OWNER_EMAIL:e.OWNER_EMAIL}))' "$RUNNER_TEMP/review-secrets.json"
+          $WRANGLER deploy --secrets-file "$RUNNER_TEMP/review-secrets.json"
+      - name: Delete the temporary secrets file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/review-secrets.json"
+      - name: Smoke test (no credentials, so it must be refused)
+        run: |
+          # The new address can take a few minutes to get its certificate; retry for up to 10 minutes.
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://review.jaysbracketplays.com/api/state || true)
+            echo "Try $i: unauthenticated request got HTTP $code"
+            case "$code" in
+              302|303|401|403) echo "Refused without a login, as it should be."; exit 0;;
+              000|5*) sleep 15;;
+              *) echo "::error::The review page answered without a login (HTTP $code). Check the Access application."; exit 1;;
+            esac
+          done
+          echo "::error::The address never came up. Check Workers > jbp-review > Domains."; exit 1

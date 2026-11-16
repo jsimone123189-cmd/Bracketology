@@ -163,7 +163,14 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 ## Stage 1 started (2026-11-15)
 - **Owner approved Stage 1 only:** the private Access + Worker + D1 review interface.
 - **Research freeze:** moved to 12:01 p.m. America/New_York, strict noon cutoff for data and edits; refused earlier (Worker and Python, tested). Final snapshot unchanged.
-- **Walkthrough:** the owner is setting up the Cloudflare dashboard one screen at a time. Deployment waits for explicit confirmation.
+- **Dashboard setup done by the owner (2026-11-15):**
+  - the account is on Workers Paid ($5/month, already paid for other projects), and Zero Trust "Teams Free Base" already existed; bracketology adds $0;
+  - Access: team domain `shiny-shadow-97c9.cloudflareaccess.com`; One-time PIN added; app "JBP Review" on `review.jaysbracketplays.com` with policy "Owner only" (Allow, owner's email, 24 h); the existing "Running Analytics" app is untouched;
+  - D1 `jbp_private` and `jbp_backup` created (ids in `review-worker/wrangler.jsonc`);
+  - a dedicated token "JBP review deploy" (Edit Cloudflare Workers template + D1 Write, zone jaysbracketplays.com, 1 year), rolled once after being pasted in chat; the site's `CLOUDFLARE_API_TOKEN` is untouched;
+  - GitHub secrets `REVIEW_CF_API_TOKEN`, `REVIEW_ACCESS_TEAM_DOMAIN`, `REVIEW_ACCESS_AUD`, `REVIEW_OWNER_EMAIL`.
+- **Deploy prepared and approved:** `.github/workflows/review-deploy.yml` (manual only) applies both migrations, deploys with `--secrets-file` so code and secrets arrive in one upload, then checks an anonymous request is refused (retries up to 10 min for the certificate). Dry run, 29 Worker tests and 56 Python tests pass. The owner starts it with Run workflow.
+- **Not done:** daily upload, `public-privacy` merge, Selection Sunday timers, stages 2-4.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
