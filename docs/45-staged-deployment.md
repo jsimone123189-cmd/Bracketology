@@ -9,6 +9,7 @@ Prepared 2026-11-15:
 - Instead of adding D1 to the existing site token (20 tokens, unclear which GitHub uses), a **separate token "JBP review deploy"** was created and stored as `REVIEW_CF_API_TOKEN`. The site token is untouched.
 - The Worker now receives its secrets in the same upload as its code (`wrangler deploy --secrets-file`).
 - `review-deploy.yml` is in `.github/workflows` (manual only). The owner approved and starts it.
+- **Deployed 2026-11-16 (run #1 success).** Owner login on his phone works; anonymous requests are redirected to the Access login on every route tested. Stage 1 is complete.
 - **Model:** v2.0 unchanged; no model experiments.
 
 ## 1. Automatic private backups (built, tested)

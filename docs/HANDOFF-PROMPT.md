@@ -170,7 +170,8 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
   - a dedicated token "JBP review deploy" (Edit Cloudflare Workers template + D1 Write, zone jaysbracketplays.com, 1 year), rolled once after being pasted in chat; the site's `CLOUDFLARE_API_TOKEN` is untouched;
   - GitHub secrets `REVIEW_CF_API_TOKEN`, `REVIEW_ACCESS_TEAM_DOMAIN`, `REVIEW_ACCESS_AUD`, `REVIEW_OWNER_EMAIL`.
 - **Deploy prepared and approved:** `.github/workflows/review-deploy.yml` (manual only) applies both migrations, deploys with `--secrets-file` so code and secrets arrive in one upload, then checks an anonymous request is refused (retries up to 10 min for the certificate). Dry run, 29 Worker tests and 56 Python tests pass. The owner starts it with Run workflow.
-- **Not done:** daily upload, `public-privacy` merge, Selection Sunday timers, stages 2-4.
+- **Stage 1 deployed (2026-11-16 01:08 UTC, run #1 success):** the owner logged in on his phone with the email code and saw the empty "Review 2027" page. Anonymous requests to `/`, `/api/state`, `/api/export` and `/api/machine/published` all get a 302 to the Access login. The public site is unchanged.
+- **Not done:** daily upload, `public-privacy` merge, Selection Sunday timers, stages 2-4. Next is stage 2 (service token, one upload, phone checklist, CPU from logs), awaiting approval.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).
