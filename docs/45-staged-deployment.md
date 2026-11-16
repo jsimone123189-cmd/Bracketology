@@ -209,3 +209,6 @@ They become Worker secrets at deploy, so your email never appears in the public 
 - **Python:** 55 on `master`, 60 on `public-privacy`.
 
 **Stage 3 done (2026-11-16):** `public-privacy` merged into `master`; the two daily steps and the incomplete-final alert from `deploy/daily-update.stage3.md` are in `daily-update.yml`. Owner approved in chat ("Fix this then move with stage 3").
+
+**Stage 4, part 1 (2026-11-16):** the timer in `trigger/` now runs Selection Sunday through the review Worker (service binding `REVIEW` -> `jbp-review`/`ReviewOps`, cron `1-56/5 15-22 14 3 *` replacing `10,40 21 14 3 *`). The daily cron is unchanged. Simulated day passes (`test/stage4.test.mjs`). Deployed by `deploy-trigger.yml` (owner taps Run workflow).
+**Still open before March:** set `final_deadline` (config.js and `FINAL_DEADLINE_ET`) once the Matrix collection time is known; until then the final freeze refuses and the timer keeps requesting fresh reviews every 10 minutes after 3:01 p.m. EDT. **Part 2, the dress rehearsal,** is planned for Sunday, December 13, 2026 (a test season with its own dates, so nothing touches 2027 records), as in docs/43.

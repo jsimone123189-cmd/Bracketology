@@ -1,7 +1,7 @@
-// The stage-4 timer draft, run against a fake review Worker and a fake GitHub over a simulated Selection Sunday.
+// The stage-4 timer (trigger/worker.js), run against a fake review Worker and a fake GitHub over a simulated Selection Sunday.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import timer from "../deploy/trigger.stage4.js";
+import timer from "../../trigger/worker.js";
 
 function simulate({ finalsDoneAt }) {
   const log = [], frozen = {}; let researchCalls = 0;
