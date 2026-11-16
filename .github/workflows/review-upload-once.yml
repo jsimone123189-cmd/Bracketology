@@ -1,5 +1,5 @@
 name: review-upload-once
-# STAGE 2 (inactive draft until approved). Builds today's review in Actions and uploads it to the private Worker, once.
+# STAGE 2 (approved 2026-11-15). Run by hand only. Builds today's review in Actions and uploads it to the private Worker, once.
 # Needs repository secrets REVIEW_URL, CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET (the Access service token).
 # Logs show only file names and the upload status ({"stored": true, ...}); the review itself is never printed or kept as an artifact.
 on: workflow_dispatch

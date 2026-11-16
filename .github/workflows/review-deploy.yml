@@ -42,9 +42,11 @@ jobs:
           ACCESS_TEAM_DOMAIN: ${{ secrets.REVIEW_ACCESS_TEAM_DOMAIN }}
           ACCESS_AUD: ${{ secrets.REVIEW_ACCESS_AUD }}
           OWNER_EMAIL: ${{ secrets.REVIEW_OWNER_EMAIL }}
+          # Stage 2: the Access service token's Client ID, so the Worker accepts the upload robot on its two machine routes only.
+          MACHINE_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
         run: |
           umask 077
-          node -e 'const e=process.env;require("fs").writeFileSync(process.argv[1],JSON.stringify({ACCESS_TEAM_DOMAIN:e.ACCESS_TEAM_DOMAIN,ACCESS_AUD:e.ACCESS_AUD,OWNER_EMAIL:e.OWNER_EMAIL}))' "$RUNNER_TEMP/review-secrets.json"
+          node -e 'const e=process.env,s={ACCESS_TEAM_DOMAIN:e.ACCESS_TEAM_DOMAIN,ACCESS_AUD:e.ACCESS_AUD,OWNER_EMAIL:e.OWNER_EMAIL};if(e.MACHINE_CLIENT_ID)s.MACHINE_CLIENT_ID=e.MACHINE_CLIENT_ID;require("fs").writeFileSync(process.argv[1],JSON.stringify(s));console.log("Worker secrets uploaded: "+Object.keys(s).join(", "))' "$RUNNER_TEMP/review-secrets.json"
           $WRANGLER deploy --secrets-file "$RUNNER_TEMP/review-secrets.json"
       - name: Delete the temporary secrets file
         if: always()

@@ -10,6 +10,8 @@ Prepared 2026-11-15:
 - The Worker now receives its secrets in the same upload as its code (`wrangler deploy --secrets-file`).
 - `review-deploy.yml` is in `.github/workflows` (manual only). The owner approved and starts it.
 - **Deployed 2026-11-16 (run #1 success).** Owner login on his phone works; anonymous requests are redirected to the Access login on every route tested. Stage 1 is complete.
+
+**Stage 2 approved (2026-11-15).** `review-upload-once.yml` is in `.github/workflows` (manual only). `review-deploy.yml` now also uploads `MACHINE_CLIENT_ID` (from the `CF_ACCESS_CLIENT_ID` secret) when it exists. The owner creates the service token, adds a Service Auth policy for it to the JBP Review app, and adds the secrets `REVIEW_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`.
 - **Model:** v2.0 unchanged; no model experiments.
 
 ## 1. Automatic private backups (built, tested)
