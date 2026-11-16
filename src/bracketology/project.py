@@ -77,8 +77,8 @@ def live_rows(season: int, today: str | None = None, info: dict | None = None) -
     info["checks"] = found
     played = statistics.median(r["w"] + r["l"] for r in rows)
     if played < 15: warn.append(f"Early season: teams have played a median of {played:.0f} games. The model is trained on full Selection Sunday resumes, so treat this as a rough preview.")
-    w = early.mark(rows); info["early_weight"] = round(w, 3)
-    if w: warn.append(f"Early-season blend on (docs/46): each team's place is {w:.0%} the median of NET, BPI, KenPom and T-Rank (Warren Nolan's copies, which can lag the originals) and {1 - w:.0%} the model. It fades out by {early.FULL_GAMES} games.")
+    w = early.mark(rows, today_d, cutoff); info["early_weight"] = round(w, 3)
+    if w: warn.append(f"Outside-rank blend on (docs/46): each team's place is {w:.0%} the median of NET, BPI, KenPom and T-Rank (Warren Nolan's copies, usually a day or two behind the originals) and {1 - w:.0%} the model, until Selection Sunday.")
     return rows, warn
 
 def ncaa_champions(games: list[dict], universe: set[str], day: str) -> set[str]:

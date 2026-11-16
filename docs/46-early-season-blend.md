@@ -19,3 +19,9 @@ and KenPom 60 in Warren Nolan's table. KenPom's own site showed 23 through Nov. 
 - `tests/test_early.py`: unmarked rows unchanged; no-op at 30 games; the outlier moves and the score set is preserved.
 - **No accuracy claim.** There is no out-of-sample test for November boards (only Selection Sunday is graded). This is a documented owner adjustment to how the early boards read.
 - 2026-11-16 board after the change: LSU overall 30 (8 line); top line Florida, Arizona, Michigan, Duke. LSU would be higher if Warren Nolan's KenPom column matched KenPom (23); the blend uses the collected value, not a hand-entered one.
+
+## Update, same day (owner decision): heavy all season, no fade
+The owner: "Those other ranks are the number 1 thing that matters... don't wait for 20 games. Rely heavily on that."
+- Weight is now a constant **0.8 on every live board before Selection Sunday**, and **0 on Selection Sunday** (`early.weight(today, selection_sunday)`).
+- Why not on Selection Sunday too: that was already tested. Real KPI/SOR/BPI/KenPom ranks at Selection Sunday scored worse than v2.0 (plain average −8.8, learned weights −2.8 over four seasons), and by then the model's own metrics correlate .95-.99 with them. The graded B1 and the research snapshot therefore stay v2.0, and the control still reproduces.
+- **KenPom source:** kenpom.com and masseyratings.com both refuse automated clients (403 / Cloudflare challenge), and the project doesn't get around blocks. ESPN's own BPI feed (LSU 59th, updated Nov 14) agrees with Warren Nolan's BPI (53), so Warren Nolan's columns are about a day behind rather than wrong; KenPom's 23 already included LSU's Nov 14 win at Gonzaga. Candidate for a fresher official copy: the NCAA team sheets, which list KenPom, BPI, T-Rank, KPI, SOR and WAB once NET is published (usually early December). Not built yet.

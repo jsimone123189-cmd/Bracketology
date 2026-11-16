@@ -1,4 +1,7 @@
+from datetime import date
 from bracketology import early
+
+SS = date(2027, 3, 14)
 
 def rows(n=40, games=4):
     # model loves team 0; outside ranks put it 30th
@@ -7,7 +10,10 @@ def rows(n=40, games=4):
     return out
 
 def test_weight_schedule():
-    assert early.weight(4) == 0.8 and early.weight(20) == 0 and early.weight(32) == 0
+    assert early.weight(date(2026, 11, 16), SS) == 0.8
+    assert early.weight(date(2027, 3, 13), SS) == 0.8          # heavy all season, no fade
+    assert early.weight(SS, SS) == 0 and early.weight(date(2027, 3, 20), SS) == 0
+    assert early.weight(date(2026, 11, 16), None) == 0
 
 def test_unmarked_rows_never_change():
     r = rows(); before = [x["rank_score"] for x in r]
@@ -15,12 +21,12 @@ def test_unmarked_rows_never_change():
     assert [x["rank_score"] for x in r] == before
 
 def test_selection_sunday_is_a_no_op():
-    r = rows(games=30); early.mark(r); before = [x["rank_score"] for x in r]
+    r = rows(games=30); early.mark(r, SS, SS); before = [x["rank_score"] for x in r]
     early.stabilize(r)
     assert [x["rank_score"] for x in r] == before
 
-def test_early_blend_moves_outlier_and_keeps_score_set():
-    r = rows(); early.mark(r); scores = sorted(x["rank_score"] for x in r)
+def test_blend_moves_outlier_and_keeps_score_set():
+    r = rows(); early.mark(r, date(2027, 2, 1), SS); scores = sorted(x["rank_score"] for x in r)
     early.stabilize(r)
     order = [x["key"] for x in sorted(r, key=lambda x: -x["rank_score"])]
     assert order.index("t0") > 15
