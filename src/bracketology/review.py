@@ -10,7 +10,7 @@ import hashlib, json, math, os, statistics, sys, time
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import numpy as np
-from . import fieldformat, model, project
+from . import early, fieldformat, model, project
 from .report import team_points
 from .shadow_h2h import PairEvidence, ShadowH2H
 
@@ -106,7 +106,7 @@ def ct_record(games: list[dict], k: str, day: str) -> tuple[int, int]:
 def build(rows: list[dict], season: int, fitted: model.Model, games: list[dict], day: str, shadow: ShadowH2H | None = None,
           edits: list[dict] | None = None, prev: dict | None = None, sources: dict | None = None) -> dict:
     """rows: live or historical rows (unprepared). day: games cutoff for evidence. prev: the previous review, for the change report."""
-    model.prepare(rows); fitted.score(rows)
+    model.prepare(rows); fitted.score(rows); early.stabilize(rows)
     field, rest_rows = model.choose_field(rows, season); order_rows = model.assign_lines(field, season); project.confidence(order_rows, season)
     R = {r["key"]: r for r in rows}
     for f, n in (("wab", "rk_wab"), ("sor", "rk_sor"), ("rating", "rk_rating")):

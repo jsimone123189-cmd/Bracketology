@@ -3,7 +3,7 @@ from __future__ import annotations
 Your adjustments live in overrides/{season}.json and are never mixed into the model. ledger.py has the format and rules."""
 import json, os, re, statistics, sys, time
 from datetime import date, datetime
-from . import checks, fieldformat, history, ledger, metrics, model
+from . import checks, early, fieldformat, history, ledger, metrics, model
 from .dataset import _d, completed_champions
 from .features import build_year
 from .sources import ncaa_games, ncaa_net, warrennolan
@@ -77,6 +77,8 @@ def live_rows(season: int, today: str | None = None, info: dict | None = None) -
     info["checks"] = found
     played = statistics.median(r["w"] + r["l"] for r in rows)
     if played < 15: warn.append(f"Early season: teams have played a median of {played:.0f} games. The model is trained on full Selection Sunday resumes, so treat this as a rough preview.")
+    w = early.mark(rows); info["early_weight"] = round(w, 3)
+    if w: warn.append(f"Early-season blend on (docs/46): each team's place is {w:.0%} the median of NET, BPI, KenPom and T-Rank (Warren Nolan's copies, which can lag the originals) and {1 - w:.0%} the model. It fades out by {early.FULL_GAMES} games.")
     return rows, warn
 
 def ncaa_champions(games: list[dict], universe: set[str], day: str) -> set[str]:
@@ -150,7 +152,7 @@ def closest_calls(order: list[dict], rest: list[dict], n: int = 12) -> dict:
             "first_out": [{"team": r["team"], "p_in": round(r["p_in"], 3)} for r in rest[:8]]}
 
 def build(rows: list[dict], season: int, fitted: model.Model, overrides: dict | None = None) -> dict:
-    model.prepare(rows); fitted.score(rows)
+    model.prepare(rows); fitted.score(rows); early.stabilize(rows)
     field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); untouched = model_bracket(order)
     final, notes = apply_overrides(order, rest, overrides or {}, season)
     keep =("overall", "team", "line", "model_line", "override_reason", "p_in", "champ", "projected_auto", "lg", "w", "l", "net", "r_kpi", "r_sor", "r_wab", "r_bpi", "r_kp", "r_trk")

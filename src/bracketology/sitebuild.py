@@ -2,7 +2,7 @@ from __future__ import annotations
 """Builds the static site: site/template.html + data -> data/output/site/preview.html (private Artifact) and data/output/public/index.html (Cloudflare).
 Run: python -m bracketology.sitebuild demo-2026   (held-out 2026 preview). Live seasons get the same data shape from project.py."""
 import hashlib, itertools, json, os, statistics, sys, time
-from . import checks, fieldformat, ledger, model, project
+from . import checks, early, fieldformat, ledger, model, project
 from .features import build_year
 from .sources import bracketmatrix as bm
 
@@ -72,7 +72,7 @@ MIN_MEDIAN_GAMES = 15
 def live(season: int, fitted: model.Model) -> dict:
     """Live season: model bracket, then the owner's overrides. Public JSON carries no third-party metric values (r_* columns)."""
     acc = json.load(open("site/accuracy.json")); table = acc["seed_error"]
-    info = {}; rows, warn = project.live_rows(season, info=info); model.prepare(rows); fitted.score(rows)
+    info = {}; rows, warn = project.live_rows(season, info=info); model.prepare(rows); fitted.score(rows); early.stabilize(rows)
     field, rest = model.choose_field(rows, season); order = model.assign_lines(field, season); project.confidence(order, season)
     untouched = project.model_bracket(order); review = project.review_list(order)
     fmt = fieldformat.format_for(season); autos = sum(1 for r in field if r["champ"] or r.get("projected_auto"))
