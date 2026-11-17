@@ -2,7 +2,8 @@
  * Live-bet alert: checks a Google Sheet every minute and pushes new "live" bets to your phone.
  *
  * Runs in YOUR Google account (script.google.com), so it is fast (1-minute checks) and private.
- * Phone alerts go through ntfy (free app, no account): https://ntfy.sh
+ * Alerts are emailed to your own Gmail (the Gmail app pushes them to your phone), and also sent to
+ * ntfy (https://ntfy.sh) when Google can reach it.
  *
  * SETUP (about 5 minutes)
  *  1. On your phone, install the "ntfy" app and subscribe to a topic name only you know, e.g.
@@ -82,10 +83,15 @@ function keyOf_(s) {
 }
 
 function push_(title, body) {
-  UrlFetchApp.fetch('https://ntfy.sh/' + encodeURIComponent(CONFIG.NTFY_TOPIC), {
-    method: 'post',
-    payload: body,
-    headers: { Title: title, Priority: 'urgent', Tags: 'basketball' },
-    muteHttpExceptions: true,
-  });
+  // Email to the script owner's Gmail: always works from Apps Script, and the Gmail app pushes it in seconds.
+  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), title, body);
+  // Also try ntfy; Google sometimes cannot reach it ("Address unavailable"), so failures are ignored.
+  try {
+    UrlFetchApp.fetch('https://ntfy.sh/' + encodeURIComponent(CONFIG.NTFY_TOPIC), {
+      method: 'post',
+      payload: body,
+      headers: { Title: title, Priority: 'urgent', Tags: 'basketball' },
+      muteHttpExceptions: true,
+    });
+  } catch (e) { /* ntfy unreachable: the email already went out */ }
 }
