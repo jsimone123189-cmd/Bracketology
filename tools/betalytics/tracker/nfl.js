@@ -77,7 +77,9 @@
   function slip(r) {
     var u = U(), now = Date.now(), p = r.p, d = new Date(r.g.t);
     var s = h('div', { className: 'slip' });
-    s.appendChild(h('span', { className: 'grade ' + (p.grade || 'x'), title: 'Betalytics price grade' }, p.grade || '–'));
+    s.appendChild(h('span', { className: 'grade ' + (p.grade || 'x'), title: p.gradeFrom === 'model'
+      ? 'Grade from Betalytics\u2019 chance vs the market (no live price); Betalytics caps these at B'
+      : 'Betalytics price grade' }, p.grade || '\u2013'));
     var mid = h('div'); mid.style.minWidth = '0';
     mid.appendChild(h('div', { className: 'pick' }, pickText(r)));
     var game = r.kind === 'prop' ? r.id.split('_').slice(2).join(' @ ') : r.g.a + ' @ ' + r.g.h;
@@ -146,8 +148,10 @@
       if (st.market === 'all') Object.keys(MK).forEach(function (k) { groups.push([MK[k], base.filter(function (r) { return r.key === k; })]); });
     }
     if (st.grade === 'all') ['A', 'B', 'C', 'D', '?'].forEach(function (gr) {
-      groups.push([gr === '?' ? 'No grade (early week)' : 'Grade ' + gr, base.filter(function (r) { return (r.p.grade || '?') === gr; })]);
+      groups.push([gr === '?' ? 'No grade' : 'Grade ' + gr, base.filter(function (r) { return (r.p.grade || '?') === gr; })]);
     });
+    groups.push(['Graded on a live price', base.filter(function (r) { return r.p.grade && r.p.gradeFrom !== 'model'; })]);
+    groups.push(['Graded on chance vs market', base.filter(function (r) { return r.p.gradeFrom === 'model'; })]);
     if (st.rec !== 'rec') groups.push(['Recommended', base.filter(function (r) { return r.p.rec; })]);
     document.getElementById('nBreakTitle').textContent = st.view === 'games' ? 'By market' : 'By edge and prop type';
     var tb = document.getElementById('nBreak'); tb.innerHTML = '';

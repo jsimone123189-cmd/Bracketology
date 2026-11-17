@@ -267,6 +267,9 @@
     player_pass_interceptions: ['passing_interceptions'], player_pass_tds: ['passing_tds'], player_pass_yds: ['passing_yards']
   };
 
+  /** Betalytics' letter for an edge in percentage points (from its site: A >= 5, B >= 2, C >= 0, else D). */
+  function siteGrade(edgePts) { return edgePts >= 5 ? 'A' : edgePts >= 2 ? 'B' : edgePts >= 0 ? 'C' : 'D'; }
+
   /** Grade a prop from the player's game stats ({market: value}); null stats = did not play (no action). */
   function gradeProp(p, stats) {
     if (!stats || stats[p.mk] == null) return null;
@@ -303,6 +306,15 @@
         out.push({ kind: 'prop', id: gid, key: p.mk, p: p, g: { t: p.t }, res: graded && graded.r === 'V' ? null : graded,
                    void: !!(graded && graded.r === 'V') });
       });
+    });
+    // Betalytics shows a letter even when its price grade is blank (stale price): its site grades the model's
+    // chance against the market's (A >= 5 pts, B >= 2, C >= 0, else D) and caps those at B. Mirror that.
+    out.forEach(function (r) {
+      if (r.p.grade) return;
+      var mkt = r.kind === 'prop' ? r.p.mkt : (r.key === 'sp' || r.key === 'tot') ? 0.5 : null;
+      if (mkt == null || r.p.hit == null) return;
+      var g = siteGrade((r.p.hit - mkt) * 100);
+      r.p = Object.assign({}, r.p, { grade: g === 'A' ? 'B' : g, gradeFrom: 'model' });
     });
     out.sort(function (x, y) { return Date.parse(y.g.t) - Date.parse(x.g.t); });
     return out;
@@ -489,7 +501,7 @@
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
-              gradeProp: gradeProp, nflRows: nflRows, PROP_STAT: PROP_STAT };
+              gradeProp: gradeProp, nflRows: nflRows, siteGrade: siteGrade, PROP_STAT: PROP_STAT };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Ledger = api;
 })(typeof window !== 'undefined' ? window : this);
