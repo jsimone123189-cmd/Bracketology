@@ -188,6 +188,12 @@
     var ts = g.two_signal || {}, picks = {};
     [['sp', 'spread', 'home', 'away'], ['tot', 'total', 'over', 'under'], ['ml', 'moneyline', 'home', 'away']].forEach(function (m) {
       var side = nflSide(ts[m[1]], m[2], m[3]);
+      // Moneylines: Betalytics' pick is the side with the edge over its price, not the likelier winner
+      // (the side it shows graded, e.g. a +520 underdog it gives 29% against a 16% break-even).
+      var sg = ts[m[1]];
+      if (m[0] === 'ml' && sg && sg.home && sg.away && sg.home.price_edge_pts != null && sg.away.price_edge_pts != null) {
+        side = sg.home.price_edge_pts >= sg.away.price_edge_pts ? 'home' : 'away';
+      }
       if (!side) return;
       var s = ts[m[1]][side];
       var price = s.best_price;
@@ -267,8 +273,14 @@
     player_pass_interceptions: ['passing_interceptions'], player_pass_tds: ['passing_tds'], player_pass_yds: ['passing_yards']
   };
 
-  /** Betalytics' letter for an edge in percentage points (from its site: A >= 5, B >= 2, C >= 0, else D). */
-  function siteGrade(edgePts) { return edgePts >= 5 ? 'A' : edgePts >= 2 ? 'B' : edgePts >= 0 ? 'C' : 'D'; }
+  /**
+   * Betalytics' letter, as its site computes it: by edge in percentage points (A >= 5, B >= 2, C >= 0, else D),
+   * then an A or B whose win chance is under 35% (a long shot) is shown as C.
+   */
+  function siteGrade(edgePts, chance) {
+    var g = edgePts >= 5 ? 'A' : edgePts >= 2 ? 'B' : edgePts >= 0 ? 'C' : 'D';
+    return (g === 'A' || g === 'B') && chance != null && chance < 0.35 ? 'C' : g;
+  }
 
   /** Grade a prop from the player's game stats ({market: value}); null stats = did not play (no action). */
   function gradeProp(p, stats) {
@@ -324,7 +336,7 @@
       }
       if (base == null) return;
       var edge = (p.hit - base) * 100;
-      r.p = Object.assign({}, p, { grade: siteGrade(edge), gradeFrom: from, siteEdge: edge, storedGrade: p.grade || null });
+      r.p = Object.assign({}, p, { grade: siteGrade(edge, p.hit), gradeFrom: from, siteEdge: edge, storedGrade: p.grade || null });
     });
     out.sort(function (x, y) { return Date.parse(y.g.t) - Date.parse(x.g.t); });
     return out;
