@@ -120,8 +120,8 @@
     var msg;
     if (!best) {
       msg = 'Not enough games since ' + START + ' to judge yet. Each strategy needs 30+ bets after that date. Until then, the honest ' +
-        'answer from the data so far: following Betalytics as-is has lost money (college moneylines especially), A-grade spreads and ' +
-        'totals are about break-even, and the only patterns that held up in both halves of the data are fading its small spread ' +
+        'answer from the data so far: following Betalytics as-is has lost money (college moneylines especially), its college A grades on ' +
+        'spreads and totals have lost too (about \u22129%), and the only patterns that held up in both halves of the data are fading its small spread ' +
         'favorites (college) and its 2–10 pt anytime-TD overs (NFL, matching its own backtest). Give it about four weeks: if no ' +
         'strategy here is beating $' + COST + ' a month by mid-December, it isn’t paying for itself.';
     } else if (best.perMonth > COST) {

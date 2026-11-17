@@ -119,8 +119,12 @@
       Object.keys(games).forEach(function (id) {
         var g = games[id];
         Object.keys(g.picks || {}).forEach(function (key) {
-          out.push({ date: date, id: id, key: key, p: g.picks[key], g: g,
-                     res: gradePick(key, g.picks[key], sc[id]), clv: clv(key, g.picks[key], cl[id]) });
+          var p = g.picks[key];
+          // Since 2026-11-13 Betalytics stores college grades capped at B (as it does for NFL) while its site
+          // still shows A for 5+ pt edges. Grade from the edge with the site's rules so every day is comparable.
+          if (p.edge != null) p = Object.assign({}, p, { grade: siteGrade(p.edge, p.hit), storedGrade: p.grade || null });
+          out.push({ date: date, id: id, key: key, p: p, g: g,
+                     res: gradePick(key, p, sc[id]), clv: clv(key, p, cl[id]) });
         });
       });
     });
