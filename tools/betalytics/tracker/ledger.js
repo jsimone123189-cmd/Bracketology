@@ -307,14 +307,24 @@
                    void: !!(graded && graded.r === 'V') });
       });
     });
-    // Betalytics shows a letter even when its price grade is blank (stale price): its site grades the model's
-    // chance against the market's (A >= 5 pts, B >= 2, C >= 0, else D) and caps those at B. Mirror that.
+    // Grade NFL picks the way Betalytics' site displays them: by edge (A >= 5 pts, B >= 2, C >= 0, else D).
+    // Betalytics' NFL data stores price_grade capped at B (an edge of 17 pts comes through as "B") while its
+    // site shows an A, so the stored letter is not used. Edge = model chance minus the break-even of the
+    // pick's price when Betalytics priced it; otherwise minus the market's chance (50% for spreads/totals),
+    // as the site does for stale prices.
     out.forEach(function (r) {
-      if (r.p.grade) return;
-      var mkt = r.kind === 'prop' ? r.p.mkt : (r.key === 'sp' || r.key === 'tot') ? 0.5 : null;
-      if (mkt == null || r.p.hit == null) return;
-      var g = siteGrade((r.p.hit - mkt) * 100);
-      r.p = Object.assign({}, r.p, { grade: g === 'A' ? 'B' : g, gradeFrom: 'model' });
+      var p = r.p;
+      if (p.hit == null) return;
+      var priced = r.kind === 'prop' ? !!p.grade : p.priced;
+      var base = null, from = 'price';
+      if (priced && p.price != null) base = 1 / (1 + profit(p.price));
+      else {
+        base = r.kind === 'prop' ? p.mkt : (r.key === 'sp' || r.key === 'tot') ? 0.5 : null;
+        from = 'model';
+      }
+      if (base == null) return;
+      var edge = (p.hit - base) * 100;
+      r.p = Object.assign({}, p, { grade: siteGrade(edge), gradeFrom: from, siteEdge: edge, storedGrade: p.grade || null });
     });
     out.sort(function (x, y) { return Date.parse(y.g.t) - Date.parse(x.g.t); });
     return out;

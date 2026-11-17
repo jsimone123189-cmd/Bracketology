@@ -77,9 +77,7 @@
   function slip(r) {
     var u = U(), now = Date.now(), p = r.p, d = new Date(r.g.t);
     var s = h('div', { className: 'slip' });
-    s.appendChild(h('span', { className: 'grade ' + (p.grade || 'x'), title: p.gradeFrom === 'model'
-      ? 'Grade from Betalytics\u2019 chance vs the market (no live price); Betalytics caps these at B'
-      : 'Betalytics price grade' }, p.grade || '\u2013'));
+    s.appendChild(h('span', { className: 'grade ' + (p.grade || 'x'), title: p.gradeFrom === 'model' ? 'Betalytics grade from its chance vs the market (no live price)' : 'Betalytics grade from its chance vs the price' }, p.grade || '\u2013'));
     var mid = h('div'); mid.style.minWidth = '0';
     mid.appendChild(h('div', { className: 'pick' }, pickText(r)));
     var game = r.kind === 'prop' ? r.id.split('_').slice(2).join(' @ ') : r.g.a + ' @ ' + r.g.h;
