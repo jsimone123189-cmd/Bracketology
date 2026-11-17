@@ -112,6 +112,7 @@
     var tb = h('tbody');
     keys.forEach(function (k) {
       var e = rec.groups[k], tr = h('tr');
+      if (o.minRow && e.n < o.minRow && k.split('|').length > 1) return;
       var u = (e.units > 0 ? '+' : e.units < 0 ? '−' : '') + Math.abs(e.units).toFixed(1);
       [o.groupName(k), String(e.n), e.w + '–' + e.l, pct(e.raw), u, e.be == null ? 'ROI ' + pts(e.est) : pct(e.est),
        pts(e.edge), e.fadeEdge == null ? '–' : pts(e.fadeEdge)].forEach(function (c, i) {
@@ -132,7 +133,7 @@
     var cap = h('p', 'muted lede', 'Record, Hit % and Units are what actually happened (1 unit per pick). The "Est." columns are my ' +
       'long-run estimate: each group starts as if it already had 100 wins and 100 losses, so a hot or cold streak over a few dozen ' +
       'games barely moves it and a real edge has to show up over hundreds. Est. edge is percentage points above break-even ' +
-      '(fading assumes the other side at −110). A verdict needs 100+ decided picks and 80% confidence. Line move is how far the ' +
+      '(fading assumes the other side at −110). A verdict needs 100+ decided picks spread over enough separate game days (5 for college, 7 for NFL) and 80% confidence. Line move is how far the ' +
       'line moved from Betalytics’ number to the close, in points (picks with a closing line in brackets); plus means ' +
       'Betalytics’ side got more expensive by tip, so following it pays to bet early and fading it pays to wait. ' +
       'Recent form compares the latest third of a group’s picks with everything before; ↑ or ↓ marks a change bigger than ' +

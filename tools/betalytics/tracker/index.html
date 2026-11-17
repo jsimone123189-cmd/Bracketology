@@ -325,7 +325,8 @@ footer p { margin: 0 0 8px; }
     var rec = Ledger.recommend(all,
       function (r) { return [r.key + '|' + (r.p.grade || '?'), r.key]; },
       function (r) { return r.key !== 'ml'; },
-      function (r) { return r.key === 'ml'; });
+      function (r) { return r.key === 'ml'; },
+      { minDays: 5 });
     LedgerRecs.render($('recs'), rec, {
       bet: function (it) {
         var r = it.r, p = r.p, g = r.g;

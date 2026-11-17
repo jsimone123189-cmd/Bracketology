@@ -408,7 +408,13 @@
     return { n: n, mean: m, se: sd / Math.sqrt(n), same: v.filter(function (x) { return x === 0; }).length };
   }
 
-  function recommend(all, groupsOf, canFade, isUnits) {
+  /**
+   * opts.minDays: distinct game days a group needs before a verdict. Results from the same day (same games)
+   * move together, so many picks from one slate are weaker evidence than their count suggests.
+   * canFade(sample, key) and isUnits(sample, key) also receive the group key, so mixed groups can be handled.
+   */
+  function recommend(all, groupsOf, canFade, isUnits, opts) {
+    opts = opts || {};
     var hist = {}, moves = {};
     all.forEach(function (r) {
       if (r.clv && r.clv.pts != null) groupsOf(r).forEach(function (k) { (moves[k] = moves[k] || []).push(r); });
@@ -420,8 +426,11 @@
     var groups = {};
     Object.keys(hist).forEach(function (k) {
       var sample = hist[k][0];
-      var e = realEdge(hist[k], { byUnits: isUnits(sample) });
-      e.verdict = verdict(e, canFade(sample));
+      var e = realEdge(hist[k], { byUnits: isUnits(sample, k) });
+      var days = {};
+      hist[k].forEach(function (r) { if (r.res && r.res.r !== 'P') days[String(r.g.t).slice(0, 10)] = 1; });
+      e.days = Object.keys(days).length;
+      e.verdict = e.days < (opts.minDays || 0) && e.n >= MIN_N ? 'few' : verdict(e, canFade(sample, k));
       e.move = moveOf[k] || { n: 0 };
       e.trend = trendOf(hist[k]);
       groups[k] = e;

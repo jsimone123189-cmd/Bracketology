@@ -10,7 +10,7 @@
   };
   var GK = { sp: 'Spread', tot: 'Total', ml: 'Moneyline' };
   var data = { games: {}, props: {}, results: {} };
-  var st = { view: 'games', rec: 'all', market: 'all', shownUp: 10, shownDone: 30 };
+  var st = { view: 'games', rec: 'all', market: 'all', grade: 'all', shownUp: 10, shownDone: 30 };
   var db = null, el = null;
   var U = function () { return window.LedgerUI; };
 
@@ -27,6 +27,7 @@
       '<div class="filters" role="group" aria-label="NFL filters">' +
       '<div><span class="flabel">Show</span><span class="seg" id="nView"></span></div>' +
       '<div><span class="flabel">Picks</span><span class="seg" id="nRec"></span></div>' +
+      '<div><span class="flabel">Grade</span><span class="seg" id="nGrade"></span></div>' +
       '<div id="nMarketWrap"><span class="flabel">Market</span><span class="seg" id="nMarket"></span></div></div>' +
       '<section><h2>Recommended bets</h2><p class="muted lede">My calls from how Betalytics’ NFL picks have actually hit in your tracked results. ' +
       'Follow = their picks in that group have a proven edge; Fade = bet the other side.</p><div id="nRecs"></div></section>' +
@@ -104,6 +105,7 @@
       if (st.view === 'games' ? r.kind !== 'game' : r.kind !== 'prop') return false;
       if (st.rec === 'rec' && !r.p.rec) return false;
       if (st.market !== 'all' && r.key !== st.market) return false;
+      if (st.grade !== 'all' && (r.p.grade || '?') !== st.grade) return false;
       return true;
     });
   }
@@ -114,6 +116,7 @@
     if (!u) return;
     seg('nView', 'view', [['games', 'Game picks'], ['props', 'Props']]);
     seg('nRec', 'rec', [['all', 'All leans'], ['rec', 'Recommended']]);
+    seg('nGrade', 'grade', [['all', 'All'], ['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D'], ['?', 'None']]);
     var mkts = st.view === 'games' ? [['all', 'All'], ['sp', 'Spread'], ['tot', 'Total'], ['ml', 'Moneyline']]
       : [['all', 'All']].concat(Object.keys(MK).map(function (k) { return [k, MK[k]]; }));
     seg('nMarket', 'market', mkts);
@@ -142,6 +145,9 @@
       });
       if (st.market === 'all') Object.keys(MK).forEach(function (k) { groups.push([MK[k], base.filter(function (r) { return r.key === k; })]); });
     }
+    if (st.grade === 'all') ['A', 'B', 'C', 'D', '?'].forEach(function (gr) {
+      groups.push([gr === '?' ? 'No grade (early week)' : 'Grade ' + gr, base.filter(function (r) { return (r.p.grade || '?') === gr; })]);
+    });
     if (st.rec !== 'rec') groups.push(['Recommended', base.filter(function (r) { return r.p.rec; })]);
     document.getElementById('nBreakTitle').textContent = st.view === 'games' ? 'By market' : 'By edge and prop type';
     var tb = document.getElementById('nBreak'); tb.innerHTML = '';
@@ -159,9 +165,15 @@
     // Recommendations from realized results (ignores the Picks/Market filters, uses the Show switch)
     var pool = all.filter(function (r) { return st.view === 'games' ? r.kind === 'game' : r.kind === 'prop'; });
     var rec = Ledger.recommend(pool,
-      function (r) { return r.kind === 'game' ? [r.key] : [r.key + '|' + r.p.side, r.key]; },
-      function (r) { return r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'; },
-      function (r) { return r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'; });
+      function (r) {
+        var gr = r.p.grade || '?';
+        return r.kind === 'game' ? [r.key + '|' + gr, r.key]
+          : [r.key + '|' + r.p.side + '|' + gr, r.key + '|' + r.p.side, r.key, '*|' + gr];
+      },
+      // '*|grade' groups mix long-shot TD props with near-even props: judge them on units, never fade them.
+      function (r, k) { return k && k[0] === '*' ? false : (r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'); },
+      function (r, k) { return k && k[0] === '*' ? true : (r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'); },
+      { minDays: 7 });
     LedgerRecs.render(document.getElementById('nRecs'), rec, {
       bet: function (it) {
         var r = it.r, p = r.p;
@@ -178,9 +190,14 @@
       },
       groupName: function (k) {
         var parts = k.split('|');
+        var gname = function (g) { return g === '?' ? 'ungraded' : 'grade ' + g; };
+        if (parts[0] === '*') return 'All props, ' + gname(parts[1]);
         var base = GK[parts[0]] || MK[parts[0]] || parts[0];
-        return parts.length > 1 ? base + ' ' + parts[1] + 's' : 'All ' + base.toLowerCase() + (GK[parts[0]] ? 's' : '');
+        if (GK[parts[0]]) return parts.length > 1 ? base + 's, ' + gname(parts[1]) : 'All ' + base.toLowerCase() + 's';
+        if (parts.length === 3) return base + ' ' + parts[1] + 's, ' + gname(parts[2]);
+        return parts.length > 1 ? base + ' ' + parts[1] + 's' : 'All ' + base.toLowerCase();
       },
+      minRow: st.view === 'props' ? 10 : 0,
       order: function (keys) { return keys.sort(function (a, b) { return a.localeCompare(b); }); }
     });
 
