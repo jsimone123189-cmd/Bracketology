@@ -226,7 +226,8 @@
     return { pid: p.player_id, n: p.player_name, tm: p.team, pos: p.position, mk: p.market, line: ln.value,
              side: side, price: sig.best_price != null ? sig.best_price : price, book: ln.book || '',
              hit: hit, mkt: Math.round(mkt * 10000) / 10000, rec: !!((p.edges || {})[side]),
-             grade: sig.price_grade || null, vin: p.vintage || '', at: p.created_at || '' };
+             grade: sig.price_grade || null, vin: p.vintage || '', at: p.created_at || '',
+             bt: p.backtest && p.backtest.bucket ? { b: p.backtest.bucket, n: p.backtest.n, w: p.backtest.win_rate } : null };
   }
 
   /**
@@ -272,6 +273,12 @@
     player_pass_attempts: ['attempts'], player_pass_completions: ['completions'],
     player_pass_interceptions: ['passing_interceptions'], player_pass_tds: ['passing_tds'], player_pass_yds: ['passing_yards']
   };
+
+  /** Betalytics' own backtest buckets for props: model chance minus market chance, in points. */
+  function edgeBucket(p) {
+    var e = (p.hit - p.mkt) * 100;
+    return e < 2 ? '0-2' : e < 5 ? '2-5' : e < 10 ? '5-10' : '10+';
+  }
 
   /**
    * Betalytics' letter, as its site computes it: by edge in percentage points (A >= 5, B >= 2, C >= 0, else D),
@@ -523,7 +530,7 @@
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
-              gradeProp: gradeProp, nflRows: nflRows, siteGrade: siteGrade, PROP_STAT: PROP_STAT };
+              gradeProp: gradeProp, nflRows: nflRows, siteGrade: siteGrade, edgeBucket: edgeBucket, PROP_STAT: PROP_STAT };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Ledger = api;
 })(typeof window !== 'undefined' ? window : this);

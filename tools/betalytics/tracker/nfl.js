@@ -40,6 +40,10 @@
       '<section><h2 id="nBreakTitle">Breakdown</h2><div class="scroll"><table><thead><tr><th>Group</th><th>Picks</th>' +
       '<th>Record</th><th>Hit %</th><th>Model %</th><th>Units</th><th>ROI</th><th>Signal</th></tr></thead>' +
       '<tbody id="nBreak"></tbody></table></div></section>' +
+      '<section id="nTdSec" hidden><h2>Anytime TD finder</h2><p class="muted lede" id="nTdLede"></p>' +
+      '<div class="scroll"><table><thead><tr><th>Betalytics edge</th><th>Your record</th><th>Hit %</th><th>Needs</th>' +
+      '<th>Units</th><th>Betalytics backtest</th></tr></thead><tbody id="nTdTable"></tbody></table></div>' +
+      '<h3 class="subh">This week’s TD overs, edge 2–10 pts</h3><p class="muted lede" id="nTdPickLede"></p><div id="nTdPicks" class="day"></div></section>' +
       '<section><h2>Results</h2><div id="nDone" class="day"></div></section>' +
       '<section><h2>Betalytics’ own backtest</h2><div id="nBt" class="muted"></div></section>' +
       '<footer><p>Game picks are the Betalytics model’s side in each market. Early in the week Betalytics shows no prices, ' +
@@ -169,12 +173,15 @@
     var rec = Ledger.recommend(pool,
       function (r) {
         var gr = r.p.grade || '?';
-        return r.kind === 'game' ? [r.key + '|' + gr, r.key]
-          : [r.key + '|' + r.p.side + '|' + gr, r.key + '|' + r.p.side, r.key, '*|' + gr];
+        if (r.kind === 'game') return [r.key + '|' + gr, r.key];
+        var keys = [r.key + '|' + r.p.side + '|' + gr, r.key + '|' + r.p.side, r.key, '*|' + gr];
+        // TD overs: Betalytics' own edge buckets come first, since that is where the evidence points
+        if (r.key === 'player_anytime_td' && r.p.side === 'over') keys.unshift('tdover|' + Ledger.edgeBucket(r.p));
+        return keys;
       },
       // '*|grade' groups mix long-shot TD props with near-even props: judge them on units, never fade them.
-      function (r, k) { return k && k[0] === '*' ? false : (r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'); },
-      function (r, k) { return k && k[0] === '*' ? true : (r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'); },
+      function (r, k) { return k && (k[0] === '*' || k.indexOf('tdover') === 0) ? false : (r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'); },
+      function (r, k) { return k && (k[0] === '*' || k.indexOf('tdover') === 0) ? true : (r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'); },
       { minDays: 7 });
     LedgerRecs.render(document.getElementById('nRecs'), rec, {
       bet: function (it) {
@@ -194,6 +201,7 @@
         var parts = k.split('|');
         var gname = function (g) { return g === '?' ? 'ungraded' : 'grade ' + g; };
         if (parts[0] === '*') return 'All props, ' + gname(parts[1]);
+        if (parts[0] === 'tdover') return 'TD overs, edge ' + parts[1].replace('-', '–') + ' pts';
         var base = GK[parts[0]] || MK[parts[0]] || parts[0];
         if (GK[parts[0]]) return parts.length > 1 ? base + 's, ' + gname(parts[1]) : 'All ' + base.toLowerCase() + 's';
         if (parts.length === 3) return base + ' ' + parts[1] + 's, ' + gname(parts[2]);
@@ -216,6 +224,8 @@
       var m = h('button', { type: 'button', className: 'more', id: 'nMoreUp' }, 'Show all ' + up.length);
       m.onclick = function () { st.shownUp = up.length; render(); }; ub.appendChild(m);
     }
+    renderTd(all);
+
     // Results
     var done = list.filter(function (r) { return r.res || r.void; });
     var dbx = document.getElementById('nDone'); dbx.innerHTML = '';
@@ -237,6 +247,50 @@
       bt.textContent = parts.join(' · ') + '. Betalytics publishes these for model ' + latest.ver +
         '. Break-even at −110 is 52.4%. Your tracked results above are the independent check.';
     } else bt.textContent = 'Shown after your first NFL upload.';
+  }
+
+  /** Anytime-TD overs by Betalytics' edge bucket: your tracked results beside Betalytics' backtest. */
+  function renderTd(all) {
+    var sec = document.getElementById('nTdSec');
+    sec.hidden = st.view !== 'props';
+    if (sec.hidden) return;
+    var u = U(), now = Date.now();
+    var td = all.filter(function (r) { return r.kind === 'prop' && r.key === 'player_anytime_td' && r.p.side === 'over' && !r.void; });
+    var bt = {};
+    td.forEach(function (r) { if (r.p.bt) bt[Ledger.edgeBucket(r.p)] = r.p.bt; });
+    var tb = document.getElementById('nTdTable'); tb.innerHTML = '';
+    ['0-2', '2-5', '5-10', '10+'].forEach(function (b) {
+      var x = td.filter(function (r) { return r.res && Ledger.edgeBucket(r.p) === b; });
+      var s = Ledger.summarize(x);
+      var need = x.length ? x.reduce(function (a, r) { return a + 1 / (1 + Ledger.profit(r.p.price)); }, 0) / x.length : null;
+      var tr = h('tr');
+      [b.replace('-', '–') + ' pts', s.n ? s.w + '–' + s.l : '–', s.n ? u.pct(s.w / s.n) : '–',
+       need == null ? '–' : u.pct(need), s.n ? u.fmtU(s.units) : '–',
+       bt[b] ? u.pct(bt[b].w) + ' over ' + bt[b].n + ' bets' : '–'].forEach(function (c, i) {
+        var td2 = h('td', null, c); if (i === 4 && s.n) td2.className = u.sign(s.units); tr.appendChild(td2);
+      });
+      tb.appendChild(tr);
+    });
+    document.getElementById('nTdLede').textContent = 'Anytime-TD overs only, split by Betalytics’ edge (its chance minus the market’s). ' +
+      'Compare each row’s hit rate with what its odds need. Betalytics’ 2024–25 backtest and your first tracked week both show ' +
+      'thin edges (0–2) and its biggest edges (10+) losing, and the 2–10 range doing best. Long-shot TD results swing wildly: a ' +
+      'few scores decide a week, so trust a row only once it holds for several weeks. The Recommended bets section turns a row into ' +
+      'Follow when your results prove it.';
+    var up = td.filter(function (r) {
+      var b = Ledger.edgeBucket(r.p);
+      return !r.res && Date.parse(r.g.t) > now && (b === '2-5' || b === '5-10');
+    }).sort(function (a, b) { return b.p.hit - a.p.hit; });
+    document.getElementById('nTdPickLede').textContent = up.length
+      ? up.length + ' upcoming. Sorted by Betalytics’ TD chance, likeliest first, so the top of the list is the steadier ' +
+        'place to start if you only want a few; the +2000 long shots further down swing the most. Spread small, equal stakes ' +
+        'across several rather than one big bet: most of these lose and a few pay many times over.'
+      : 'None upcoming. Upload a capture from the props page before kickoff.';
+    var box = document.getElementById('nTdPicks'); box.innerHTML = '';
+    up.slice(0, st.shownTd || 12).forEach(function (r) { box.appendChild(slip(r)); });
+    if (up.length > (st.shownTd || 12)) {
+      var m = h('button', { type: 'button', className: 'more', id: 'nMoreTd' }, 'Show all ' + up.length);
+      m.onclick = function () { st.shownTd = up.length; render(); }; box.appendChild(m);
+    }
   }
 
   function watch(name, fn) {
