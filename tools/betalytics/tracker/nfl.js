@@ -312,6 +312,7 @@
       snap.docs.forEach(function (d) { var b = d.data(); if (b) fn(o, d.id, b); });
       data[name.replace('nfl', '')] = o;
       render();
+      if (window.renderLab) window.renderLab();
     }, function () {});
   }
 
@@ -323,6 +324,7 @@
       watch('nflresults', function (o, id, b) { o[id] = b; });
     },
     render: function () { if (!el) layout(); render(); },
+    rows: function () { return Ledger.nflRows(data.games, data.props, data.results); },
     ingest: async function (cap) {
       var m = Ledger.mergeNfl(data, cap);
       var weeks = Object.keys(m.games), gids = Object.keys(m.props);

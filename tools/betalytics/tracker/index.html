@@ -136,6 +136,7 @@ footer p { margin: 0 0 8px; }
   <nav class="tabs" role="tablist" aria-label="Sport">
     <button type="button" role="tab" id="tabNcaab" aria-selected="true">College basketball</button>
     <button type="button" role="tab" id="tabNfl" aria-selected="false">NFL</button>
+    <button type="button" role="tab" id="tabLab" aria-selected="false">Strategy lab</button>
   </nav>
 
   <div id="viewNcaab" class="view">
@@ -199,11 +200,13 @@ footer p { margin: 0 0 8px; }
   </div>
 
   <div id="viewNfl" class="view" hidden></div>
+  <div id="viewLab" class="view" hidden></div>
 </div>
 
 <script src="ledger.js"></script>
 <script src="recs.js"></script>
 <script src="nfl.js"></script>
+<script src="lab.js"></script>
 <script>
 (function () {
   'use strict';
@@ -307,6 +310,7 @@ footer p { margin: 0 0 8px; }
     renderChart(list);
     renderLeans(all);
     renderRecs(all);
+    if (window.renderLab) renderLab();
     renderPicks(list, all.length);
   }
 
@@ -514,16 +518,27 @@ footer p { margin: 0 0 8px; }
   var scoreMeta = {};
   window.LedgerUI = { fmtOdds: fmtOdds, fmtLine: fmtLine, fmtU: fmtU, pct: pct, sign: sign, signal: signal, msg: msg };
 
-  function showTab(name) {
-    var nfl = name === 'nfl';
-    $('viewNcaab').hidden = nfl; $('viewNfl').hidden = !nfl;
-    $('tabNcaab').setAttribute('aria-selected', String(!nfl)); $('tabNfl').setAttribute('aria-selected', String(nfl));
-    if (window.NflTab) NflTab.render();
+  var tab = 'ncaab';
+  function renderLab() {
+    if (tab !== 'lab' || !window.Lab) return;
+    Lab.render($('viewLab'), Ledger.rows(slates, scores, closing), window.NflTab ? NflTab.rows() : []);
   }
+  window.renderLab = renderLab;
+  function showTab(name) {
+    tab = name;
+    $('viewNcaab').hidden = name !== 'ncaab'; $('viewNfl').hidden = name !== 'nfl'; $('viewLab').hidden = name !== 'lab';
+    $('tabNcaab').setAttribute('aria-selected', String(name === 'ncaab'));
+    $('tabNfl').setAttribute('aria-selected', String(name === 'nfl'));
+    $('tabLab').setAttribute('aria-selected', String(name === 'lab'));
+    if (window.NflTab) NflTab.render();
+    renderLab();
+  }
+  var fromHash = function () { return location.hash === '#nfl' ? 'nfl' : location.hash === '#lab' ? 'lab' : 'ncaab'; };
   $('tabNcaab').onclick = function () { history.replaceState(null, '', '#ncaab'); showTab('ncaab'); };
   $('tabNfl').onclick = function () { history.replaceState(null, '', '#nfl'); showTab('nfl'); };
-  window.addEventListener('hashchange', function () { showTab(location.hash === '#nfl' ? 'nfl' : 'ncaab'); });
-  showTab(location.hash === '#nfl' ? 'nfl' : 'ncaab');
+  $('tabLab').onclick = function () { history.replaceState(null, '', '#lab'); showTab('lab'); };
+  window.addEventListener('hashchange', function () { showTab(fromHash()); });
+  showTab(fromHash());
 
   async function start() {
     renderFilters(); render();
