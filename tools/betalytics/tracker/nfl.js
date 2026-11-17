@@ -43,7 +43,7 @@
       '<section id="nTdSec" hidden><h2>Anytime TD finder</h2><p class="muted lede" id="nTdLede"></p>' +
       '<div class="scroll"><table><thead><tr><th>Betalytics edge</th><th>Your record</th><th>Hit %</th><th>Needs</th>' +
       '<th>Units</th><th>Betalytics backtest</th></tr></thead><tbody id="nTdTable"></tbody></table></div>' +
-      '<h3 class="subh">This week’s TD overs, edge 2–10 pts</h3><p class="muted lede" id="nTdPickLede"></p><div id="nTdPicks" class="day"></div></section>' +
+      '<h3 class="subh">Your weekly TD card</h3><p class="muted lede" id="nTdPickLede"></p><div id="nTdPicks" class="day"></div></section>' +
       '<section><h2>Results</h2><div id="nDone" class="day"></div></section>' +
       '<section><h2>Betalytics’ own backtest</h2><div id="nBt" class="muted"></div></section>' +
       '<footer><p>Game picks are the Betalytics model’s side in each market. Early in the week Betalytics shows no prices, ' +
@@ -173,8 +173,10 @@
     var rec = Ledger.recommend(pool,
       function (r) {
         var gr = r.p.grade || '?';
-        if (r.kind === 'game') return [r.key + '|' + gr, r.key];
+        var band = Ledger.edgeBand(r.p.siteEdge);
+        if (r.kind === 'game') return [r.key + '|' + gr, r.key].concat(band ? [r.key + '#e' + band] : []);
         var keys = [r.key + '|' + r.p.side + '|' + gr, r.key + '|' + r.p.side, r.key, '*|' + gr];
+        if (band && r.key !== 'player_anytime_td') keys.push(r.key + '#' + r.p.side + '-e' + band);
         // TD overs: Betalytics' own edge buckets come first, since that is where the evidence points
         if (r.key === 'player_anytime_td' && r.p.side === 'over') keys.unshift('tdover|' + Ledger.edgeBucket(r.p));
         return keys;
@@ -201,14 +203,25 @@
         var parts = k.split('|');
         var gname = function (g) { return g === '?' ? 'ungraded' : 'grade ' + g; };
         if (parts[0] === '*') return 'All props, ' + gname(parts[1]);
+        if (k.indexOf('#') > 0) {
+          var sp = k.split('#'), nm = GK[sp[0]] ? GK[sp[0]] + 's' : (MK[sp[0]] || sp[0]);
+          var tail = sp[1], side = '';
+          if (tail.indexOf('-e') > 0) { side = ' ' + tail.split('-e')[0] + 's'; tail = 'e' + tail.split('-e')[1]; }
+          var b = tail.slice(1);
+          return nm + side + ', edge ' + (b === 'neg' ? 'below 0' : b.replace('-', '–') + ' pts');
+        }
         if (parts[0] === 'tdover') return 'TD overs, edge ' + parts[1].replace('-', '–') + ' pts';
         var base = GK[parts[0]] || MK[parts[0]] || parts[0];
         if (GK[parts[0]]) return parts.length > 1 ? base + 's, ' + gname(parts[1]) : 'All ' + base.toLowerCase() + 's';
         if (parts.length === 3) return base + ' ' + parts[1] + 's, ' + gname(parts[2]);
         return parts.length > 1 ? base + ' ' + parts[1] + 's' : 'All ' + base.toLowerCase();
       },
-      minRow: st.view === 'props' ? 10 : 0,
-      order: function (keys) { return keys.sort(function (a, b) { return a.localeCompare(b); }); }
+      minRow: 10,
+      order: function (keys) {
+        return keys.sort(function (a, b) {
+          return (a.indexOf('#') > 0) - (b.indexOf('#') > 0) || a.localeCompare(b);
+        });
+      }
     });
 
     // Upcoming leans
@@ -281,13 +294,13 @@
       return !r.res && Date.parse(r.g.t) > now && (b === '2-5' || b === '5-10');
     }).sort(function (a, b) { return b.p.hit - a.p.hit; });
     document.getElementById('nTdPickLede').textContent = up.length
-      ? up.length + ' upcoming. Sorted by Betalytics’ TD chance, likeliest first, so the top of the list is the steadier ' +
-        'place to start if you only want a few; the +2000 long shots further down swing the most. Spread small, equal stakes ' +
-        'across several rather than one big bet: most of these lose and a few pay many times over.'
+      ? 'The 8 likeliest of this week’s ' + up.length + ' TD overs in the 2–10 pt edge range. You don’t need all of them: ' +
+        'if the range is profitable, 8 bets have the same expected return per dollar as 80, just less money at work and ' +
+        'bumpier weeks. Likeliest first keeps it steadier than the +2000 long shots. Bet the same small amount on each.'
       : 'None upcoming. Upload a capture from the props page before kickoff.';
     var box = document.getElementById('nTdPicks'); box.innerHTML = '';
-    up.slice(0, st.shownTd || 12).forEach(function (r) { box.appendChild(slip(r)); });
-    if (up.length > (st.shownTd || 12)) {
+    up.slice(0, st.shownTd || 8).forEach(function (r) { box.appendChild(slip(r)); });
+    if (up.length > (st.shownTd || 8)) {
       var m = h('button', { type: 'button', className: 'more', id: 'nMoreTd' }, 'Show all ' + up.length);
       m.onclick = function () { st.shownTd = up.length; render(); }; box.appendChild(m);
     }

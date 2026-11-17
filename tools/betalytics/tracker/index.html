@@ -323,7 +323,16 @@ footer p { margin: 0 0 8px; }
   var GRADE_NAME = { sp: 'spreads', tot: 'totals', ml: 'moneylines' };
   function renderRecs(all) {
     var rec = Ledger.recommend(all,
-      function (r) { return [r.key + '|' + (r.p.grade || '?'), r.key]; },
+      function (r) {
+        var keys = [r.key + '|' + (r.p.grade || '?'), r.key];
+        var band = Ledger.edgeBand(r.p.edge);
+        if (band) keys.push(r.key + '#e' + band);
+        if (r.key === 'tot') keys.push('tot#' + r.p.side);
+        if (r.key === 'sp' && r.p.line != null) {
+          keys.push('sp#' + (r.p.line <= -10 ? 'fav10' : r.p.line < 0 ? 'fav' : r.p.line < 10 ? 'dog' : 'dog10'));
+        }
+        return keys;
+      },
       function (r) { return r.key !== 'ml'; },
       function (r) { return r.key === 'ml'; },
       { minDays: 5 });
@@ -344,14 +353,26 @@ footer p { margin: 0 0 8px; }
           (it.action === 'fade' ? ' · Betalytics has ' + pickText(r) : '');
       },
       groupName: function (k) {
+        if (k.indexOf('#') > 0) {
+          var seg = k.split('#'), name = GRADE_NAME[seg[0]], m = seg[1];
+          var SEG = { over: 'overs', under: 'unders', fav10: 'Betalytics on a favorite of 10+', fav: 'Betalytics on a favorite under 10',
+                      dog: 'Betalytics on an underdog under 10', dog10: 'Betalytics on an underdog of 10+' };
+          if (m[0] === 'e') return name[0].toUpperCase() + name.slice(1) + ', edge ' + (m.slice(1) === 'neg' ? 'below 0' : m.slice(1).replace('-', '–') + ' pts');
+          return name[0].toUpperCase() + name.slice(1) + ': ' + SEG[m];
+        }
         var parts = k.split('|');
         return parts.length > 1 ? 'Grade ' + parts[1] + ' ' + GRADE_NAME[parts[0]] : 'All ' + GRADE_NAME[parts[0]];
       },
+      minRow: 10,
       order: function (keys) {
         var rank = { sp: 0, tot: 1, ml: 2 };
+        var band = ['neg', '0-2', '2-5', '5-10', '10-20', '20+'];
+        var m = function (k) { return k.split(/[|#]/)[0]; };
+        var seg = function (k) { return k.indexOf('#') > 0 ? 1 : 0; };
+        var sub = function (k) { var x = k.split('#')[1] || ''; return x[0] === 'e' ? band.indexOf(x.slice(1)) : 10 + x.length; };
         return keys.sort(function (a, b) {
-          var A = a.split('|'), B = b.split('|');
-          return rank[A[0]] - rank[B[0]] || (A.length - B.length) || (A[1] || '').localeCompare(B[1] || '');
+          return seg(a) - seg(b) || rank[m(a)] - rank[m(b)] || (a.split('|').length - b.split('|').length) ||
+            sub(a) - sub(b) || a.localeCompare(b);
         });
       }
     });

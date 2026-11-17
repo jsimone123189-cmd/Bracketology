@@ -396,12 +396,19 @@
   }
 
   /** 'follow' | 'fade' | 'none' | 'few' for a group, given whether fading is possible for it. */
-  function verdict(e, canFade) {
+  function verdict(e, canFade, conf) {
+    conf = conf || CONFIDENT;
     if (e.n < MIN_N) return 'few';
-    if (e.pFollow >= CONFIDENT && e.edge > 0) return 'follow';
-    if (canFade && e.pFade >= CONFIDENT && e.fadeEdge > 0) return 'fade';
-    if (!canFade && e.pFollow <= 1 - CONFIDENT && e.edge < 0) return 'avoid';   // clearly losing, other side unpriced
+    if (e.pFollow >= conf && e.edge > 0) return 'follow';
+    if (canFade && e.pFade >= conf && e.fadeEdge > 0) return 'fade';
+    if (!canFade && e.pFollow <= 1 - conf && e.edge < 0) return 'avoid';   // clearly losing, other side unpriced
     return 'none';
+  }
+
+  var SEGMENT_CONFIDENT = 0.9;   // finer splits (keys with '#') are many; demand more before calling one
+  /** Edge bucket label for an edge in percentage points. */
+  function edgeBand(e) {
+    return e == null ? null : e < 0 ? 'neg' : e < 2 ? '0-2' : e < 5 ? '2-5' : e < 10 ? '5-10' : e < 20 ? '10-20' : '20+';
   }
 
   /**
@@ -471,7 +478,9 @@
       var days = {};
       hist[k].forEach(function (r) { if (r.res && r.res.r !== 'P') days[String(r.g.t).slice(0, 10)] = 1; });
       e.days = Object.keys(days).length;
-      e.verdict = e.days < (opts.minDays || 0) && e.n >= MIN_N ? 'few' : verdict(e, canFade(sample, k));
+      e.segment = k.indexOf('#') > 0;
+      e.verdict = e.days < (opts.minDays || 0) && e.n >= MIN_N ? 'few'
+        : verdict(e, canFade(sample, k), e.segment ? SEGMENT_CONFIDENT : CONFIDENT);
       e.move = moveOf[k] || { n: 0 };
       e.trend = trendOf(hist[k]);
       groups[k] = e;
@@ -479,11 +488,17 @@
     var now = Date.now(), picks = [];
     all.forEach(function (r) {
       if (r.res || r.void || Date.parse(r.g.t) <= now) return;
-      var keys = groupsOf(r), g = null, k = null;
-      for (var i = 0; i < keys.length; i++) {
-        if (groups[keys[i]] && groups[keys[i]].n >= MIN_N) { g = groups[keys[i]]; k = keys[i]; break; }
-      }
-      if (!g || (g.verdict !== 'follow' && g.verdict !== 'fade')) return;
+      // Every group the pick belongs to may have a verdict: conflicting calls cancel out; otherwise the
+      // group with the biggest estimated edge decides.
+      var keys = groupsOf(r), g = null, k = null, acts = {};
+      keys.forEach(function (key) {
+        var e = groups[key];
+        if (!e || (e.verdict !== 'follow' && e.verdict !== 'fade')) return;
+        acts[e.verdict] = true;
+        var ed = e.verdict === 'fade' ? e.fadeEdge : e.edge;
+        if (!g || ed > (g.verdict === 'fade' ? g.fadeEdge : g.edge)) { g = e; k = key; }
+      });
+      if (!g || (acts.follow && acts.fade)) return;
       var mv = null;
       for (var j = 0; j < keys.length; j++) {
         if (moveOf[keys[j]] && moveOf[keys[j]].n >= MIN_MOVE_N) { mv = moveOf[keys[j]]; mv.key = keys[j]; break; }
@@ -526,7 +541,7 @@
     return out;
   }
 
-  var api = { realEdge: realEdge, verdict: verdict, recommend: recommend, lineMove: lineMove, betPlan: betPlan, trendOf: trendOf, MIN_N: MIN_N, PRIOR: PRIOR,
+  var api = { realEdge: realEdge, verdict: verdict, edgeBand: edgeBand, recommend: recommend, lineMove: lineMove, betPlan: betPlan, trendOf: trendOf, MIN_N: MIN_N, PRIOR: PRIOR,
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,

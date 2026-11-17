@@ -112,7 +112,7 @@
     var tb = h('tbody');
     keys.forEach(function (k) {
       var e = rec.groups[k], tr = h('tr');
-      if (o.minRow && e.n < o.minRow && k.split('|').length > 1) return;
+      if (o.minRow && e.n < o.minRow && (k.split('|').length > 1 || k.indexOf('#') > 0)) return;
       var u = (e.units > 0 ? '+' : e.units < 0 ? '−' : '') + Math.abs(e.units).toFixed(1);
       [o.groupName(k), String(e.n), e.w + '–' + e.l, pct(e.raw), u, e.be == null ? 'ROI ' + pts(e.est) : pct(e.est),
        pts(e.edge), e.fadeEdge == null ? '–' : pts(e.fadeEdge)].forEach(function (c, i) {
