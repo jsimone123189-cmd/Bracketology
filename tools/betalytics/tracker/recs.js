@@ -60,6 +60,10 @@
     } else {
       parts.push('When: not enough closing-line data for this group yet. Bet when convenient and shop for the best number.');
     }
+    if (it.e.be != null) {
+      var pHit = it.action === 'fade' ? 1 - it.e.est : it.e.est, mp = Ledger.breakEvenPrice(pHit);
+      if (mp != null) parts.push('Max price: ' + (mp > 0 ? '+' : '−') + Math.abs(mp) + '; at anything worse the estimated edge is gone.');
+    }
     if (pl.bet) {
       var key = it.r.key;
       parts.push(pl.worst != null
@@ -76,6 +80,8 @@
   function render(box, rec, o) {
     box.innerHTML = '';
     var list = h('div', 'recs');
+    if (rec.hiddenByPrice) list.appendChild(h('p', 'muted lede', rec.hiddenByPrice + ' recommendation' +
+      (rec.hiddenByPrice === 1 ? '' : 's') + ' hidden by your max price.'));
     if (!rec.picks.length) {
       list.appendChild(h('p', 'muted', 'No bets recommended right now. No group of Betalytics picks has shown a real edge ' +
         'either way yet. The table below shows how each group is hitting and how close it is to a verdict.'));

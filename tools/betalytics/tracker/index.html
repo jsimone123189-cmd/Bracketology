@@ -107,6 +107,7 @@ footer p { margin: 0 0 8px; }
 .tag.rec-fade { background: var(--accent); color: var(--accent-ink); }
 .sig.fade { background: var(--accent); color: var(--accent-ink); }
 .slip .plan { font-size: 12px; color: var(--ink); margin-top: 3px; overflow-wrap: anywhere; }
+.pricein { width: 84px; font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
 .subh { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 0; }
 .view { display: grid; gap: 18px; }
 .view[hidden] { display: none; }
@@ -151,6 +152,7 @@ footer p { margin: 0 0 8px; }
     <div><span class="flabel">Grade</span><span class="seg" id="fGrade"></span></div>
     <div><span class="flabel">Picks</span><span class="seg" id="fTop"></span></div>
     <div><span class="flabel">Period</span><span class="seg" id="fPeriod"></span></div>
+    <div><label class="flabel" for="fMaxPrice">Max price</label><input id="fMaxPrice" class="pricein" type="number" step="1" inputmode="numeric"></div>
   </div>
 
   <section>
@@ -308,8 +310,8 @@ footer p { margin: 0 0 8px; }
     });
 
     renderChart(list);
+    renderRecs(all);     // first: it computes the group estimates the picks list uses
     renderLeans(all);
-    renderRecs(all);
     if (window.renderLab) renderLab();
     renderPicks(list, all.length);
   }
@@ -340,6 +342,14 @@ footer p { margin: 0 0 8px; }
       function (r) { return r.key !== 'ml'; },
       function (r) { return r.key === 'ml'; },
       { minDays: 5 });
+    lastGroups = rec.groups;
+    var mx = maxPrice(), hidden = 0;
+    rec.picks = rec.picks.filter(function (it) {
+      var price = it.action === 'fade' ? -110 : it.r.p.price;
+      if (Ledger.priceOk(price, mx)) return true;
+      hidden++; return false;
+    });
+    rec.hiddenByPrice = hidden;
     LedgerRecs.render($('recs'), rec, {
       bet: function (it) {
         var r = it.r, p = r.p, g = r.g;
@@ -382,10 +392,23 @@ footer p { margin: 0 0 8px; }
     });
   }
 
+  var lastGroups = {};
+  /** Worst price worth paying for a pick, from the tracker's estimate for its group (key|grade), if it has data. */
+  function worthTo(r) {
+    var g = lastGroups[r.key + '|' + (r.p.grade || '?')];
+    if (!g || g.n < 30 || g.be == null) return '';
+    var mp = Ledger.breakEvenPrice(g.est);
+    if (mp == null) return '';
+    if (mp > 100) return ' · tracker: only worth it at +' + mp + ' or better (its group hits under 50%)';
+    if (mp >= -100) return '';
+    return ' · tracker: worth it down to −' + Math.abs(mp) + (r.p.price < mp ? ' (this price is worse)' : '');
+  }
+
   function renderLeans(all) {
-    var now = Date.now(), el = $('leans');
+    var now = Date.now(), el = $('leans'), mx = maxPrice(), cut = 0;
     var up = all.filter(function (r) {
       if (r.res || Date.parse(r.g.t) <= now) return false;
+      if (!Ledger.priceOk(r.p.price, mx)) { cut++; return false; }
       if (state.market !== 'all' && r.key !== state.market) return false;
       if (state.grade !== 'all' && r.p.grade !== state.grade) return false;
       if (state.top === 'top' && !r.p.top) return false;
@@ -396,8 +419,11 @@ footer p { margin: 0 0 8px; }
         ((y.p.edge ?? -99) - (x.p.edge ?? -99)) || (Date.parse(x.g.t) - Date.parse(y.g.t));
     });
     el.innerHTML = '';
+    if (cut) el.appendChild(Object.assign(document.createElement('p'), { className: 'muted lede',
+      textContent: cut + ' pick' + (cut === 1 ? '' : 's') + ' priced worse than your max price (' + fmtOdds(mx) + ') hidden.' }));
     if (!up.length) {
-      el.innerHTML = '<p class="muted" style="margin:0">No upcoming picks stored. Upload a fresh capture before tip-off to see today’s card.</p>';
+      el.appendChild(Object.assign(document.createElement('p'), { className: 'muted',
+        textContent: cut ? 'Nothing left at your max price.' : 'No upcoming picks stored. Upload a fresh capture before tip-off to see today’s card.' }));
       return;
     }
     up.slice(0, state.leans || 8).forEach(function (r) { el.appendChild(slipEl(r, now, true)); });
@@ -422,7 +448,7 @@ footer p { margin: 0 0 8px; }
       d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     meta.textContent = r.g.a.s + ' @ ' + r.g.h.s + '  ' + (sc ? sc.as + '–' + sc.hs : when) +
       ' · ' + KEYS[r.key] + (r.p.hit != null ? ' · Betalytics says ' + Math.round(r.p.hit * 100) + '% to hit, needs ' +
-        Math.round(100 / (1 + Ledger.profit(r.p.price))) + '%' : '') + closeText(r);
+        Math.round(100 / (1 + Ledger.profit(r.p.price))) + '%' : '') + (r.res ? '' : worthTo(r)) + closeText(r);
     mid.appendChild(pk); mid.appendChild(meta); slip.appendChild(mid);
     var res = document.createElement('div'); res.className = 'res';
     var tag = document.createElement('span');
@@ -516,7 +542,20 @@ footer p { margin: 0 0 8px; }
   function msg(text, err) { var m = $('msg'); m.hidden = !text; m.textContent = text || ''; m.className = 'note' + (err ? ' err' : ''); }
 
   var scoreMeta = {};
-  window.LedgerUI = { fmtOdds: fmtOdds, fmtLine: fmtLine, fmtU: fmtU, pct: pct, sign: sign, signal: signal, msg: msg };
+  // Max price: picks priced worse than this are hidden from recommendations and Betalytics' picks.
+  function maxPrice() {
+    try { var v = parseInt(localStorage.getItem('maxPrice'), 10); if (!isNaN(v)) return v; } catch (_) {}
+    return -115;
+  }
+  $('fMaxPrice').value = String(maxPrice());
+  $('fMaxPrice').addEventListener('change', function () {
+    var v = parseInt($('fMaxPrice').value, 10);
+    if (isNaN(v) || (v > -100 && v < 100)) v = -115;   // American odds never sit between -100 and +100
+    $('fMaxPrice').value = String(v);
+    try { localStorage.setItem('maxPrice', String(v)); } catch (_) {}
+    render(); if (window.NflTab) NflTab.render(); if (window.renderLab) renderLab();
+  });
+  window.LedgerUI = { maxPrice: maxPrice, fmtOdds: fmtOdds, fmtLine: fmtLine, fmtU: fmtU, pct: pct, sign: sign, signal: signal, msg: msg };
 
   var tab = 'ncaab';
   function renderLab() {

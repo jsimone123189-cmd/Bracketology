@@ -185,6 +185,13 @@
       function (r, k) { return k && (k[0] === '*' || k.indexOf('tdover') === 0) ? false : (r.kind === 'game' ? r.key !== 'ml' : r.key !== 'player_anytime_td'); },
       function (r, k) { return k && (k[0] === '*' || k.indexOf('tdover') === 0) ? true : (r.kind === 'game' ? r.key === 'ml' : r.key === 'player_anytime_td'); },
       { minDays: 7 });
+    var mxp = U().maxPrice ? U().maxPrice() : null, hid = 0;
+    rec.picks = rec.picks.filter(function (it) {
+      var price = it.action === 'fade' ? -110 : it.r.p.price;
+      if (Ledger.priceOk(price, mxp)) return true;
+      hid++; return false;
+    });
+    rec.hiddenByPrice = hid;
     LedgerRecs.render(document.getElementById('nRecs'), rec, {
       bet: function (it) {
         var r = it.r, p = r.p;
@@ -226,7 +233,7 @@
 
     // Upcoming leans
     var now = Date.now();
-    var up = list.filter(function (r) { return !r.res && !r.void && Date.parse(r.g.t) > now; })
+    var up = list.filter(function (r) { return !r.res && !r.void && Date.parse(r.g.t) > now && Ledger.priceOk(r.p.price, mxp); })
       .sort(function (a, b) { return (b.p.rec - a.p.rec) || (edgeOf(b) - edgeOf(a)); });
     document.getElementById('nLede').textContent = up.length
       ? 'Upcoming ' + (st.view === 'games' ? 'game picks' : 'props') + ', recommended first, then the biggest edge over the market.'

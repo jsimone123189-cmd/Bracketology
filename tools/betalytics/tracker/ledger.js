@@ -545,7 +545,15 @@
     return out;
   }
 
-  var api = { realEdge: realEdge, verdict: verdict, edgeBand: edgeBand, recommend: recommend, lineMove: lineMove, betPlan: betPlan, trendOf: trendOf, MIN_N: MIN_N, PRIOR: PRIOR,
+  /** The worst American price at which a bet that wins with probability p still breaks even. */
+  function breakEvenPrice(p) {
+    if (p == null || p <= 0 || p >= 1) return null;
+    return p >= 0.5 ? -Math.round(100 * p / (1 - p)) : Math.round(100 * (1 - p) / p);
+  }
+  /** Is price at least as good as max (American odds: higher is better, e.g. -110 beats -120)? */
+  function priceOk(price, max) { return max == null || price == null || price >= max; }
+
+  var api = { breakEvenPrice: breakEvenPrice, priceOk: priceOk, realEdge: realEdge, verdict: verdict, edgeBand: edgeBand, recommend: recommend, lineMove: lineMove, betPlan: betPlan, trendOf: trendOf, MIN_N: MIN_N, PRIOR: PRIOR,
               findSlates: findSlates, compactGame: compactGame, merge: merge, profit: profit,
               gradePick: gradePick, clv: clv, rows: rows, summarize: summarize,
               findNfl: findNfl, compactNflGame: compactNflGame, compactProp: compactProp, mergeNfl: mergeNfl,
