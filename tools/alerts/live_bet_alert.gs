@@ -86,6 +86,7 @@ function push_(title, body) {
   // Email to the script owner's Gmail: always works from Apps Script, and the Gmail app pushes it in seconds.
   MailApp.sendEmail(Session.getEffectiveUser().getEmail(), title, body);
   // Also try ntfy; Google sometimes cannot reach it ("Address unavailable"), so failures are ignored.
+  if (!CONFIG.NTFY_TOPIC || CONFIG.NTFY_TOPIC.indexOf('PASTE') === 0) return;
   try {
     UrlFetchApp.fetch('https://ntfy.sh/' + encodeURIComponent(CONFIG.NTFY_TOPIC), {
       method: 'post',
