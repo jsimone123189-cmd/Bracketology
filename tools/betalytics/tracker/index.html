@@ -138,6 +138,7 @@ footer p { margin: 0 0 8px; }
     <button type="button" role="tab" id="tabNcaab" aria-selected="true">College basketball</button>
     <button type="button" role="tab" id="tabNfl" aria-selected="false">NFL</button>
     <button type="button" role="tab" id="tabLab" aria-selected="false">Strategy lab</button>
+    <button type="button" role="tab" id="tabBrad" aria-selected="false">Brad Evans</button>
   </nav>
 
   <div id="viewNcaab" class="view">
@@ -203,12 +204,14 @@ footer p { margin: 0 0 8px; }
 
   <div id="viewNfl" class="view" hidden></div>
   <div id="viewLab" class="view" hidden></div>
+  <div id="viewBrad" class="view" hidden></div>
 </div>
 
 <script src="ledger.js"></script>
 <script src="recs.js"></script>
 <script src="nfl.js"></script>
 <script src="lab.js"></script>
+<script src="brad.js"></script>
 <script>
 (function () {
   'use strict';
@@ -565,17 +568,20 @@ footer p { margin: 0 0 8px; }
   window.renderLab = renderLab;
   function showTab(name) {
     tab = name;
-    $('viewNcaab').hidden = name !== 'ncaab'; $('viewNfl').hidden = name !== 'nfl'; $('viewLab').hidden = name !== 'lab';
+    $('viewNcaab').hidden = name !== 'ncaab'; $('viewNfl').hidden = name !== 'nfl'; $('viewLab').hidden = name !== 'lab'; $('viewBrad').hidden = name !== 'brad';
     $('tabNcaab').setAttribute('aria-selected', String(name === 'ncaab'));
     $('tabNfl').setAttribute('aria-selected', String(name === 'nfl'));
     $('tabLab').setAttribute('aria-selected', String(name === 'lab'));
+    $('tabBrad').setAttribute('aria-selected', String(name === 'brad'));
     if (window.NflTab) NflTab.render();
+    if (window.BradTab) BradTab.render($('viewBrad'));
     renderLab();
   }
-  var fromHash = function () { return location.hash === '#nfl' ? 'nfl' : location.hash === '#lab' ? 'lab' : 'ncaab'; };
+  var fromHash = function () { return location.hash === '#nfl' ? 'nfl' : location.hash === '#lab' ? 'lab' : location.hash === '#brad' ? 'brad' : 'ncaab'; };
   $('tabNcaab').onclick = function () { history.replaceState(null, '', '#ncaab'); showTab('ncaab'); };
   $('tabNfl').onclick = function () { history.replaceState(null, '', '#nfl'); showTab('nfl'); };
   $('tabLab').onclick = function () { history.replaceState(null, '', '#lab'); showTab('lab'); };
+  $('tabBrad').onclick = function () { history.replaceState(null, '', '#brad'); showTab('brad'); };
   window.addEventListener('hashchange', function () { showTab(fromHash()); });
   showTab(fromHash());
 
@@ -588,6 +594,7 @@ footer p { margin: 0 0 8px; }
     var canWrite = user ? await user.can('data.write') : null;
     if (canWrite !== false) $('fileBtn').setAttribute('aria-disabled', 'false');
     if (window.NflTab) NflTab.start(db);
+    if (window.BradTab) BradTab.start(db);
     var timer = setTimeout(function () { if (!loaded.s) $('status').textContent = 'Still loading your picks… the store is slow to answer.'; }, 10000);
     db.collection('slates').onSnapshot(function (snap) {
       slates = {};
