@@ -22,7 +22,7 @@
  */
 const CONFIG = {
   SHEET_ID: '1iSoCt8jYVcC0mye6pOQ57NVsxYzOBeKNEKRsnvgmGYk',
-  GIDS: ['1337232798'],              // CBK tab. Add '0' (NFL) or '769882725' (NCAAF) to watch those too
+  GIDS: ['1337232798', '0'],         // CBK and NFL tabs. Add '769882725' (NCAAF) to watch college football too
   NTFY_TOPIC: '',                    // email only (Google cannot reach ntfy)
   TO: '',                            // where alert emails go; empty = this Google account
   MATCH: /\blive\b/i,                // what marks a live bet in the bet description
