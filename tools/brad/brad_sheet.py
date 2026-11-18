@@ -238,13 +238,17 @@ def summarize(allbets, today):
             rows.append({"name": label, "cur": c, "prev": p, "both": both, "verdict": verdict(c, p, both)})
         out["sports"].append({"sport": sp, "name": name, "cur": cur[sp], "prev": prev[sp], "rows": rows})
     # Avoid styles win over tail ones (a full-unit rushing prop is still a rushing prop).
-    order = [st for st in STYLES if st[0] == "avoid"] + [st for st in STYLES if st[0] == "tail"]
+    calls = {st["name"]: st["call"] for st in out["styles"]}        # as decided above (a Watch style can be promoted)
+    live_styles = [(calls[name], name, fn) for _, name, fn in STYLES]
+    order = [st for st in live_styles if st[0] == "avoid"] + [st for st in live_styles if st[0] == "tail"]
     style_of = lambda b: next((c for c, _, fn in order if fn(b)), None)
     rank = {"tail": 0, None: 1, "avoid": 2}
-    opn = [b for b in bets if not b.get("r") and not b.get("live") and is_cur(b)]
+    # Open bets include odds-boosted ones (flagged): the records above leave boosts out, but you may get the same boost.
+    boosted_too = [b for b in allbets if b["sport"] in dict(SHOW) and b["k"] != "future"]
+    opn = [b for b in boosted_too if not b.get("r") and not b.get("live") and is_cur(b)]
     opn.sort(key=lambda b: (rank[style_of(b)], -b["i"]))
     out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
-                    "style": style_of(b)} for b in opn[:40]]
+                    "style": style_of(b), "boost": bool(b.get("boost"))} for b in opn[:40]]
     return out
 
 

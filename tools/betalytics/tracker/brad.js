@@ -91,7 +91,8 @@
       s.appendChild(h('span', 'grade A', b.sport === 'CBK' ? 'CBB' : 'NFL'));
       var mid = h('div'); mid.style.minWidth = '0';
       mid.appendChild(h('div', 'pick', b.d));
-      mid.appendChild(h('div', 'meta', odds(b.o) + ' · ' + b.u + 'u · ' + (b.b || 'book ?') + ' · ' + b.w));
+      mid.appendChild(h('div', 'meta', odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + b.u + 'u · ' + (b.b || 'book ?') + ' · ' + b.w));
+      if (b.boost) mid.appendChild(h('div', 'plan', 'Boosted price at ' + (b.b || 'his book') + '. Only worth it at this price if you get the same boost; the normal price is lower.'));
       s.appendChild(mid);
       s2.appendChild(s);
     });
@@ -101,7 +102,7 @@
       det.appendChild(smry);
       rest.forEach(function (b) {
         var why = b.style === 'avoid' ? 'Avoid style' : 'No edge shown';
-        det.appendChild(h('div', 'meta', (b.sport === 'CBK' ? 'CBB' : 'NFL') + ' · ' + b.d + ' · ' + odds(b.o) + ' · ' + why));
+        det.appendChild(h('div', 'meta', (b.sport === 'CBK' ? 'CBB' : 'NFL') + ' · ' + b.d + ' · ' + odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + why));
       });
       s2.appendChild(det);
     }
