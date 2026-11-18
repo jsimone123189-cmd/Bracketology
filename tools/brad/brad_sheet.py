@@ -121,6 +121,132 @@ def parse(sport, rows):
             bets.append(b)
     return bets
 
+# ---------- Summary for the tracker page (collection "bradsum", doc "latest") ----------
+# The page shows only this small document; the per-bet documents above stay as the record.
+START = "2026-11-18"                        # tracking began; bets first seen after this are the forward test
+SHOW = [("NFL", "NFL"), ("CBK", "College basketball")]
+TWO = re.compile(r"(rec|rsh|rush|pass|yds|yards|TD|reb|ast|3PM|longest|most)", re.I)
+
+
+def market(b):
+    if b["k"] != "straight":
+        return b["k"]
+    d = b["d"]
+    if re.search(r"\bML\b", d, re.I):
+        return "ml"
+    if re.search(r"\d\s*(o|u)\b|\bover\b|\bunder\b|\d+\+?\s*(points|pts)\b", d, re.I) and not TWO.search(d):
+        return "total"
+    if re.search(r"(^|\s)[+-]\d+(\.5)?(\s|$)|\bPK\b", d, re.I) and not TWO.search(d):
+        return "spread"
+    return "prop"
+
+
+def prop_type(d):
+    for k, rx in (("most", r"\b(most|mst)\b"), ("longest", r"longest|\blng\b"), ("td", r"\bTD"),
+                  ("rec", r"\d\+?\s*rec\b|\brec\b(?!.*yd)"), ("recyds", r"rec\.? ?(yds|yards)|rcv"),
+                  ("rush", r"rsh|rush"), ("pass", r"pass|cmp|\bint")):
+        if re.search(rx, d, re.I if k != "td" else 0):
+            return k
+    return "other"
+
+
+def stats(lst):
+    """Record, Brad's units, and your result at a $1 flat stake (risk 1 on plus money, to win 1 on minus)."""
+    x = {"w": 0, "l": 0, "u": 0.0, "pl": 0.0, "risk": 0.0, "v": 0.0}
+    for b in lst:
+        r = b.get("r")
+        if not r:
+            continue
+        o = b["o"]
+        win, lose = (o / 100, 1.0) if o > 0 else (1.0, -o / 100)
+        p0 = 100 / (o + 100) if o > 0 else -o / (-o + 100)
+        x["u"] += b.get("n") or 0
+        if r == "WIN":
+            x["w"] += 1; x["pl"] += win
+        elif r == "LOSS":
+            x["l"] += 1; x["pl"] -= lose
+        if r in ("WIN", "LOSS"):
+            x["risk"] += lose; x["v"] += p0 * (1 - p0) * (win + lose) ** 2
+    x["z"] = round(x["pl"] / x["v"] ** 0.5, 2) if x["v"] else 0.0
+    del x["v"]
+    return {k: round(v, 3) if isinstance(v, float) else v for k, v in x.items()}
+
+
+def full_prop(b, full):
+    return b["sport"] == "NFL" and not b.get("live") and market(b) == "prop" and ((b["u"] >= 1) if full else (b["u"] < 1))
+
+
+STYLES = [
+    ("tail", "NFL props he bets at a full unit (1u+)", lambda b: full_prop(b, True)),
+    ("tail", "· anytime TD, full unit", lambda b: full_prop(b, True) and prop_type(b["d"]) == "td"),
+    ("tail", "· most yards in the game, full unit", lambda b: full_prop(b, True) and prop_type(b["d"]) == "most"),
+    ("tail", "· receptions, full unit", lambda b: full_prop(b, True) and prop_type(b["d"]) == "rec"),
+    ("watch", "College basketball straight bets", lambda b: b["sport"] == "CBK" and not b.get("live") and b["k"] == "straight"),
+    ("avoid", "NFL props at a half unit (his long shots)", lambda b: full_prop(b, False)),
+    ("avoid", "NFL rushing-yard props", lambda b: b["sport"] == "NFL" and not b.get("live") and market(b) == "prop" and prop_type(b["d"]) == "rush"),
+    ("avoid", "Same-game parlays", lambda b: not b.get("live") and b["k"] == "sgp"),
+]
+
+SEGMENTS = [
+    ("Live bets (your alerts)", lambda b: b.get("live")),
+    ("Everything except live", lambda b: not b.get("live")),
+    ("Straight bets", lambda b: not b.get("live") and b["k"] == "straight"),
+    ("Regular parlays", lambda b: not b.get("live") and b["k"] == "parlay"),
+    ("Same-game parlays", lambda b: not b.get("live") and b["k"] == "sgp"),
+]
+
+
+def verdict(cur, prev, both):
+    n = both["w"] + both["l"]
+    if n < 100:
+        return "Too few"
+    if both["z"] >= 1.28 and cur["pl"] > 0 and (prev["w"] + prev["l"] < 30 or prev["pl"] > 0):
+        return "Tail"
+    if both["z"] <= -1.28:
+        return "Skip"
+    return "Losing" if both["pl"] < 0 else "Not yet"
+
+
+def summarize(allbets, today):
+    bets = [b for b in allbets if b["sport"] in dict(SHOW) and b["k"] != "future" and not b.get("boost")]
+    seasons = {sp: sorted({b["season"] for b in bets if b["sport"] == sp}, reverse=True) for sp, _ in SHOW}
+    cur = {sp: (v + [None])[0] for sp, v in seasons.items()}
+    prev = {sp: (v + [None, None])[1] for sp, v in seasons.items()}
+    is_cur = lambda b: b["season"] == cur[b["sport"]]
+    is_prev = lambda b: b["season"] == prev[b["sport"]]
+    fresh = [b for b in bets if b["fs"] > START]
+    out = {"updated": today, "start": START,
+           "since": {"live": stats([b for b in fresh if b.get("live")]),
+                     "nonlive": stats([b for b in fresh if not b.get("live")])},
+           "styles": [], "sports": [], "open": []}
+    for call, name, fn in STYLES:
+        a = [b for b in bets if fn(b)]
+        if call == "watch":                 # unproven style: promote only when the numbers say so
+            c_, p_, b_ = (stats([b for b in a if f(b)]) for f in (is_cur, is_prev, lambda b: is_cur(b) or is_prev(b)))
+            call = "tail" if verdict(c_, p_, b_) == "Tail" else "watch"
+        out["styles"].append({"call": call, "name": name, "prev": stats([b for b in a if is_prev(b)]),
+                              "cur": stats([b for b in a if is_cur(b)]),
+                              "both": stats([b for b in a if is_cur(b) or is_prev(b)]),
+                              "fw": stats([b for b in a if b["fs"] > START])})
+    for sp, name in SHOW:
+        mine = [b for b in bets if b["sport"] == sp]
+        rows = []
+        for label, fn in SEGMENTS:
+            a = [b for b in mine if fn(b)]
+            c, p = stats([b for b in a if is_cur(b)]), stats([b for b in a if is_prev(b)])
+            both = stats([b for b in a if is_cur(b) or is_prev(b)])
+            rows.append({"name": label, "cur": c, "prev": p, "both": both, "verdict": verdict(c, p, both)})
+        out["sports"].append({"sport": sp, "name": name, "cur": cur[sp], "prev": prev[sp], "rows": rows})
+    # Avoid styles win over tail ones (a full-unit rushing prop is still a rushing prop).
+    order = [st for st in STYLES if st[0] == "avoid"] + [st for st in STYLES if st[0] == "tail"]
+    style_of = lambda b: next((c for c, _, fn in order if fn(b)), None)
+    rank = {"tail": 0, None: 1, "avoid": 2}
+    opn = [b for b in bets if not b.get("r") and not b.get("live") and is_cur(b)]
+    opn.sort(key=lambda b: (rank[style_of(b)], -b["i"]))
+    out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
+                    "style": style_of(b)} for b in opn[:40]]
+    return out
+
 
 def first_seen(stored, key):
     for d in stored.values():
@@ -136,7 +262,7 @@ def main(db_dir, out_dir):
     for p in glob.glob(os.path.join(db_dir, "brad", "*.json")):
         stored[os.path.splitext(os.path.basename(p))[0].replace("@", "~")] = json.load(open(p))   # ArtifactData spells "~" as "@"
     os.makedirs(out_dir, exist_ok=True)
-    files, counts = [], {}
+    files, counts, allbets = [], {}, []
     for sport, gid in TABS.items():
         seasons = {}
         for b in parse(sport, fetch(gid)):
@@ -154,6 +280,7 @@ def main(db_dir, out_dir):
                     b.pop("season")
                     b["fs"] = (prev.get(key) or {}).get("fs") or first_seen(stored, key) or today
                     bets[key] = b
+                    allbets.append(dict(b, sport=sport, season=season))
                 counts[doc_id] = len(bets)
                 if prev == bets:
                     continue
@@ -162,7 +289,11 @@ def main(db_dir, out_dir):
                           open(path, "w"), separators=(",", ":"))
                 files.append({"doc_id": doc_id, "file": path, "existed": doc_id in stored,
                               "bytes": os.path.getsize(path)})
-    print(json.dumps({"bets": counts, "files": files}, indent=1))
+    summ = summarize(allbets, today)
+    sp = os.path.join(out_dir, "bradsum-latest.json")
+    json.dump(summ, open(sp, "w"), separators=(",", ":"))
+    print(json.dumps({"bets": counts, "files": files,
+                      "summary": {"collection": "bradsum", "doc_id": "latest", "file": sp, "bytes": os.path.getsize(sp)}}, indent=1))
 
 
 if __name__ == "__main__":
