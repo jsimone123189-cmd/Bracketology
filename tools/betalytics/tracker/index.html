@@ -213,6 +213,7 @@ footer p { margin: 0 0 8px; }
 <script src="lab.js"></script>
 <script src="brad.js"></script>
 <script src="ats.js"></script>
+<script src="timing.js"></script>
 <script>
 (function () {
   'use strict';
@@ -565,6 +566,7 @@ footer p { margin: 0 0 8px; }
   function renderLab() {
     if (tab !== 'lab' || !window.Lab) return;
     Lab.render($('viewLab'), Ledger.rows(slates, scores, closing), window.NflTab ? NflTab.rows() : []);
+    if (window.Timing) { var tb = document.createElement('div'); $('viewLab').appendChild(tb); Timing.render(tb, Ledger.rows(slates, scores, closing)); }
     if (window.AtsForm) { var box = document.createElement('div'); $('viewLab').appendChild(box); AtsForm.render(box); }
   }
   window.renderLab = renderLab;

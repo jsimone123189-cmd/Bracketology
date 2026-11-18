@@ -66,11 +66,26 @@
         var old = day[g.game_id];
         if (old && Date.parse(old.at) >= Date.parse(c.at)) { counts.unchanged++; return; }
         if (!changed[g.game_date]) changed[g.game_date] = Object.assign({}, stored[g.game_date] || {});
+        // Keep the first version captured too (only the fields that matter), so early and late picks can be compared.
+        if (old) {
+          var first = old.first || { at: old.at, picks: slim(old.picks) };
+          if (JSON.stringify(first.picks) !== JSON.stringify(slim(c.picks))) c.first = first;
+        }
         changed[g.game_date][g.game_id] = c;
         counts[old ? 'updated' : 'added']++;
       });
     });
     return { slates: changed, counts: counts };
+  }
+
+  /** A pick set reduced to what an early/late comparison needs. */
+  function slim(picks) {
+    var o = {};
+    Object.keys(picks || {}).forEach(function (k) {
+      var p = picks[k];
+      o[k] = { side: p.side, line: p.line, price: p.price, edge: p.edge, hit: p.hit };
+    });
+    return o;
   }
 
   /** Profit on a 1-unit stake at American odds. */
@@ -123,8 +138,15 @@
           // Since 2026-11-13 Betalytics stores college grades capped at B (as it does for NFL) while its site
           // still shows A for 5+ pt edges. Grade from the edge with the site's rules so every day is comparable.
           if (p.edge != null) p = Object.assign({}, p, { grade: siteGrade(p.edge, p.hit), storedGrade: p.grade || null });
-          out.push({ date: date, id: id, key: key, p: p, g: g,
-                     res: gradePick(key, p, sc[id]), clv: clv(key, p, cl[id]) });
+          var row = { date: date, id: id, key: key, p: p, g: g,
+                      res: gradePick(key, p, sc[id]), clv: clv(key, p, cl[id]) };
+          // The first version captured, when it differed from this one (same game score grades it).
+          var f = g.first && g.first.picks && g.first.picks[key];
+          if (f) {
+            var fp = Object.assign({}, f, { grade: f.edge != null ? siteGrade(f.edge, f.hit) : null });
+            row.first = { at: g.first.at, p: fp, res: gradePick(key, fp, sc[id]) };
+          }
+          out.push(row);
         });
       });
     });
