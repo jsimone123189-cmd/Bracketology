@@ -1,6 +1,6 @@
 /* ATS form study (Strategy lab): does a team's recent record against the spread predict its next cover?
  * College: a daily summary (collection "atssum", built by ats_scores.py from every game's closing spread and score).
- * (collection "atsscores", from ats_scores.py), collected from 2026-11-18. NFL: a fixed 27-season result. */
+ * NFL: a fixed 27-season result. */
 (function () {
   'use strict';
   var sum = null, loaded = false, el = null;   // summary built daily by ats_scores.py (collection "atssum")
