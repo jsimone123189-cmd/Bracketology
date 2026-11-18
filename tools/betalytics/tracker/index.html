@@ -212,6 +212,7 @@ footer p { margin: 0 0 8px; }
 <script src="nfl.js"></script>
 <script src="lab.js"></script>
 <script src="brad.js"></script>
+<script src="ats.js"></script>
 <script>
 (function () {
   'use strict';
@@ -564,6 +565,7 @@ footer p { margin: 0 0 8px; }
   function renderLab() {
     if (tab !== 'lab' || !window.Lab) return;
     Lab.render($('viewLab'), Ledger.rows(slates, scores, closing), window.NflTab ? NflTab.rows() : []);
+    if (window.AtsForm) { var box = document.createElement('div'); $('viewLab').appendChild(box); AtsForm.render(box); }
   }
   window.renderLab = renderLab;
   function showTab(name) {
@@ -595,6 +597,7 @@ footer p { margin: 0 0 8px; }
     if (canWrite !== false) $('fileBtn').setAttribute('aria-disabled', 'false');
     if (window.NflTab) NflTab.start(db);
     if (window.BradTab) BradTab.start(db);
+    if (window.AtsForm) AtsForm.start(db);
     var timer = setTimeout(function () { if (!loaded.s) $('status').textContent = 'Still loading your picks… the store is slow to answer.'; }, 10000);
     db.collection('slates').onSnapshot(function (snap) {
       slates = {};

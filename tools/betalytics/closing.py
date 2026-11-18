@@ -7,7 +7,9 @@ h2h, spreads and totals in the US region = 3 of the plan's monthly requests.
 Usage: python3 closing.py <db_dir> <out_dir>
   <db_dir>/slates/*.json and <db_dir>/closing/*.json as saved by ArtifactData `list` with out_dir.
 Writes <out_dir>/closing-<date>.json for each date that changed (ArtifactData `set` on collection
-"closing", doc_id <date>) and prints a JSON summary. A game's entry is replaced only while the game
+"closing", doc_id <date>) and prints a JSON summary. From the same API response it also keeps the
+consensus line of EVERY college game, tracked by Betalytics or not, in <out_dir>/lines-<date>.json
+(collection "lines", listed under "lines_files"), for the ATS-form study. A game's entry is replaced only while the game
 has not started, so the stored line is the last one seen before tip-off.
 """
 import glob
@@ -116,6 +118,30 @@ def orient(c, flipped):
     return o
 
 
+def et_date(iso):
+    """US Eastern calendar date of a UTC tip time (fixed -5h is close enough for a game's date)."""
+    return (datetime.fromisoformat(iso.replace("Z", "+00:00")) - timedelta(hours=5)).strftime("%Y-%m-%d")
+
+
+def all_lines(events, stored, now):
+    """{date: games} for dates whose stored lines changed; only games not yet started are replaced."""
+    changed = {}
+    for ev in events or []:
+        tip = datetime.fromisoformat(ev["commence_time"].replace("Z", "+00:00"))
+        if tip <= now:
+            continue
+        c = consensus(ev)
+        if "sp" not in c:
+            continue
+        date = et_date(ev["commence_time"])
+        if date not in changed:
+            changed[date] = dict((stored.get(date) or {}).get("games", {}))
+        changed[date][ev["id"]] = {"h": ev["home_team"], "a": ev["away_team"], "t": ev["commence_time"],
+                                   "sp": c["sp"]["home"], "tot": (c.get("tot") or {}).get("line"),
+                                   "books": c["books"]}
+    return changed
+
+
 def load(pattern):
     return {os.path.splitext(os.path.basename(p))[0]: json.load(open(p)) for p in glob.glob(pattern)}
 
@@ -124,6 +150,7 @@ def main(db_dir, out_dir, events=None):
     now = datetime.now(timezone.utc)
     slates = load(os.path.join(db_dir, "slates", "*.json"))
     stored = load(os.path.join(db_dir, "closing", "*.json"))
+    stored_lines = load(os.path.join(db_dir, "lines", "*.json"))
     upcoming = {}
     for date, doc in slates.items():
         for gid, g in (doc.get("games") or {}).items():
@@ -146,8 +173,13 @@ def main(db_dir, out_dir, events=None):
         path = os.path.join(out_dir, f"closing-{date}.json")
         json.dump({"date": date, "games": games}, open(path, "w"))
         files.append({"doc_id": date, "file": path, "existed": date in stored})
+    lines_files = []
+    for date, games in sorted(all_lines(events, stored_lines, now).items()):
+        path = os.path.join(out_dir, f"lines-{date}.json")
+        json.dump({"date": date, "games": games}, open(path, "w"), separators=(",", ":"))
+        lines_files.append({"doc_id": date, "file": path, "existed": date in stored_lines})
     print(json.dumps({"upcoming": len(upcoming), "matched": len(matched), "requests_left": left,
-                      "files": files}, indent=1))
+                      "files": files, "lines_files": lines_files}, indent=1))
 
 
 if __name__ == "__main__":
