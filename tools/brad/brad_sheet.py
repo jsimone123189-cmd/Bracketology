@@ -196,6 +196,45 @@ SEGMENTS = [
 ]
 
 
+BANDS = [("Minus money", -100000, -101), ("+100 to +134", 100, 134), ("+135 to +199", 135, 199), ("+200 and up", 200, 100000)]
+PRIOR = 40          # pseudo-bets at the market's break-even rate: a small band can't swing its estimate far
+
+
+def implied(o):
+    return 100 / (o + 100) if o > 0 else -o / (-o + 100)
+
+
+def american(p):
+    """American price whose break-even rate is p (rounded to whole points)."""
+    return round(100 * (1 - p) / p) if p < 0.5 else -round(100 * p / (1 - p))
+
+
+def band_of(o):
+    return next((i for i, (_, lo, hi) in enumerate(BANDS) if lo <= o <= hi), None)
+
+
+def price_bands(lst):
+    """His straight bets by price band: record, hit rate, break-even, and the worst price still worth taking.
+
+    The estimate shrinks the band's hit rate toward the market's rate with PRIOR pseudo-bets, so a 3-10 or
+    4-4 band moves its fair price only part of the way."""
+    out = []
+    for name, lo, hi in BANDS:
+        l = [b for b in lst if lo <= b["o"] <= hi and b.get("r") in ("WIN", "LOSS")]
+        x = stats(l)
+        n = x["w"] + x["l"]
+        need = sum(implied(b["o"]) for b in l) / n if n else None
+        est = (x["w"] + PRIOR * need) / (n + PRIOR) if n else None
+        # ratio: how much more often than break-even his bets in this band win (1.05 = 5% more often).
+        # Applied to a single bet's own price, so a +214 isn't judged by a band whose average is +314.
+        out.append({"name": name, "w": x["w"], "l": x["l"], "pl": x["pl"], "z": x["z"],
+                    "hit": round(x["w"] / n, 3) if n else None, "need": round(need, 3) if need else None,
+                    "est": round(est, 3) if est else None, "ratio": round(est / need, 3) if n else None,
+                    "min": american(est) if est else None,
+                    "avg": round(sum(b["o"] for b in l) / n) if n else None})
+    return out
+
+
 def verdict(cur, prev, both):
     n = both["w"] + both["l"]
     if n < 100:
@@ -237,7 +276,9 @@ def summarize(allbets, today):
             c, p = stats([b for b in a if is_cur(b)]), stats([b for b in a if is_prev(b)])
             both = stats([b for b in a if is_cur(b) or is_prev(b)])
             rows.append({"name": label, "cur": c, "prev": p, "both": both, "verdict": verdict(c, p, both)})
-        out["sports"].append({"sport": sp, "name": name, "cur": cur[sp], "prev": prev[sp], "rows": rows})
+        st = [b for b in mine if not b.get("live") and b["k"] == "straight" and (is_cur(b) or is_prev(b))]
+        out["sports"].append({"sport": sp, "name": name, "cur": cur[sp], "prev": prev[sp], "rows": rows,
+                              "bands": price_bands(st)})
     # Avoid styles win over tail ones (a full-unit rushing prop is still a rushing prop).
     calls = {st["name"]: st["call"] for st in out["styles"]}        # as decided above (a Watch style can be promoted)
     live_styles = [(calls[name], name, fn) for _, name, fn in STYLES]
@@ -246,8 +287,21 @@ def summarize(allbets, today):
     rank = {"tail": 0, None: 1, "avoid": 2}
     opn = [b for b in bets if not b.get("r") and not b.get("live") and is_cur(b)]
     opn.sort(key=lambda b: (rank[style_of(b)], -b["i"]))
+    bands = {sp["sport"]: sp["bands"] for sp in out["sports"]}
+
+    def fair(b):
+        if b["k"] != "straight":
+            return None
+        i = band_of(b["o"])
+        bd = bands[b["sport"]][i] if i is not None else None
+        if not bd or bd["min"] is None:
+            return None
+        p = min(0.97, implied(b["o"]) * bd["ratio"])     # his estimated chance on this bet
+        mn = american(p)
+        return {"band": bd["name"], "p": round(p, 3), "min": mn, "ok": b["o"] >= mn,
+                "edge": round(bd["ratio"] - 1, 3)}
     out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
-                    "style": style_of(b), "boost": bool(b.get("boost"))} for b in opn[:40]]
+                    "style": style_of(b), "boost": bool(b.get("boost")), "fair": fair(b)} for b in opn[:40]]
     return out
 
 

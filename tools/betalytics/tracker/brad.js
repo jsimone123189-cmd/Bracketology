@@ -12,6 +12,13 @@
   function odds(o) { return (o > 0 ? '+' : '−') + Math.abs(o); }
   function rec(x) { return x && x.w + x.l ? x.w + '–' + x.l : '–'; }
   function cls(x) { return x > 0 ? 'pos' : x < 0 ? 'neg' : ''; }
+  function fairText(b) {
+    var f = b.fair; if (!f) return '';
+    var e = Math.round(Math.abs(f.edge) * 100);
+    var lead = 'His ' + (b.sport === 'CBK' ? 'college' : 'NFL') + ' straights at ' + f.band + ' win about ' + e + '% ' + (f.edge >= 0 ? 'more' : 'less') + ' often than break-even. ';
+    return f.ok ? lead + 'Worth it at ' + odds(f.min) + ' or better; ' + odds(b.o) + ' clears it.'
+                : lead + 'Needs ' + odds(f.min) + ' or better; not worth it at ' + odds(b.o) + '.';
+  }
   function day(s) { var p = s.split('-'); return Number(p[1]) + '/' + Number(p[2]); }
 
   function table(head, rows) {
@@ -92,6 +99,7 @@
       var mid = h('div'); mid.style.minWidth = '0';
       mid.appendChild(h('div', 'pick', b.d));
       mid.appendChild(h('div', 'meta', odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + b.u + 'u · ' + (b.b || 'book ?') + ' · ' + b.w));
+      if (b.fair) mid.appendChild(h('div', 'plan ' + (b.fair.ok ? 'pos' : 'neg'), fairText(b)));
       if (b.boost) mid.appendChild(h('div', 'plan', 'Boosted price at ' + (b.b || 'his book') + '. Tail it if you can get the same boost.'));
       s.appendChild(mid);
       s2.appendChild(s);
@@ -102,7 +110,8 @@
       det.appendChild(smry);
       rest.forEach(function (b) {
         var why = b.style === 'avoid' ? 'Avoid style' : 'No edge shown';
-        det.appendChild(h('div', 'meta', (b.sport === 'CBK' ? 'CBB' : 'NFL') + ' · ' + b.d + ' · ' + odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + why));
+        det.appendChild(h('div', 'meta', (b.sport === 'CBK' ? 'CBB' : 'NFL') + ' · ' + b.d + ' · ' + odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + why +
+          (b.fair ? ' · ' + (b.fair.ok ? 'price OK (min ' : 'price too short (needs ') + odds(b.fair.min) + ')' : '')));
       });
       s2.appendChild(det);
     }
@@ -115,12 +124,26 @@
         sp.rows.map(function (r) {
           return [r.name, rec(r.cur), cash(r.cur, S), rec(r.prev), cash(r.prev, S), { tag: r.verdict, cls: VERD[r.verdict] || '' }];
         })));
+      if (sp.bands) {
+        s3.appendChild(h('h3', 'subh', sp.name + ' straight bets by price'));
+        s3.appendChild(table(['His price', 'Record', 'Hit %', 'Needed', 'You at $' + S, 'vs break-even', 'Worst price worth taking'],
+          sp.bands.map(function (b) {
+            var n = b.w + b.l;
+            if (!n) return [b.name, '–', '–', '–', '–', '–', '–'];
+            var e = (b.ratio - 1) * 100;
+            return [b.name, b.w + '–' + b.l, (b.hit * 100).toFixed(0) + '%', (b.need * 100).toFixed(0) + '%', cash(b, S),
+                    { text: (e >= 0 ? '+' : '−') + Math.abs(e).toFixed(0) + '%', cls: cls(e) },
+                    odds(b.min) + ' (typical ' + odds(b.avg) + ')'];
+          })));
+      }
       el.appendChild(s3);
     });
     var f = h('footer');
     f.appendChild(h('p', null, 'Updated ' + sum.updated + '. Verdicts use this season and last together: Tail needs 100+ decided bets, ' +
       'profit beyond luck (about 90% confidence) and a profit in each season. Records are Brad’s own entries on his sheet; ' +
-      'voids and pushes count as $0.'));
+      'voids and pushes count as $0. Price bands: “vs break-even” is how much more (or less) often his straights at those prices win than ' +
+      'the price needs, after pulling small bands toward break-even (as if each had 40 extra bets at no edge), so a 3–10 band moves only part way. ' +
+      'The worst price worth taking is for a bet at the band’s typical price; each open bet gets its own.'));
     el.appendChild(f);
   }
 
