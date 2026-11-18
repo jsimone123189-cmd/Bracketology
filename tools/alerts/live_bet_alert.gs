@@ -22,6 +22,7 @@ const CONFIG = {
   SHEET_ID: 'PASTE_SHEET_ID_HERE',
   GIDS: ['0'],                       // tab ids to watch, e.g. ['0', '123456789']
   NTFY_TOPIC: 'PASTE_YOUR_SECRET_TOPIC',
+  TO: '',                            // where alert emails go; empty = this Google account
   MATCH: /\blive\b/i,                // what marks a live bet in the bet description
   ROWS: 200,                         // read only the top rows: new bets go at the top of each tab
   HOURS: { from: 11, to: 2, tz: 'America/New_York' },   // only check 11 AM to 2 AM Eastern (games happen then)
@@ -94,7 +95,7 @@ function keyOf_(s) {
 
 function push_(title, body) {
   // Email to the script owner's Gmail: always works from Apps Script, and the Gmail app pushes it in seconds.
-  MailApp.sendEmail(Session.getEffectiveUser().getEmail(), title, body);
+  MailApp.sendEmail(CONFIG.TO || Session.getEffectiveUser().getEmail(), title, body);
   // Also try ntfy; Google sometimes cannot reach it ("Address unavailable"), so failures are ignored.
   if (!CONFIG.NTFY_TOPIC || CONFIG.NTFY_TOPIC.indexOf('PASTE') === 0) return;
   try {
