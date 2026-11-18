@@ -208,7 +208,8 @@ def verdict(cur, prev, both):
 
 
 def summarize(allbets, today):
-    bets = [b for b in allbets if b["sport"] in dict(SHOW) and b["k"] != "future" and not b.get("boost")]
+    # Odds-boosted bets count in their normal category (the user can usually get the same boost).
+    bets = [b for b in allbets if b["sport"] in dict(SHOW) and b["k"] != "future"]
     seasons = {sp: sorted({b["season"] for b in bets if b["sport"] == sp}, reverse=True) for sp, _ in SHOW}
     cur = {sp: (v + [None])[0] for sp, v in seasons.items()}
     prev = {sp: (v + [None, None])[1] for sp, v in seasons.items()}
@@ -243,9 +244,7 @@ def summarize(allbets, today):
     order = [st for st in live_styles if st[0] == "avoid"] + [st for st in live_styles if st[0] == "tail"]
     style_of = lambda b: next((c for c, _, fn in order if fn(b)), None)
     rank = {"tail": 0, None: 1, "avoid": 2}
-    # Open bets include odds-boosted ones (flagged): the records above leave boosts out, but you may get the same boost.
-    boosted_too = [b for b in allbets if b["sport"] in dict(SHOW) and b["k"] != "future"]
-    opn = [b for b in boosted_too if not b.get("r") and not b.get("live") and is_cur(b)]
+    opn = [b for b in bets if not b.get("r") and not b.get("live") and is_cur(b)]
     opn.sort(key=lambda b: (rank[style_of(b)], -b["i"]))
     out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
                     "style": style_of(b), "boost": bool(b.get("boost"))} for b in opn[:40]]

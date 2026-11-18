@@ -48,7 +48,7 @@
     sec.appendChild(h('h2', null, 'Brad Evans'));
     sec.appendChild(h('p', 'muted lede', 'His NFL and college basketball bets, refreshed every morning. Dollar figures are what tailing would ' +
       'have made at your stake ($' + S + ': risk $' + S + ' on plus money, to win $' + S + ' on minus money) at his posted price. ' +
-      'Odds-boosted bets and futures are left out.'));
+      'Odds-boosted bets count at their boosted price in their normal category; futures are left out.'));
     el.appendChild(sec);
     if (failed) { sec.appendChild(h('p', 'note', failed)); return; }
     if (!loaded) { sec.appendChild(h('p', 'muted', 'Loading Brad’s record…')); return; }
@@ -92,7 +92,7 @@
       var mid = h('div'); mid.style.minWidth = '0';
       mid.appendChild(h('div', 'pick', b.d));
       mid.appendChild(h('div', 'meta', odds(b.o) + (b.boost ? ' boosted' : '') + ' · ' + b.u + 'u · ' + (b.b || 'book ?') + ' · ' + b.w));
-      if (b.boost) mid.appendChild(h('div', 'plan', 'Boosted price at ' + (b.b || 'his book') + '. Only worth it at this price if you get the same boost; the normal price is lower.'));
+      if (b.boost) mid.appendChild(h('div', 'plan', 'Boosted price at ' + (b.b || 'his book') + '. Tail it if you can get the same boost.'));
       s.appendChild(mid);
       s2.appendChild(s);
     });
