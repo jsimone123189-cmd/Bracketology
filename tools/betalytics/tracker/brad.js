@@ -137,6 +137,10 @@
   function usable(b) { return store('brad-boost', '0') === '1' || !b.boost; }
 
   function render() {
+    try { draw(); } catch (e) { if (el) { el.innerHTML = ''; el.appendChild(h('p', 'note', 'The Brad tab hit an error: ' + e.message)); } }
+  }
+
+  function draw() {
     if (!el || el.hidden) return;
     el.innerHTML = '';
     var S = stake();
@@ -146,7 +150,8 @@
       'The question this tab answers: is anything besides his live bets worth tailing? Dollar figures are what you would have made ' +
       'tailing each bet at your stake ($' + S + ': risk $' + S + ' on plus money, to win $' + S + ' on minus money), at his posted price. ' +
       'Units are Brad’s own sizing and results.'));
-    if (!loaded) { sec.appendChild(h('p', 'muted', 'Loading Brad’s bets…')); el.appendChild(sec); return; }
+    if (failed) sec.appendChild(h('p', 'note', failed));
+    if (!loaded) { if (!failed) sec.appendChild(h('p', 'muted', 'Loading Brad’s bets…')); el.appendChild(sec); return; }
 
     var opts = h('div', 'filters');
     var lab = h('label', 'flabel'); var cb = h('input'); cb.type = 'checkbox'; cb.checked = store('brad-boost', '0') === '1';
@@ -238,20 +243,27 @@
     el.appendChild(f);
   }
 
+  var failed = '';
   function start(db) {
+    var timer = setTimeout(function () { if (!loaded) { failed = 'Still loading Brad’s bets… the store is slow to answer.'; render(); } }, 15000);
     db.collection('brad').onSnapshot(function (snap) {
-      bets = [];
-      snap.docs.forEach(function (d) {
-        var doc = d.data(); if (!doc || !doc.bets) return;
-        Object.keys(doc.bets).forEach(function (k) {
-          var b = doc.bets[k]; b.id = k; b.sport = doc.sport; b.season = doc.season; bets.push(b);
+      try {
+        var list = [];
+        snap.docs.forEach(function (d) {
+          var doc = d.data(); if (!doc || !doc.bets) return;
+          Object.keys(doc.bets).forEach(function (k) {
+            // Copy: the store's documents are read-only.
+            var b = Object.assign({}, doc.bets[k], { id: k, sport: doc.sport, season: doc.season });
+            list.push(b);
+          });
         });
-      });
-      // Newest first: by season, then by position on the sheet.
-      bets.sort(function (a, b) { return a.season < b.season ? 1 : a.season > b.season ? -1 : (b.i || 0) - (a.i || 0); });
-      loaded = true;
+        // Newest first: by season, then by position on the sheet.
+        list.sort(function (a, b) { return a.season < b.season ? 1 : a.season > b.season ? -1 : (b.i || 0) - (a.i || 0); });
+        bets = list; failed = '';
+      } catch (e) { failed = 'Brad’s bets could not be read (' + e.message + ').'; }
+      loaded = true; clearTimeout(timer);
       render();
-    }, function () { loaded = true; render(); });
+    }, function (e) { loaded = true; clearTimeout(timer); failed = 'Brad’s bets could not be loaded' + (e && e.message ? ' (' + e.message + ')' : '') + '. Reload to try again.'; render(); });
   }
 
   window.BradTab = { start: start, render: function (node) { if (node) el = node; render(); }, market: market };
