@@ -1,11 +1,11 @@
 // Season settings. Must match the Python side (review.freeze_deadline, FINAL_DEADLINE_ET, fieldformat); test/parity.test.mjs checks.
-// final_deadline stays null until the 2027 selection-show time and the Matrix's final collection time are confirmed (docs/43):
-// while null, the final freeze refuses and edits stay open.
+// final_deadline: 5:45 p.m. ET on Selection Sunday (owner, 2026-11-17), 15 minutes before the 6 p.m. selection show, when the Matrix's
+// final collection closes. Re-check if CBS announces a different 2027 show time. While null, the final freeze refuses.
 export const SEASONS = {
   2027: {
     selection_sunday: "2027-03-14",
     research_cutoff: "2027-03-14T16:00:00Z",      // noon America/New_York (EDT begins that morning)
-    final_deadline: null,                          // e.g. "2027-03-14T21:45:00Z" once confirmed
+    final_deadline: "2027-03-14T21:45:00Z",        // 5:45 p.m. EDT (owner, 2026-11-17); must equal FINAL_DEADLINE_ET in review.py
     lines: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 6, 8, 4, 4, 6, 8],   // 76-team format
   },
 };

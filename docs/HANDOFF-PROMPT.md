@@ -128,7 +128,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Two immutable Selection Sunday snapshots (built, tested, 53 tests pass):**
   - **research:** noon America/New_York, B1/B2/B3, graded under docs/38;
   - **final competitive:** newest review taken after every Sunday conference final is over (scoreboard read before collection and cross-checked against the games used), before `FINAL_DEADLINE_ET`.
-  - The final deadline stays empty, and the freeze refuses, until the 2027 show time and the Matrix's final collection time are confirmed.
+  - Final deadline: **5:45 p.m. ET (21:45 UTC) on March 14, 2027** (owner, 2026-11-17: Matrix collection is due by Selection Sunday before the 6 p.m. ET show; 15-minute margin). Re-check if CBS announces a different show time. If the last conference final isn't over by 5:35, the final is frozen INCOMPLETE and labelled.
 - **2025 and 2026 Sunday finals:** five each, the last tipping at 3:30 p.m. ET (ending about 5:30 p.m.), against a 6 p.m. reveal. The 2027 schedules aren't published.
 - **Recommended private editing:** a Cloudflare Access (one-time PIN, owner's email only) + Worker + D1 page with a Save button and server timestamps, preferred over a private GitHub repo.
   - **Checked:** Zero Trust Free is $0 for up to 50 users, but signup asks for payment details. Workers Free allows 5 crons per account and 10 ms CPU. D1 Free allows 100k writes a day. Private GitHub Pages needs an organization.
@@ -178,7 +178,7 @@ You're picking up a research problem. **Goal:** make a free, automated NCAA men'
 - **Daily-update failure (2026-11-16 12:08 UTC, "No jobs were run"):** the Stage 3 incomplete-final step was written `run: { ... }`, which YAML reads as a mapping, so GitHub rejected the whole file on push. Fixed in 511febe; every workflow now checked for text `run` steps.
 - **Blend changed (owner decision):** 80% outside ranks on every live board until Selection Sunday, no fade; 0 on Selection Sunday because that was already tested and lost (−8.8 / −2.8). KenPom: kenpom.com and Massey block automated clients (not circumvented); ESPN BPI agrees with Warren Nolan's BPI, so WN is about a day behind, not wrong. NCAA team sheets (from early December) are the candidate fresher source.
 - **Stage 4 part 1 done:** `trigger/worker.js` runs Selection Sunday through a service binding to `jbp-review` (cron `1-56/5 15-22 14 3 *`), daily cron unchanged; deploys with `deploy-trigger.yml`. Worker tests 29/29 (a publish test was made independent of the day's board).
-- **Not done:** part 2, the dress rehearsal (planned Sunday 2026-12-13, test season); the final deadline (needs the Matrix collection time); NCAA team-sheet collector; replace `DISPATCH_TOKEN` before 2027-04-30.
+- **Not done:** part 2, the dress rehearsal (planned Sunday 2026-12-13, test season); deploy the 5:45 p.m. deadline (review-deploy run); NCAA team-sheet collector; replace `DISPATCH_TOKEN` before 2027-04-30.
 
 ## Searched and not found
 - No free, automatic injury or availability source with past seasons (docs/27).

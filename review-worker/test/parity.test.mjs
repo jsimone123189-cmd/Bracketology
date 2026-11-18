@@ -43,7 +43,7 @@ test("JS engine matches Python on 400 random edit sequences over the real 2027 f
   assert.ok(applied > 500 && rejected > 50, `coverage: ${applied} applied, ${rejected} rejected`);
 });
 
-test("season config matches Python (cutoff, 76-team lines, Selection Sunday, final deadline unset)", () => {
+test("season config matches Python (cutoff, 76-team lines, Selection Sunday, final deadline 5:45 p.m. EDT)", () => {
   const { config } = JSON.parse(python(path.join(REPO, "review-worker/test/py_engine.py"), []));
   const s = SEASONS[2027];
   assert.equal(s.research_cutoff, config.research_cutoff);
@@ -51,7 +51,7 @@ test("season config matches Python (cutoff, 76-team lines, Selection Sunday, fin
   assert.deepEqual(s.lines, config.lines);
   assert.equal(s.lines.reduce((a, b) => a + b, 0), 76);
   assert.equal(s.selection_sunday, config.selection_sunday);
-  assert.equal(s.final_deadline, null); assert.equal(config.final_deadline, null);
+  assert.equal(s.final_deadline, config.final_deadline); assert.equal(s.final_deadline, "2027-03-14T21:45:00Z");
 });
 
 test("replaying a long log in chunks gives exactly the one-pass result (CPU fallback)", { skip: !rv && "no local 2027 review" }, () => {

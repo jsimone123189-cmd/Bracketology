@@ -42,6 +42,7 @@ The 2026 demo is unchanged (356 / 346 / 377).
   - **2027:** the schedules aren't published yet.
 - **Bracket Matrix deadline:** not documented. The 2027 Matrix page states no submission rule, and I found none published. The only certain hard stop is the bracket reveal; the Matrix's final collection time is unknown.
   - **Action:** you ask the Matrix maintainer when they take final brackets. I can draft that email for you.
+- **Set 2026-11-17:** **5:45 p.m. ET (21:45 UTC) on March 14, 2027** (owner, 2026-11-17: Matrix collection is due by Selection Sunday before the 6 p.m. ET show; 15-minute margin). Re-check if CBS announces a different show time. If the last conference final isn't over by 5:35, the final is frozen INCOMPLETE and labelled.
 - **Rule:** `FINAL_DEADLINE_ET[2027]` is set only from confirmed times. It must be early enough that build, freeze and publish (about 10 minutes) finish before the Matrix's final collection.
 
 ## 3. Easier private editing

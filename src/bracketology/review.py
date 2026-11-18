@@ -267,7 +267,7 @@ def previous(season: int, collected_at: str, folder: str | None = None) -> dict 
 #   final    - the competitive bracket: newest review taken after every Selection Sunday conference final is over, and before
 #              the submission deadline. The deadline is not guessed: it stays None until the 2027 selection-show time and the
 #              Matrix's final collection time are confirmed, and freezing "final" refuses until it is set (local time, New York).
-FINAL_DEADLINE_ET = {2027: None}          # e.g. {2027: "2027-03-14 17:45"}; set and commit once confirmed
+FINAL_DEADLINE_ET = {2027: "2027-03-14 17:45"}   # owner, 2026-11-17: Matrix final collection is before the 6 p.m. ET show; 15 min margin
 KINDS = ("research", "final")
 
 def freeze_deadline(season: int, kind: str = "research") -> datetime:
