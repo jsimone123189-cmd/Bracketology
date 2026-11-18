@@ -215,7 +215,7 @@ def summarize(allbets, today):
     is_cur = lambda b: b["season"] == cur[b["sport"]]
     is_prev = lambda b: b["season"] == prev[b["sport"]]
     fresh = [b for b in bets if b["fs"] > START]
-    out = {"updated": today, "start": START,
+    out = {"updated": today, "checked": datetime.now(timezone.utc).isoformat(timespec="minutes"), "start": START,
            "since": {"live": stats([b for b in fresh if b.get("live")]),
                      "nonlive": stats([b for b in fresh if not b.get("live")])},
            "styles": [], "sports": [], "open": []}

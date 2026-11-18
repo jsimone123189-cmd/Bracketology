@@ -63,6 +63,8 @@
       strip.appendChild(d);
     });
     sec.appendChild(strip);
+    if (sum.checked) sec.appendChild(h('p', 'muted', 'Last checked his sheet: ' + new Date(sum.checked).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }) +
+      ' · ' + (sum.open || []).length + ' open bet' + ((sum.open || []).length === 1 ? '' : 's') + ' (not live)'));
 
     var s1 = h('section');
     s1.appendChild(h('h3', 'subh', 'What to tail'));
@@ -93,8 +95,16 @@
       s.appendChild(mid);
       s2.appendChild(s);
     });
-    var others = (sum.open || []).length - open.length;
-    if (others > 0) s2.appendChild(h('p', 'muted lede', others + ' other open bet' + (others === 1 ? '' : 's') + ' on his sheet don’t fit a Tail style (or fit an Avoid one).'));
+    var rest = (sum.open || []).filter(function (b) { return b.style !== 'tail'; });
+    if (rest.length) {
+      var det = h('details'), smry = h('summary', 'muted', rest.length + ' other open bet' + (rest.length === 1 ? '' : 's') + ' (not a Tail style)');
+      det.appendChild(smry);
+      rest.forEach(function (b) {
+        var why = b.style === 'avoid' ? 'Avoid style' : 'No edge shown';
+        det.appendChild(h('div', 'meta', (b.sport === 'CBK' ? 'CBB' : 'NFL') + ' · ' + b.d + ' · ' + odds(b.o) + ' · ' + why));
+      });
+      s2.appendChild(det);
+    }
     el.appendChild(s2);
 
     sum.sports.forEach(function (sp) {
