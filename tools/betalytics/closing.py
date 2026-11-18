@@ -158,7 +158,7 @@ def main(db_dir, out_dir, events=None):
             if now < tip < now + timedelta(hours=30):
                 upcoming[gid] = (date, g)
     left = None
-    if events is None and upcoming:
+    if events is None:                  # always: the ATS study wants every game, tracked or not
         events, left = fetch()
     matched = match_events({k: v[1] for k, v in upcoming.items()}, events or [])
     changed = {}
