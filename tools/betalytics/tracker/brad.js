@@ -265,7 +265,8 @@
     readLive();
     var openAll = liveOpen || sum.open || [];
     s2.appendChild(h('p', 'muted', liveOpen ? 'Live from his sheet, checked ' + liveAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '. Reopen the tab to check again.'
-      : 'As of this morning’s update' + (liveTried ? ' (his sheet couldn’t be read live just now).' : '.')));
+      : 'As of the last refresh' + (sum.checked ? ', ' + new Date(sum.checked).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : '') +
+        '. It refreshes at 5:23 AM, 9:15 AM, 11 AM, 3 PM and 5:30 PM.'));
     var open = openAll.filter(function (b) { return b.style === 'tail'; });
     if (!open.length) s2.appendChild(h('p', 'muted', 'None of his open non-live bets fit a Tail style right now.'));
     open.forEach(function (b) {
