@@ -302,6 +302,12 @@ def summarize(allbets, today):
                 "edge": round(bd["ratio"] - 1, 3)}
     out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
                     "style": style_of(b), "boost": bool(b.get("boost")), "fair": fair(b)} for b in opn[:40]]
+    # Bets the user may have tailed (live, or a Tail style), newest first: the page's "your price" log.
+    tailable = [b for b in bets if is_cur(b) and (b.get("live") or style_of(b) == "tail")]
+    tailable.sort(key=lambda b: (b["sport"] != "CBK", -b["i"]))
+    tailable.sort(key=lambda b: b["fs"], reverse=True)
+    out["recent"] = [{"id": b["id"], "d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"],
+                      "w": b["w"], "r": b.get("r", ""), "live": bool(b.get("live")), "fs": b["fs"]} for b in tailable[:60]]
     return out
 
 
@@ -337,7 +343,7 @@ def main(db_dir, out_dir):
                     b.pop("season")
                     b["fs"] = (prev.get(key) or {}).get("fs") or first_seen(stored, key) or today
                     bets[key] = b
-                    allbets.append(dict(b, sport=sport, season=season))
+                    allbets.append(dict(b, sport=sport, season=season, id=key))
                 counts[doc_id] = len(bets)
                 if prev == bets:
                     continue
