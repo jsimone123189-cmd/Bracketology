@@ -118,6 +118,104 @@
     return sec;
   }
 
+  // ---------- Live read of his sheet (in your browser, no scheduled job) ----------
+  // Open bets come straight from his public sheet each time the tab opens, so bets he posts during the day
+  // show up at once. Records still come from the daily summary. Falls back to the summary if the read fails.
+  var SHEET = 'https://docs.google.com/spreadsheets/d/1iSoCt8jYVcC0mye6pOQ57NVsxYzOBeKNEKRsnvgmGYk/export?format=csv&gid=';
+  var TABS = { CBK: '1337232798', NFL: '0' };
+  var liveOpen = null, liveAt = null, liveTried = false;
+
+  function csv(text) {
+    var rows = [], row = [], f = '', q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows;
+  }
+  function oddsOf(s) { var m = String(s).match(/[+-]?\d{3,5}/); if (!m) return null; var v = parseInt(m[0], 10); return Math.abs(v) >= 100 ? v : null; }
+  var TWO = /(rec|rsh|rush|pass|yds|yards|TD|reb|ast|3PM|longest|most)/i;
+  function kindOf(d) { return /^SGP/i.test(d) ? 'sgp' : /^\d+-leg/i.test(d) ? 'parlay' : 'straight'; }
+  function marketOf(b) {
+    if (b.k !== 'straight') return b.k;
+    if (/\bML\b/i.test(b.d)) return 'ml';
+    if (/\d\s*(o|u)\b|\bover\b|\bunder\b|\d+\+?\s*(points|pts)\b/i.test(b.d) && !TWO.test(b.d)) return 'total';
+    if (/(^|\s)[+-]\d+(\.5)?(\s|$)|\bPK\b/i.test(b.d) && !TWO.test(b.d)) return 'spread';
+    return 'prop';
+  }
+  function propType(d) {
+    var T = [['most', /\b(most|mst)\b/i], ['longest', /longest|\blng\b/i], ['td', /\bTD/], ['rec', /\d\+?\s*rec\b|\brec\b(?!.*yd)/i],
+             ['recyds', /rec\.? ?(yds|yards)|rcv/i], ['rush', /rsh|rush/i], ['pass', /pass|cmp|\bint/i]];
+    for (var i = 0; i < T.length; i++) if (T[i][1].test(d)) return T[i][0];
+    return 'other';
+  }
+  // Same styles, same order, as tools/brad/brad_sheet.py; the calls (tail/watch/avoid) come from the daily summary.
+  function fullProp(b, full) { return b.sport === 'NFL' && marketOf(b) === 'prop' && (full ? b.u >= 1 : b.u < 1); }
+  var STYLE_FN = {
+    'NFL props he bets at a full unit (1u+)': function (b) { return fullProp(b, true); },
+    '· anytime TD, full unit': function (b) { return fullProp(b, true) && propType(b.d) === 'td'; },
+    '· most yards in the game, full unit': function (b) { return fullProp(b, true) && propType(b.d) === 'most'; },
+    '· receptions, full unit': function (b) { return fullProp(b, true) && propType(b.d) === 'rec'; },
+    'College basketball straight bets': function (b) { return b.sport === 'CBK' && b.k === 'straight'; },
+    'NFL props at a half unit (his long shots)': function (b) { return fullProp(b, false); },
+    'NFL rushing-yard props': function (b) { return b.sport === 'NFL' && marketOf(b) === 'prop' && propType(b.d) === 'rush'; },
+    'Same-game parlays': function (b) { return b.k === 'sgp'; },
+  };
+  function styleOf(b) {
+    var st = (sum && sum.styles) || [], i;
+    for (i = 0; i < st.length; i++) if (st[i].call === 'avoid' && STYLE_FN[st[i].name] && STYLE_FN[st[i].name](b)) return 'avoid';
+    for (i = 0; i < st.length; i++) if (st[i].call === 'tail' && STYLE_FN[st[i].name] && STYLE_FN[st[i].name](b)) return 'tail';
+    return null;
+  }
+  function implied(o) { return o > 0 ? 100 / (o + 100) : -o / (-o + 100); }
+  function american(p) { return p < 0.5 ? Math.round(100 * (1 - p) / p) : -Math.round(100 * p / (1 - p)); }
+  function fairOf(b) {
+    if (b.k !== 'straight' || !sum || !sum.sports) return null;
+    var sp = sum.sports.filter(function (x) { return x.sport === b.sport; })[0];
+    if (!sp || !sp.bands) return null;
+    var lim = [[-1e6, -101], [100, 134], [135, 199], [200, 1e6]], i;
+    for (i = 0; i < lim.length; i++) if (b.o >= lim[i][0] && b.o <= lim[i][1]) break;
+    var bd = sp.bands[i];
+    if (!bd || bd.ratio == null) return null;
+    var p = Math.min(0.97, implied(b.o) * bd.ratio), mn = american(p);
+    return { band: bd.name, p: p, min: mn, ok: b.o >= mn, edge: bd.ratio - 1 };
+  }
+  function parseOpen(sport, rows) {
+    var out = [], headers = 0, header = '';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i], a = (r[0] || '').trim();
+      if ((r[1] || '').trim() === 'Juice') { headers++; header = a; if (headers > 2) break; continue; }   // newest two weeks
+      if (!headers) continue;
+      var o = oddsOf(r[1] || ''), u = parseFloat(r[2]);
+      if (!a || o == null || !(u > 0)) continue;
+      if ((r[5] || '').trim()) continue;                       // already graded
+      if (/\blive\b/i.test(a)) continue;                       // live bets alert you by email
+      var b = { d: a, o: o, u: u, b: (r[4] || '').trim(), sport: sport, w: header, k: kindOf(a),
+                boost: /boost/i.test((r[6] || '') + ' ' + (r[7] || '')) };
+      b.style = styleOf(b); b.fair = fairOf(b);
+      out.push(b);
+    }
+    return out;
+  }
+  function readLive() {
+    if (liveTried) return; liveTried = true;
+    Promise.all(Object.keys(TABS).map(function (sp) {
+      return fetch(SHEET + TABS[sp], { credentials: 'omit' }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      }).then(function (t) { return parseOpen(sp, csv(t)); });
+    })).then(function (lists) {
+      var all = [].concat.apply([], lists), rank = { tail: 0, avoid: 2 };
+      all.sort(function (x, y) { return (rank[x.style] == null ? 1 : rank[x.style]) - (rank[y.style] == null ? 1 : rank[y.style]); });
+      liveOpen = all; liveAt = new Date(); render();
+    }).catch(function () { liveOpen = null; render(); });     // blocked or offline: the daily summary's list stays
+  }
+
   function render() { try { draw(); } catch (e) { if (el) { el.innerHTML = ''; el.appendChild(h('p', 'note', 'The Brad tab hit an error: ' + e.message)); } } }
 
   function draw() {
@@ -164,7 +262,11 @@
     if (sum.recent) el.appendChild(tailsSection(S));
     var s2 = h('section');
     s2.appendChild(h('h3', 'subh', 'Open bets on his sheet worth a look'));
-    var open = (sum.open || []).filter(function (b) { return b.style === 'tail'; });
+    readLive();
+    var openAll = liveOpen || sum.open || [];
+    s2.appendChild(h('p', 'muted', liveOpen ? 'Live from his sheet, checked ' + liveAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '. Reopen the tab to check again.'
+      : 'As of this morning’s update' + (liveTried ? ' (his sheet couldn’t be read live just now).' : '.')));
+    var open = openAll.filter(function (b) { return b.style === 'tail'; });
     if (!open.length) s2.appendChild(h('p', 'muted', 'None of his open non-live bets fit a Tail style right now.'));
     open.forEach(function (b) {
       var s = h('div', 'slip');
@@ -177,7 +279,7 @@
       s.appendChild(mid);
       s2.appendChild(s);
     });
-    var rest = (sum.open || []).filter(function (b) { return b.style !== 'tail'; });
+    var rest = openAll.filter(function (b) { return b.style !== 'tail'; });
     if (rest.length) {
       var det = h('details'), smry = h('summary', 'muted', rest.length + ' other open bet' + (rest.length === 1 ? '' : 's') + ' (not a Tail style)');
       det.appendChild(smry);
@@ -239,5 +341,5 @@
     }, function (e) { clearTimeout(timer); loaded = true; failed = 'Brad’s record could not be loaded' + (e && e.message ? ' (' + e.message + ')' : '') + '.'; render(); });
   }
 
-  window.BradTab = { start: start, render: function (node) { if (node) el = node; render(); } };
+  window.BradTab = { start: start, render: function (node) { if (node) { el = node; if (liveAt && Date.now() - liveAt > 60000) liveTried = false; } render(); } };
 })();
