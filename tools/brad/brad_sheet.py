@@ -301,7 +301,7 @@ def summarize(allbets, today):
         return {"band": bd["name"], "p": round(p, 3), "min": mn, "ok": b["o"] >= mn,
                 "edge": round(bd["ratio"] - 1, 3)}
     out["open"] = [{"d": b["d"], "o": b["o"], "u": b["u"], "b": b.get("b", ""), "sport": b["sport"], "w": b["w"],
-                    "style": style_of(b), "boost": bool(b.get("boost")), "fair": fair(b)} for b in opn[:40]]
+                    "style": style_of(b), "boost": bool(b.get("boost")), "fair": fair(b)} for b in opn[:100]]
     # Bets the user may have tailed (live, or a Tail style), newest first: the page's "your price" log.
     tailable = [b for b in bets if is_cur(b) and (b.get("live") or style_of(b) == "tail")]
     tailable.sort(key=lambda b: (b["sport"] != "CBK", -b["i"]))
