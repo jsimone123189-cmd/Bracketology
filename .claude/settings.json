@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(python3 -I tools/brad/brad_sheet.py:*)",
+      "ArtifactData"
+    ]
+  }
+}
