@@ -3,6 +3,10 @@
     "allow": [
       "Bash(git pull:*)",
       "Bash(python3 -I tools/brad/brad_sheet.py:*)",
+      "Bash(python3 -I tools/betalytics/update_scores.py:*)",
+      "Bash(python3 -I tools/betalytics/nfl_results.py:*)",
+      "Bash(python3 -I tools/betalytics/ats_scores.py:*)",
+      "Bash(python3 -I tools/betalytics/closing.py:*)",
       "ArtifactData"
     ]
   }
