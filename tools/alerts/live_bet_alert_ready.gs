@@ -2,6 +2,8 @@
  * READY TO USE: settings below are filled in. Paste the whole file into Apps Script, save, run testAlert, then run setup.
  *
  * Live-bet alert: checks a Google Sheet every minute and pushes new "live" bets to your phone.
+ * From 7 to 10 PM Eastern it also alerts on EVERY new bet row ("New bet: ..."), live or not.
+ * Rows that first appear outside that window are noted silently, so 7 PM never brings a flood.
  *
  * Runs in YOUR Google account (script.google.com), so it is fast (1-minute checks) and private.
  * Alerts are emailed to your own Gmail (the Gmail app pushes them to your phone), and also sent to
@@ -28,6 +30,7 @@ const CONFIG = {
   MATCH: /\blive\b/i,                // what marks a live bet in the bet description
   ROWS: 200,                         // read only the top rows: new bets go at the top of each tab
   HOURS: { from: 11, to: 2, tz: 'America/New_York' },   // only check 11 AM to 2 AM Eastern (games happen then)
+  ALL: { from: 19, to: 22 },         // also alert on every new bet from 7:00 to 9:59 PM (same time zone)
 };
 
 function setup() {
@@ -46,36 +49,53 @@ function testAlert() {
   push_('Test alert', 'Live-bet alerts are working.');
 }
 
-function inHours_() {
+function inWindow_(w) {
   const h = Number(Utilities.formatDate(new Date(), CONFIG.HOURS.tz, 'H'));
-  const f = CONFIG.HOURS.from, t = CONFIG.HOURS.to;
-  return f <= t ? (h >= f && h < t) : (h >= f || h < t);
+  return w.from <= w.to ? (h >= w.from && h < w.to) : (h >= w.from || h < w.to);
+}
+
+function inHours_() {
+  return inWindow_(CONFIG.HOURS);
 }
 
 function checkLive(silent) {
   if (silent !== true && !inHours_()) return;   // outside game hours: exit at once (keeps daily run time low)
   const props = PropertiesService.getScriptProperties();
   const seen = new Set(JSON.parse(props.getProperty('seen') || '[]'));
-  const fresh = [];
+  // 'rows' = every bet row on the sheet at the last check. A row not in it is new. The first run after
+  // this update has no 'rows' yet, so it only records them (no flood of old bets).
+  const prevRaw = props.getProperty('rows');
+  const prev = new Set(JSON.parse(prevRaw || '[]'));
+  const allOn = silent !== true && prevRaw !== null && inWindow_(CONFIG.ALL);
+  const current = [], fresh = [];
   CONFIG.GIDS.forEach(function (gid) {
     readRows_(gid).forEach(function (row) {
-      const desc = String(row[0] || '').trim();
-      if (!desc || !CONFIG.MATCH.test(desc)) return;
+      const desc = String(row[0] || '').trim(), odds = String(row[1] || '').trim();
+      if (!desc) return;
       // Key on the bet itself (description + odds), not the result columns, so filling in
       // WIN/LOSS later does not trigger a second alert.
-      const key = keyOf_(gid + '|' + desc + '|' + String(row[1] || '').trim());
-      if (seen.has(key)) return;
-      seen.add(key);
-      fresh.push(row);
+      const key = keyOf_(gid + '|' + desc + '|' + odds);
+      const isBet = odds && odds !== 'Juice';            // skips week headers and column headers
+      const isNew = isBet && !prev.has(key.slice(0, 10));
+      if (isBet) current.push(key.slice(0, 10));
+      if (CONFIG.MATCH.test(desc)) {                      // live bets: unchanged, alert any time in HOURS
+        if (seen.has(key)) return;
+        seen.add(key);
+        fresh.push({ row: row, live: true });
+      } else if (isNew && allOn) {                        // any other new bet: alert 7-10 PM only
+        fresh.push({ row: row, live: false });
+      }
     });
   });
   // Triggers call this with an event object, so only an explicit true means silent (used by setup).
-  if (silent !== true) fresh.forEach(function (row) {
-    const odds = String(row[1] || '').trim(), units = String(row[2] || '').trim();
-    push_('Live bet: ' + row[0], [odds && 'Odds ' + odds, units && units + 'u'].filter(String).join('  ·  ') ||
-      'New live bet on the sheet');
+  if (silent !== true) fresh.forEach(function (f) {
+    const odds = String(f.row[1] || '').trim(), units = String(f.row[2] || '').trim();
+    push_((f.live ? 'Live bet: ' : 'New bet: ') + f.row[0],
+      [odds && 'Odds ' + odds, units && units + 'u'].filter(String).join('  ·  ') ||
+      (f.live ? 'New live bet on the sheet' : 'New bet on the sheet'));
   });
   props.setProperty('seen', JSON.stringify(Array.from(seen).slice(-400)));   // keep the store small
+  props.setProperty('rows', JSON.stringify(current));                        // ~400 rows x 13 bytes, well under 9 KB
 }
 
 function readRows_(gid) {
